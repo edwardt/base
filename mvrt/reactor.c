@@ -155,7 +155,6 @@ void _reactor_parse_file(const char *file)
         }
         else {
           fprintf(stderr, "S%d: Parse error at token \"%s\".\n", state, token);
-          printf("token_tag = %d\n", token_tag);
           exit(1);
         }
         break;
@@ -163,18 +162,20 @@ void _reactor_parse_file(const char *file)
         switch (oper_tag) {
         case MVRT_OP_PUSHS:
           {
-            char *name = strdup(token+1);
-            name[strlen(name)-1] = '\0';
-            reactor->code->instrs[nopers++].ptr = (mv_ptr_t) name;
-            fprintf(stdout, "\t\tPUSH %s\n", name);
+            char *arg = strdup(token+1);
+            arg[strlen(arg)-1] = '\0';
+            fprintf(stdout, "\treactor[%d]: %s \"%s\"\n", nopers,  
+                    mvrt_opcode_str(reactor->code->instrs[nopers].opcode), arg);
+            reactor->code->instrs[nopers++].ptr = (mv_ptr_t) arg;
           }
           break;
         case MVRT_OP_PUSHI:
         case MVRT_OP_BEQ:
           {
             int arg = atoi(token);
+            fprintf(stdout, "\treactor[%d]: %s %d\n", nopers,  
+                    mvrt_opcode_str(reactor->code->instrs[nopers].opcode), arg);
             reactor->code->instrs[nopers++].ptr = (mv_ptr_t) arg;
-            fprintf(stdout, "\t\tPUSH %d\n", arg);
           }
           break;
         default:
@@ -184,20 +185,20 @@ void _reactor_parse_file(const char *file)
         break;
       case _STATE_EXPECT_OPER_OR_RPAREN:
         if (token_tag == _TOKEN_ID) {
-          if ((oper_tag = mvrt_opcode_tag(token)) == -1)
+          if ((oper_tag = mvrt_opcode_tag(token)) == -1) {
             fprintf(stderr, "Invalid operator -- \"%s\"", token);
-          else {
-            reactor->code->instrs[nopers].opcode = oper_tag;
-            fprintf(stdout, "\treactor[%d]: %s\n", 
-                    nopers-1,  
-                    mvrt_opcode_str(reactor->code->instrs[nopers-1].opcode));
+            exit(1);
           }
+          else
+            reactor->code->instrs[nopers].opcode = oper_tag;
 
           if (_reactor_parse_nargs(oper_tag) > 0) {
             state = _STATE_EXPECT_ARG;
           }
           else {
             state = _STATE_EXPECT_OPER_OR_RPAREN;
+            fprintf(stdout, "\treactor[%d]: %s\n", nopers,  
+                    mvrt_opcode_str(reactor->code->instrs[nopers].opcode));
             nopers++;
           }
         }
