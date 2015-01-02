@@ -8,6 +8,7 @@
 #ifndef MVRT_EVENT_H
 #define MVRT_EVENT_H
 
+#include <stdlib.h>       /* size_t */
 #include <common/defs.h>  /* mv_uint32_t */
 
 typedef enum {

@@ -274,14 +274,7 @@ int mvrt_reactor_delete(mvrt_reactor_t *reactor)
   _reactor_delete(reactor);
 }
 
-mvrt_reactor_t *mvrt_reactor_lookup(mvrt_reactorid_t id)
-{
-  assert(id >= 0 && id < _reactor_id);
-
-  return _reactors[id];
-}
-
-mvrt_reactor_t *mvrt_reactor_lookup_by_name(const char *name)
+mvrt_reactor_t *mvrt_reactor_lookup(const char *name)
 {
   int i;
   for (i = 0; i < _reactor_id; i++) {

@@ -91,10 +91,8 @@ typedef enum {
   MVRT_OP_PROP_SET,
   
   /* funtion service */
-  MVRT_OP_CALL_LOCAL,       /* call local MV function */
-  MVRT_OP_CALL_NATIVE,      /* call local native function */
-  MVRT_OP_CALL_REMOTE,      /* call remote function */
-  MVRT_OP_CALL_REMOTE_RET,  /* call remote function with return value */
+  MVRT_OP_CALL_FUNC,        /* call function */
+  MVRT_OP_CALL_FUNC_RET,    /* call function with return value */
 
   MVRT_OP_CALL_RETURN,      /* return the value to caller */
   MVRT_OP_CALL_CONTINUE,    /* resume suspended computation */

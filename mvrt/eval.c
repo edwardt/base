@@ -25,9 +25,8 @@ static int _eval_branch(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_push(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_cons(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_stackop(mvrt_instr_t *instr, mvrt_context_t *ctx);
-static int _eval_call_local(mvrt_instr_t *instr, mvrt_context_t *ctx);
-static int _eval_call_native(mvrt_instr_t *instr, mvrt_context_t *ctx);
-static int _eval_call_remote(mvrt_instr_t *instr, mvrt_context_t *ctx);
+static int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx);
+static int _eval_call_native(mvrt_value_t f, mvrt_value_t a, mvrt_context_t *c);
 static int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static mvrt_func_t _eval_get_func(const char *func_s);
@@ -111,13 +110,9 @@ int _eval_instr(mvrt_instr_t *instr, mvrt_context_t *ctx)
     return _eval_prop_set(instr, ctx);
 
   /* function calls */
-  case MVRT_OP_CALL_NATIVE:
-    return _eval_call_native(instr, ctx);
-  case MVRT_OP_CALL_LOCAL:
-    return _eval_call_local(instr, ctx);
-  case MVRT_OP_CALL_REMOTE:
-  case MVRT_OP_CALL_REMOTE_RET:
-    return _eval_call_remote(instr, ctx);
+  case MVRT_OP_CALL_FUNC:
+  case MVRT_OP_CALL_FUNC_RET:
+    return _eval_call_func(instr, ctx);
   case MVRT_OP_CALL_RETURN:
     return _eval_call_return(instr, ctx);
   case MVRT_OP_CALL_CONTINUE:
@@ -321,17 +316,120 @@ int _eval_call_local(mvrt_instr_t *instr, mvrt_context_t *ctx)
   return _EVAL_FAILURE;
 }
 
-int _eval_call_native(mvrt_instr_t *instr, mvrt_context_t *ctx)
+mvrt_func_t _eval_get_func(const char *func_s)
+{
+  mvrt_func_t func;
+  char *charp;
+
+  if (((charp = strstr(func_s, ":")) == NULL) || charp == func_s) {
+    /* "foo" or ":foo" - local function */
+    if (charp == func_s)
+      func = mvrt_func_lookup(mv_device_self(), func_s);
+    else
+      func = mvrt_func_lookup(mv_device_self(), func_s+1);
+  }
+  else {
+    /* "dev:foo" - remote function */
+    char *name = strdup(func_s + 1);
+    char save = *charp;
+    *charp = '\0';
+    func = mvrt_func_lookup(func_s, name);
+    if (func == 0)
+      func = mvrt_func_new(func_s, name, MVRT_FUNC_GLOBAL);
+    *charp = save;
+  }
+
+  return func;
+}
+
+int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
+{
+  mvrt_stack_t *stack = ctx->stack;
+  int ip = ctx->iptr;
+  
+  /*
+     CALL_FUNC[_RET]
+
+     Call a remote function with/without waiting for the return value. Stack
+     top should contain function value, number of arguments, and arguments.
+   */
+  mvrt_value_t func_v = mvrt_stack_pop(stack);
+  mvrt_value_t farg_v = mvrt_stack_pop(stack);
+
+  char *func_s = (char *) mvrt_value_string_get(func_v);
+  mvrt_func_t func = _eval_get_func(func_s);
+  if (mvrt_func_tag(func) == MVRT_FUNC_NATIVE)
+    return _eval_call_native(func_v, farg_v, ctx);
+
+  const char *dev = mvrt_func_dev(func);
+  const char *name = mvrt_func_name(func);
+  const char *destaddr = mv_device_addr(dev);
+  mvrt_native_t *native = NULL;
+
+  static char msg[4096];
+  int rid = 0;
+
+  switch (mvrt_func_tag(func)) {
+    native = mvrt_func_native(func);
+    if (!native->func1) {
+      void *handle = dlopen(native->lib, RTLD_NOW);
+      if (!handle) {
+        fprintf(stderr, "%s\n", dlerror());
+        exit(EXIT_FAILURE);
+      }
+      char *name = native->name;
+      native->func1 = (mvrt_native_func1_t) dlsym(handle, name);
+      native->func2 = (mvrt_native_func2_t) dlsym(handle, name);
+    }
+
+    break;
+  case MVRT_FUNC_LOCAL:
+    assert(0 && "Not implemented yet.");
+    break;
+  case MVRT_FUNC_GLOBAL:
+    switch (instr->opcode) {
+    case MVRT_OP_CALL_FUNC:
+      sprintf(msg, 
+              "%s {"
+              " \"tag\":\"FUNC_CALL\", "
+              " \"src\":\"%s\", "
+              " \"arg\":"
+              "{ \"name\": \"%s\", \"funarg\" : %s } }",
+              destaddr, mv_mqueue_addr(mq), name, mvrt_value_to_str(farg_v));
+      mv_mqueue_put(mq, msg);
+      break;
+    case MVRT_OP_CALL_FUNC_RET:
+      sprintf(msg, 
+              "%s {"
+              " \"tag\":\"FUNC_CALL_RET\", "
+              " \"src\":\"%s\", "
+              " \"arg\":"
+              "{ \"name\": \"%s\", \"funarg\" : %s, \"retid\" : %d, "
+              "  \"retaddr\": \"%s\" } }",
+              destaddr, mv_mqueue_addr(mq), name, mvrt_value_to_str(farg_v), 
+              rid, mv_mqueue_addr(mq));
+      mv_mqueue_put(mq, msg);
+      return _EVAL_SUSPEND;
+    case MVRT_FUNC_NATIVE:
+      assert(0 && "Native function should not reach here.");
+    default:
+      break;
+    }
+  default:
+    break;
+  }
+
+  return ip + 1;
+}
+
+int _eval_call_native(mvrt_value_t func_v, mvrt_value_t farg_v, 
+                      mvrt_context_t *ctx)
 {
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_value_t func_v = mvrt_stack_pop(stack);
-  mvrt_value_t farg_v = mvrt_stack_pop(stack);
-
   mvrt_func_t func = mvrt_value_func_get(func_v);
   mvrt_native_t *native = mvrt_func_native(func);
-  assert(mvrt_func_tag(func) == MVRT_FUNC_NATIVE);
 
   /* get function */
   if (!native->func1) {
@@ -375,91 +473,8 @@ int _eval_call_native(mvrt_instr_t *instr, mvrt_context_t *ctx)
   else
     (native->func2)(arg1, arg2);
 
-  //fprintf(stdout, "RETVAL = %d\n", retval);
   mvrt_value_t retval_v = mvrt_value_int(retval);
   mvrt_stack_push(stack, retval_v);
-
-  return ip + 1;
-}
-
-
-mvrt_func_t _eval_get_func(const char *func_s)
-{
-  mvrt_func_t func;
-  char *charp;
-
-  if (((charp = strstr(func_s, ":")) == NULL) || charp == func_s) {
-    /* "foo" or ":foo" - local function */
-    if (charp == func_s)
-      func = mvrt_func_lookup(mv_device_self(), func_s);
-    else
-      func = mvrt_func_lookup(mv_device_self(), func_s+1);
-  }
-  else {
-    /* "dev:foo" - remote function */
-    char *name = strdup(func_s + 1);
-    char save = *charp;
-    *charp = '\0';
-    func = mvrt_func_lookup(func_s, name);
-    if (func == 0)
-      func = mvrt_func_new(func_s, name, MVRT_FUNC_GLOBAL);
-    *charp = save;
-  }
-
-  return func;
-}
-
-int _eval_call_remote(mvrt_instr_t *instr, mvrt_context_t *ctx)
-{
-  mvrt_stack_t *stack = ctx->stack;
-  int ip = ctx->iptr;
-  
-  /*
-     CALL_REMOTE[_RET]
-
-     Call a remote function with/without waiting for the return value. Stack
-     top should contain function value, number of arguments, and arguments.
-   */
-  mvrt_value_t func_v = mvrt_stack_pop(stack);
-  mvrt_value_t farg_v = mvrt_stack_pop(stack);
-
-  char *func_s = (char *) mvrt_value_string_get(func_v);
-  mvrt_func_t func = _eval_get_func(func_s);
-  assert(mvrt_func_tag(func) == MVRT_FUNC_GLOBAL);
-
-  const char *dev = mvrt_func_dev(func);
-  const char *name = mvrt_func_name(func);
-  const char *destaddr = mv_device_addr(dev);
-
-  static char msg[4096];
-  int rid = 0;
-
-  switch (instr->opcode) {
-  case MVRT_OP_CALL_REMOTE:
-    sprintf(msg, 
-            "%s {"
-            " \"tag\":\"FUNC_CALL\", "
-            " \"src\":\"%s\", "
-            " \"arg\":"
-            "{ \"name\": \"%s\", \"funarg\" : %s } }",
-            destaddr, mv_mqueue_addr(mq), name, mvrt_value_to_str(farg_v));
-    mv_mqueue_put(mq, msg);
-    break;
-  case MVRT_OP_CALL_REMOTE_RET:
-    sprintf(msg, 
-            "%s {"
-            " \"tag\":\"FUNC_CALL_RET\", "
-            " \"src\":\"%s\", "
-            " \"arg\":"
-            "{ \"name\": \"%s\", \"funarg\" : %s, \"retid\" : %d, "
-            "  \"retaddr\": \"%s\" } }",
-            destaddr, mv_mqueue_addr(mq), name, mvrt_value_to_str(farg_v), 
-            rid, mv_mqueue_addr(mq));
-    mv_mqueue_put(mq, msg);
-    return _EVAL_SUSPEND;
-  default:
-    break;
-  }
 
   return ip + 1;
 }

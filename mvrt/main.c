@@ -21,9 +21,9 @@
 #include "rtsched.h"
 #include "rtevent.h"
 #include "rtprop.h"
-#include "operator.h"
 #include "rtfunc.h"
 #include "reactor.h"
+#include "sysinit.h"
 
 extern void sched();
 
@@ -51,9 +51,11 @@ static void register_system_events()
   const char *self = mv_device_self();
   mvrt_event_new(self, ":prop_add", MVRT_EVENT_SYSTEM);
   mvrt_event_new(self, ":prop_get", MVRT_EVENT_SYSTEM);
-  mvrt_event_new(self,":prop_set", MVRT_EVENT_SYSTEM);
+  mvrt_event_new(self, ":prop_set", MVRT_EVENT_SYSTEM);
 
   mvrt_event_new(self, ":func_call", MVRT_EVENT_SYSTEM);
+  mvrt_event_new(self, ":func_call_ret", MVRT_EVENT_SYSTEM);
+  mvrt_event_new(self, ":func_return", MVRT_EVENT_SYSTEM);
   ncall_ev = mvrt_event_new(self, ":native_call", MVRT_EVENT_SYSTEM);
 }
 
@@ -165,10 +167,14 @@ int main(int argc, char *argv[])
   mvrt_sched_run(sched);
 
   /* add reactors to events */
-  mvrt_reactor_t *r0 = mvrt_reactor_lookup_by_name("native_call_reactor");
-  mvrt_reactor_t *r1 = mvrt_reactor_lookup_by_name("r1");
+  mvrt_reactor_t *r0 = mvrt_reactor_lookup("native_call_reactor");
+  mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
+  mvrt_reactor_t *r2 = mvrt_reactor_lookup("func_call_reactor");
   mvrt_add_reactor_to_event(ncall_ev, r0);
   mvrt_add_reactor_to_event(timer0, r1);
+
+  mvrt_system_event_init();
+  mvrt_system_reactor_init();
 
   /* temporarily, generate timer event manually */
   struct timespec ts;

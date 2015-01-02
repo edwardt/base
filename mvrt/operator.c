@@ -89,12 +89,10 @@ struct {
   { "prop_set",    2 },
 
   /* functions */
-  { "call_local",      2 },
-  { "call_native",     2 },
-  { "call_remote",     2 },
-  { "call_remote_ret", 2 },
-  { "call_return",     2 },
-  { "call_continue",   2 },
+  { "call_func",      2 },
+  { "call_func_ret",  2 },
+  { "call_return",    2 },
+  { "call_continue",  2 },
 
   { "",            0 }
 };

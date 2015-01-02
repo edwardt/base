@@ -29,8 +29,7 @@ extern int mvrt_reactor_module_init(const char *file);
 
 extern mvrt_reactor_t *mvrt_reactor(const char *name);
 extern int mvrt_reactor_delete(mvrt_reactor_t *react);
-extern mvrt_reactor_t *mvrt_reactor_lookup(mvrt_reactorid_t id);
-extern mvrt_reactor_t *mvrt_reactor_lookup_by_name(const char *name);
+extern mvrt_reactor_t *mvrt_reactor_lookup(const char *name);
 
 /* event-reactor table */
 extern int mvrt_add_reactor_to_event(mvrt_event_t ev, mvrt_reactor_t *r);

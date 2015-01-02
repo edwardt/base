@@ -2,31 +2,20 @@
 # serve device-to-device service requests. The other is user-defined
 # reactors which is added by user.
 
-
-# for :native_call event
-#  - caller:  
-#    push argval
-#    push funcval
-reactor native_call_reactor {
-  call_native
+reactor _R_func_call {
+  getarg              # put event arg to stack top
+  getf "funarg"       # get "funarg" value of "arg map"
+  getarg              # put event arg again to stack top
+  getf "name"         # get "name" value of "arg map"
+  call_func           # call the function
 }
 
-# for :func_call event
-# always event arg is pushed 
-reactor func_call_reactor {
+reactor _R_func_call_ret {
   getarg
   getf "funarg"
   getarg
   getf "name"
-  call_local
-}
-
-reactor func_call_ret_reactor {
-  getarg
-  getf "funarg"
-  getarg
-  getf "name"
-  call_local
+  call_func
   getarg
   getf "retid"
   getarg

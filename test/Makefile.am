@@ -14,4 +14,7 @@ greptest.sh:
 run: $(bin_PROGRAMS) 
 	./client
 
+rt: $(bin_PROGRAMS)
+	../mvrt/mvrt
+
 CLEANFILES = greptest.sh

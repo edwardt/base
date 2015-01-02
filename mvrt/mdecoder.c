@@ -13,6 +13,7 @@
 #include "rtfunc.h"      /* mvrt_func_t */
 #include "rtvalue.h"     /* mvrt_value_t */
 #include "message.h"     /* mvrt_message_t */
+#include "sysinit.h"     /* mvrt_system_event_get */
 #include "mdecoder.h"
 
 
@@ -95,8 +96,8 @@ void _mdecoder_init()
 
 mvrt_value_t _mdecoder_decode(mvrt_message_t *mvmsg)
 {
-  mvrt_value_t arg;       /* arg of the message */
-  mvrt_value_t name;      /* name */
+  mvrt_value_t arg_v;     /* arg of the message */
+  mvrt_value_t name_v;    /* name */
 
   mvrt_event_t event;     /* event type */
   mvrt_prop_t prop;       /* property */
@@ -108,7 +109,7 @@ mvrt_value_t _mdecoder_decode(mvrt_message_t *mvmsg)
   mvrt_value_t pair_v;    /* pair value */
   mvrt_value_t null_v;    /* null value */
 
-  char *namestr;        /* name string */
+  char *name_s;           /* name string */
 
   switch (mvmsg->tag) {
   case MVRT_MESSAGE_EVENT_OCCUR:
@@ -118,16 +119,16 @@ mvrt_value_t _mdecoder_decode(mvrt_message_t *mvmsg)
          arg: { "name": "adjust_volume", "volume": 12 } 
        }
     */
-    arg = mvmsg->arg;
-    name = mvrt_value_map_lookup(arg, _values[_V_STRING_NAME]);
-    namestr = mvrt_value_string_get(name);
-    event = mvrt_event_lookup(mvmsg->srcdev, namestr);
+    arg_v = mvmsg->arg;
+    name_v = mvrt_value_map_lookup(arg_v, _values[_V_STRING_NAME]);
+    name_s = mvrt_value_string_get(name_v);
+    event = mvrt_event_lookup(mvmsg->srcdev, name_s);
     if (!event) {
-      fprintf(stdout, "ERROR: No such event -- %s.\n", namestr);
+      fprintf(stdout, "ERROR: No such event -- %s.\n", name_s);
       break;
     }
-    if (mvrt_value_event(event, arg) == null_v) {
-      fprintf(stdout, "Failed to create an event instance.\n", namestr);
+    if (mvrt_value_event(event, arg_v) == null_v) {
+      fprintf(stdout, "Failed to create an event instance.\n", name_s);
       return null_v;
     }
     break;
@@ -138,12 +139,12 @@ mvrt_value_t _mdecoder_decode(mvrt_message_t *mvmsg)
          arg: { "name": "current_volume" } 
        }
     */
-    arg = mvmsg->arg;
-    name = mvrt_value_map_lookup(arg, _values[_V_STRING_NAME]);
-    namestr = mvrt_value_string_get(name);
-    prop = mvrt_prop_new(mv_device_self(), namestr, MVRT_PROP_LOCAL);
+    arg_v = mvmsg->arg;
+    name_v = mvrt_value_map_lookup(arg_v, _values[_V_STRING_NAME]);
+    name_s = mvrt_value_string_get(name_v);
+    prop = mvrt_prop_new(mv_device_self(), name_s, MVRT_PROP_LOCAL);
     if (!prop) {
-      fprintf(stdout, "ERROR: Failed to create property -- %s.\n", namestr);
+      fprintf(stdout, "ERROR: Failed to create property -- %s.\n", name_s);
       return null_v;
     }
     break;
@@ -156,42 +157,9 @@ mvrt_value_t _mdecoder_decode(mvrt_message_t *mvmsg)
     }
     break;
   case MVRT_MESSAGE_FUNC_CALL:
-    /* 
-       { 
-         tag: "FUNC_CALL",
-         arg: { "name": "adjust_volume", "arg": 14 } 
-       }
-    */
-    arg = mvmsg->arg;
-    name = mvrt_value_map_lookup(arg, _values[_V_STRING_NAME]);
-    farg_v = mvrt_value_map_lookup(arg, _values[_V_STRING_FUNARG]);
-    namestr = mvrt_value_string_get(name);
-    func = mvrt_func_lookup(mv_device_self(), namestr);
-    fprintf(stdout, "fcall: %s\n", namestr);
-    if (!func) {
-      fprintf(stdout, "ERROR: No such function -- %s.\n", namestr);
-      return null_v;
-    }
-    func_v = mvrt_value_func(func);
-    //printf("FUNC: "); mvrt_value_print(func_v);
-    pair_v = mvrt_value_pair(func_v, farg_v);
-
-    switch (mvrt_func_tag(func)) {
-    case MVRT_FUNC_NATIVE:
-      event = mvrt_event_lookup(mv_device_self(), ":native_call");
-      event_v = mvrt_value_event(event, pair_v);
-      //mvrt_value_print(pair_v);
-      //mvrt_value_print(event_v);
-      break;
-    case MVRT_FUNC_GLOBAL:
-      event = mvrt_event_lookup(mv_device_self(), ":func_call");
-      event_v = mvrt_value_event(event, pair_v);
-      break;
-    case MVRT_FUNC_LOCAL:
-    default:
-      fprintf(stdout, "ERROR: No such function -- %s.\n", namestr);
-      return null_v;
-    }
+    arg_v = mvmsg->arg;
+    event = mvrt_system_event_get(MVRT_SYSEV_FUNC_CALL);
+    event_v = mvrt_value_event(event, pair_v);
     return event_v;
   case MVRT_MESSAGE_INVALID:
   default:
