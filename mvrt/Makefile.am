@@ -13,6 +13,7 @@ mvrt_SOURCES = \
 	reactor.c \
 	eval.c \
 	rtsched.c \
+	sysinit.c \
 	main.c
 
 STRICT_CHECK_C = \
