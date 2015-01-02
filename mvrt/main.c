@@ -41,58 +41,8 @@ static void sig_child(int signo)
   return;
 }
 
-
-char *dest;
-
-/* registers system events */
-static mvrt_event_t ncall_ev;
-static void register_system_events()
-{
-  const char *self = mv_device_self();
-  mvrt_event_new(self, ":prop_add", MVRT_EVENT_SYSTEM);
-  mvrt_event_new(self, ":prop_get", MVRT_EVENT_SYSTEM);
-  mvrt_event_new(self, ":prop_set", MVRT_EVENT_SYSTEM);
-
-  mvrt_event_new(self, ":func_call", MVRT_EVENT_SYSTEM);
-  mvrt_event_new(self, ":func_call_ret", MVRT_EVENT_SYSTEM);
-  mvrt_event_new(self, ":func_return", MVRT_EVENT_SYSTEM);
-  ncall_ev = mvrt_event_new(self, ":native_call", MVRT_EVENT_SYSTEM);
-}
-
-static mvrt_event_t timer0;
-static void register_user_events()
-{
-  timer0 = mvrt_timer_new("timer0", 10);
-}
-
-static void register_system_funcs()
-{
-}
-
-static mvrt_func_t turnon;
-static void register_user_funcs()
-{
-  turnon = mvrt_func_new(dest, "gpioPut", MVRT_FUNC_GLOBAL);
-}
-
-
-static void register_system_props()
-{
-}
-
-static void register_user_props()
-{
-  const char *self = mv_device_self();
-
-  mvrt_prop_t prev = mvrt_prop_new(self, "pval", MVRT_PROP_LOCAL);
-  mvrt_prop_t curr = mvrt_prop_new(self, "cval", MVRT_PROP_LOCAL);
-  mvrt_value_t prev_init = mvrt_value_int(0);
-  mvrt_value_t curr_init = mvrt_value_int(0);
-  mvrt_prop_setvalue(prev, prev_init);
-  mvrt_prop_setvalue(curr, curr_init);
-}
-
-mv_mqueue_t *mq;
+/* for now, global */
+mv_mqueue_t *mq = NULL;
 
 /* 
  * the main entry point
@@ -105,12 +55,11 @@ int main(int argc, char *argv[])
      register_signal_handler(SIGCHLD, sig_child);
   */
 
-  if (argc < 3) {
-    fprintf(stdout, "Usage: %s [device name] [dest device]\n", argv[0]);
+  if (argc < 2) {
+    fprintf(stdout, "Usage: %s [device name]\n", argv[0]);
     exit(1);
   }
   char *self = strdup(argv[1]);
-  dest = strdup(argv[2]);
 
   /* initialize device service */
   mv_device_service_init(self, "device.dat");
@@ -122,21 +71,19 @@ int main(int argc, char *argv[])
   
   /* initialize local event module */
   mvrt_event_module_init();
-  register_system_events();
-  register_user_events();
+  mvrt_system_event_init();
 
   /* initialize local function module */
   mvrt_func_module_init((char *) "native.dat");
-  register_system_funcs();
-  register_user_funcs();
+  mvrt_system_func_init();
 
   /* initialize local prop module */
   mvrt_prop_module_init((char *) 0);
-  register_system_props();
-  register_user_props();
+  mvrt_system_prop_init();
 
   /* initialize reactor module */
   mvrt_reactor_module_init((char *) "reactor.dat");
+  mvrt_system_reactor_init();
 
   /* initialize message queue handler */
   mq = mv_mqueue_init(DEFAULT_PORT);
@@ -166,35 +113,28 @@ int main(int argc, char *argv[])
   mvrt_sched_t *sched = mvrt_sched(evq);
   mvrt_sched_run(sched);
 
+  /* 
+   *
+   */
+  /* user events */
+  mvrt_event_t timer0 = mvrt_timer_new("timer0", 10);
+
+  /* user props */
+  mvrt_prop_t prev = mvrt_prop_new(self, "pval", MVRT_PROP_LOCAL);
+  mvrt_prop_t curr = mvrt_prop_new(self, "cval", MVRT_PROP_LOCAL);
+  mvrt_value_t prev_init = mvrt_value_int(0);
+  mvrt_value_t curr_init = mvrt_value_int(0);
+  mvrt_prop_setvalue(prev, prev_init);
+  mvrt_prop_setvalue(curr, curr_init);
+
   /* add reactors to events */
-  mvrt_reactor_t *r0 = mvrt_reactor_lookup("native_call_reactor");
   mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
-  mvrt_reactor_t *r2 = mvrt_reactor_lookup("func_call_reactor");
-  mvrt_add_reactor_to_event(ncall_ev, r0);
   mvrt_add_reactor_to_event(timer0, r1);
-
-  mvrt_system_event_init();
-  mvrt_system_reactor_init();
-
-  /* temporarily, generate timer event manually */
-  struct timespec ts;
-  ts.tv_sec = 0;
-  ts.tv_sec = 2;
-  ts.tv_nsec = 300000; // 0.3s
-  while (1) {
-    nanosleep(&ts, NULL);
-
-    /*
-      mv_value_t null_v = mv_value_null();
-      mvrt_value_t eval = mvrt_value_event(timer0, null_v);
-      
-      while (mvrt_evqueue_full(evq)) {
-      nanosleep(&ts, NULL);
-      }
-      mvrt_evqueue_put(evq, eval);
-    */
-
-  }
+  /*
+   * main thread perform infinite loop - Is there a better way?
+   */
+  while (1)
+    sleep(1000);
 
   return EXIT_SUCCESS;
 }

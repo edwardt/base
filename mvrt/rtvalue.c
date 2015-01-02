@@ -11,7 +11,6 @@
 #include "rtevent.h"
 
 
-
 /*
  * Functions for the value API.
  */
