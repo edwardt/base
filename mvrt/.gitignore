@@ -1,1 +1,5 @@
+Makfile
+Makefile.in
+*.a
 *.o
+*.swp
