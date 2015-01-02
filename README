@@ -1,4 +1,0 @@
-
-Required packages:
-  - ZeroMQ 4.0.4 or higher
-  - jsmn JSON parser
