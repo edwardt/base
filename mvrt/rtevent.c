@@ -1,0 +1,252 @@
+/**
+ * @file rtevent.c
+ */
+#include <stdio.h>      /* fprintf */
+#include <stdlib.h>     /* free, exit */
+#include <string.h>     /* strdup */
+#include <assert.h>     /* assert */
+#include <signal.h>     /* sigaction */
+#include <time.h>       /* timer_settime */
+#include <mv/event.h>   /* mv_event_publish */
+#include <mv/device.h>  /* mv_device_self */
+#include "evqueue.h"    /* mvrt_evqueue_instance */
+#include "rtvalue.h"    /* mvrt_value_t */
+#include "rtevent.h"
+
+
+#define MAX_RTIMER_TABLE 128
+typedef struct _rtimer {
+  timer_t timerid;          /* timer */
+  size_t msec;              /* interval in msec */
+  mvrt_event_t rtev;        /* back pointer to _rtevent_t */
+} _rtimer_t;
+static _rtimer_t _rtimer_table[MAX_RTIMER_TABLE];
+
+#define MAX_RTEVENT_TABLE 4096
+typedef struct _rtevent {
+  char *dev;
+  char *name;
+  union {
+    mv_value_t subs;        /* LOCAL: list of subscribers */
+    _rtimer_t *timer;       /* TIMER */
+  } u;
+  size_t noccurs;           /* number of occurrences */
+
+  unsigned tag      : 3;    /* tag */
+
+  unsigned free     : 1;    /* free or not */
+  unsigned free_idx : 12;   /* index to free list */
+  unsigned free_nxt : 12;   /* index of next free entry */
+  unsigned pad      : 4;
+} _rtevent_t;
+static _rtevent_t _rtevent_table[MAX_RTEVENT_TABLE];
+static _rtevent_t *_free_rtevent;
+
+static int _rtevent_table_init();
+static _rtevent_t *_rtevent_get_free();
+static int _rtevent_delete(_rtevent_t *rtev);
+static _rtevent_t *_rtevent_lookup(const char *dev, const char *name);
+
+static _rtimer_t *_rtimer_create(const char *name, int interval);
+static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc);
+
+int _rtevent_table_init()
+{
+  int i;
+  _rtevent_t *ev;
+  for (i = 0; i < MAX_RTEVENT_TABLE; i++) {
+    ev = _rtevent_table + i;
+    ev->dev = NULL;
+    ev->name = NULL;
+
+    ev->free = 1;
+    ev->free_idx = i;
+    ev->free_nxt = i + 1;
+  }
+  /* the last element */
+  ev->free_idx = i;
+  ev->free_nxt = 0;
+
+  _free_rtevent = _rtevent_table + 1;
+  _rtevent_table[0].free = 0;
+}
+
+_rtevent_t *_rtevent_get_free()
+{
+  if (_free_rtevent == _rtevent_table)
+    return NULL;
+
+  _rtevent_t *rtev = _free_rtevent;
+  _free_rtevent = _rtevent_table + rtev->free_nxt;
+  rtev->free = 0;
+
+  return rtev;
+}
+
+int _rtevent_delete(_rtevent_t *rtev)
+{
+  rtev->free = 1;
+  rtev->free_nxt = _free_rtevent->free_idx;
+  _free_rtevent = rtev;
+
+  return 0;
+}
+
+_rtevent_t *_rtevent_lookup(const char *dev, const char *name)
+{
+  int i;
+  _rtevent_t *rtev;
+  for (i = 1; i < MAX_RTEVENT_TABLE; i++) {
+    rtev = _rtevent_table + i;
+    if (!rtev->free && !strcmp(rtev->dev, dev) && !strcmp(rtev->name, name))
+      return rtev;
+  }
+
+  return NULL;
+}
+
+static size_t _rtimer_id = 0;
+_rtimer_t *_rtimer_create(const char *name, int interval)
+{
+  struct sigevent sev;
+  struct itimerspec its;
+  struct sigaction sa;
+  int signo = SIGRTMIN;
+
+  if (_rtimer_id == MAX_RTIMER_TABLE) {
+    fprintf(stderr, "Cannot create more timers.\n");
+    return NULL;
+  }
+  _rtimer_t *rtimer = _rtimer_table + _rtimer_id++;
+
+  sa.sa_flags = SA_SIGINFO;
+  sa.sa_sigaction = _rtimer_handler;
+  sigemptyset(&sa.sa_mask);
+  if (sigaction(signo, &sa, NULL) == -1) {
+    fprintf(stderr, "Failed to setup signal handler for timer %s.\n", name);
+    return NULL;
+  }
+
+  sev.sigev_notify = SIGEV_SIGNAL;
+  sev.sigev_signo = signo;
+  sev.sigev_value.sival_ptr = &rtimer->timerid;
+
+  timer_create(CLOCK_REALTIME, &sev, &rtimer->timerid);
+
+  its.it_interval.tv_sec = 0;
+  its.it_interval.tv_nsec = interval * 1000000;
+  its.it_value.tv_sec = 0;
+  its.it_value.tv_nsec = 0;
+
+  timer_settime(rtimer->timerid, 0, &its, NULL);
+
+  return rtimer;
+}
+
+extern mvrt_evqueue_t *mvrt_evqueue_getcurrent();
+static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
+{
+  int i;
+  timer_t *tid;
+  _rtimer_t *rtimer;
+
+  struct timespec ts; /* 1ms */
+  ts.tv_sec = 0;
+  ts.tv_nsec = 1000; 
+  
+  mvrt_evqueue_t *evq = mvrt_evqueue_getcurrent();
+  tid = sinfo->si_value.sival_ptr;
+  for (i = 0; i < _rtimer_id; i++) {
+    rtimer = _rtimer_table + i;
+    if (*tid == rtimer->timerid) {
+      mvrt_event_t rtev = rtimer->rtev;
+      mvrt_value_t null_v = mv_value_null();
+      mvrt_value_t eval = mvrt_value_event(rtev, null_v);
+
+      while (mvrt_evqueue_full(evq))
+        nanosleep(&ts, NULL);
+      mvrt_evqueue_put(evq, eval);
+    }
+  }
+}
+
+
+/*
+ * API for the event module.
+ */
+int mvrt_event_module_init()
+{
+  _rtevent_table_init();
+}
+
+mvrt_event_t mvrt_event_new(const char *dev, const char *name, int tag)
+{
+  _rtevent_t *rtev;
+  if ((rtev = _rtevent_get_free()) == NULL) {
+    fprintf(stderr, "mvrt_event_new: MAX table reached.\n");
+    return (mvrt_event_t) 0;
+  }
+  if (rtev->dev) free(rtev->dev);
+  if (rtev->name) free(rtev->name);
+  rtev->dev = strdup(dev);
+  rtev->name = strdup(name);
+  rtev->tag = tag;
+  rtev->noccurs = 0;
+
+  switch (tag) {
+  case MVRT_EVENT_GLOBAL:
+  case MVRT_EVENT_SYSTEM:
+  case MVRT_EVENT_LOCAL:
+  case MVRT_EVENT_TIMER:
+    return (mvrt_event_t) rtev;
+  default:
+    assert(0 && "mvrt_event_new: Invalid tag");
+  }
+
+  return (mvrt_event_t) 0;
+}
+
+mvrt_event_t mvrt_timer_new(const char *name, size_t msec)
+{
+  const char *dev = mv_device_self();
+  _rtevent_t *rtev = (_rtevent_t *) mvrt_event_new(dev, name, MVRT_EVENT_TIMER);
+  rtev->u.timer = _rtimer_create(name, msec);
+  rtev->u.timer->msec = msec;
+  rtev->u.timer->rtev = (mvrt_event_t) rtev;
+
+  return (mvrt_event_t) rtev;
+}
+
+int mvrt_event_delete(mvrt_event_t ev)
+{
+  return 0;
+}
+
+mvrt_event_t mvrt_event_lookup(const char *dev, const char *name)
+{
+  int i;
+  _rtevent_t *rtev;
+  if ((rtev = _rtevent_lookup(dev, name)) == NULL)
+    return (mvrt_event_t) 0;
+
+  return (mvrt_event_t) rtev;
+}
+
+const char *mvrt_event_dev(mvrt_event_t event)
+{
+  _rtevent_t *rtev = (_rtevent_t *) event;
+  return rtev->dev;
+}
+
+const char *mvrt_event_name(mvrt_event_t event)
+{
+  _rtevent_t *rtev = (_rtevent_t *) event;
+  return rtev->name;
+}
+
+mvrt_eventag_t mvrt_event_tag(mvrt_event_t event)
+{
+  _rtevent_t *rtev = (_rtevent_t *) event;
+  return rtev->tag;
+}
+

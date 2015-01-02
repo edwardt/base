@@ -1,0 +1,8 @@
+libmv_a-func.o: func.c ../include/mv/func.h ../include/mv/value.h \
+ ../include/common/defs.h
+
+../include/mv/func.h:
+
+../include/mv/value.h:
+
+../include/common/defs.h:

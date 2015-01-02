@@ -1,0 +1,111 @@
+# There are two types of reactors. System reactors which are added to
+# serve device-to-device service requests. The other is user-defined
+# reactors which is added by user.
+
+
+# for :native_call event
+#  - caller:  
+#    push argval
+#    push funcval
+reactor native_call_reactor {
+  call_native
+}
+
+# for :func_call event
+# always event arg is pushed 
+reactor func_call_reactor {
+  getarg
+  getf "funarg"
+  getarg
+  getf "name"
+  call_local
+}
+
+reactor func_call_ret_reactor {
+  getarg
+  getf "funarg"
+  getarg
+  getf "name"
+  call_local
+  getarg
+  getf "retid"
+  getarg
+  getf "retaddr"
+  call_return              # initiate return sequence #1
+}
+
+#reactor func_ret_reactor {
+# getarg
+# getf "retval" 
+# getarg
+# getf "retid" 
+# call_continue retid
+#}
+
+# recursive reactor
+#  - timer_add(timer);
+#  - prop_add(cval);
+#  - prop_add(pval);
+#  - prop_add(ledval);
+#  - always @(timer) begin
+#      cval = gpioGet(pin);
+#      if (cval != pval)
+#        polya:gpioPut(10 /*pin*/, ledval);
+#      pval = cval;
+#      if (ledval == 1)
+#        ledval = 0;  
+#      else
+#        ledval = 1;  
+#  - add_event_reactor(timer, r1);
+# 
+reactor r1 {
+  pushi 10                # 0: pin value for button
+  pushs ":gpioGet"        # 1:
+  call_native             # 2:  :gpioGet(pin)
+  pushs "cval"            # 3:
+  prop_set                # 4:  cval = retval
+  pushs "cval"            # 5:
+  prop_get                # 6:  get cval
+  pushs "pval"            # 7:
+  prop_get                # 8:  get pval
+  beq 22                  # 9:  if (cval == pval) 
+  pushs "ledval"          # 10: 
+  prop_get                # 11:
+  cons                    # 12: [ledval]
+  pushi 10                # 13: pin value for remote LED
+  cons                    # 14: [10 ledval] -- fargs to gpioPut
+  pushs "polya:gpioPut"   # 15:
+  call_remote             # 16: polya:gpioPut(10, ledval)
+  pushs "cval"            # 17:
+  prop_get                # 18: get cval
+  pushs "pval"            # 19: 
+  prop_set                # 20: pval = cval
+  pushs "ledval"          # 21: 
+  prop_get                # 22: get ledval
+  pushi 1                 # 23:  
+  beq 29                  # 24: if (ledval == 1)
+  pushi 1                 # 25:
+  pushs "ledval"          # 26:
+  prop_set                # 27: ledval = 1
+  ret                     # 28: ret
+  pushi 0                 # 29:
+  pushs "ledval"          # 30:
+  prop_set                # 31: ledval = 0
+}
+# ----------------------- IGNORE BELOW -- FOR LATER LOOKUP ONLY
+#
+#  pushi iargs 2
+#  pushi oargs (1 or 0)A
+#  native_call
+#
+#  - always @(timer) begin
+#     cval = gpioGet(pin);
+#     if (cval != pval)
+#        cont_01(pval, cval);
+#     else
+#        pval = cval
+#
+#  - function cont_01(pval, cval);
+#      remote_call(dev0, turn_on);
+#      @ack
+#      pval = cval;
