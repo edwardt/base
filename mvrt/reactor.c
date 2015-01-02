@@ -162,7 +162,6 @@ void _reactor_parse_file(const char *file)
       case _STATE_EXPECT_ARG:
         switch (oper_tag) {
         case MVRT_OP_PUSHS:
-        case MVRT_OP_GETF:
           {
             char *name = strdup(token+1);
             name[strlen(name)-1] = '\0';
@@ -226,7 +225,6 @@ int _reactor_parse_nargs(int opertag)
   case MVRT_OP_PUSHS:
   case MVRT_OP_PUSHI:
   case MVRT_OP_BEQ:
-  case MVRT_OP_GETF:
     return 1;
   default:
     break;

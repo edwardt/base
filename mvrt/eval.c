@@ -255,14 +255,14 @@ int _eval_stackop(mvrt_instr_t *instr, mvrt_context_t *ctx)
   case MVRT_OP_GETF:
     val0 = mvrt_stack_pop(stack);
     val1 = mvrt_stack_pop(stack);
-    val2 = mvrt_value_map_lookup(val0, val1);
+    val2 = mvrt_value_map_lookup(val1, val0);
     mvrt_stack_push(stack, val2);
     break;
   case MVRT_OP_SETF:
     val0 = mvrt_stack_pop(stack);
     val1 = mvrt_stack_pop(stack);
     val2 = mvrt_stack_pop(stack);
-    val3 = mvrt_value_map_add(val0, val1, val2);
+    val3 = mvrt_value_map_add(val2, val0, val1);
     mvrt_stack_push(stack, val3);
     break;
   default:
@@ -324,9 +324,9 @@ mvrt_func_t _eval_get_func(const char *func_s)
   if (((charp = strstr(func_s, ":")) == NULL) || charp == func_s) {
     /* "foo" or ":foo" - local function */
     if (charp == func_s)
-      func = mvrt_func_lookup(mv_device_self(), func_s);
-    else
       func = mvrt_func_lookup(mv_device_self(), func_s+1);
+    else
+      func = mvrt_func_lookup(mv_device_self(), func_s);
   }
   else {
     /* "dev:foo" - remote function */
@@ -353,11 +353,12 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
      Call a remote function with/without waiting for the return value. Stack
      top should contain function value, number of arguments, and arguments.
    */
-  mvrt_value_t func_v = mvrt_stack_pop(stack);
+  mvrt_value_t fnam_v = mvrt_stack_pop(stack);
   mvrt_value_t farg_v = mvrt_stack_pop(stack);
 
-  char *func_s = (char *) mvrt_value_string_get(func_v);
+  char *func_s = (char *) mvrt_value_string_get(fnam_v);
   mvrt_func_t func = _eval_get_func(func_s);
+  mvrt_value_t func_v = mvrt_value_func(func);
   if (mvrt_func_tag(func) == MVRT_FUNC_NATIVE)
     return _eval_call_native(func_v, farg_v, ctx);
 
@@ -370,19 +371,6 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
   int rid = 0;
 
   switch (mvrt_func_tag(func)) {
-    native = mvrt_func_native(func);
-    if (!native->func1) {
-      void *handle = dlopen(native->lib, RTLD_NOW);
-      if (!handle) {
-        fprintf(stderr, "%s\n", dlerror());
-        exit(EXIT_FAILURE);
-      }
-      char *name = native->name;
-      native->func1 = (mvrt_native_func1_t) dlsym(handle, name);
-      native->func2 = (mvrt_native_func2_t) dlsym(handle, name);
-    }
-
-    break;
   case MVRT_FUNC_LOCAL:
     assert(0 && "Not implemented yet.");
     break;
@@ -526,7 +514,7 @@ int mvrt_eval_reactor(mvrt_reactor_t *reactor, mvrt_value_t event)
   fprintf(stdout, "EVAL: "); 
   mvrt_value_print(event);
 
-  mvrt_event_t evtype = mvrt_value_event_data(event);
+  mvrt_event_t evtype = mvrt_value_event_type(event);
   mvrt_value_t evdata = mvrt_value_event_data(event);
 
   /* Create a new context

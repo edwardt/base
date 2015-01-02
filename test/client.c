@@ -16,7 +16,7 @@ int main()
     perror("zmq_socket@main");
     exit(1);
   }
-  if (zmq_connect(sock_req, "tcp://localhost:5555") == -1) {
+  if (zmq_connect(sock_req, "tcp://localhost:5557") == -1) {
     perror("zmq_connect@main");
     exit(1);
   }
@@ -58,8 +58,17 @@ int main()
               "FUNC_CALL");
     }
     else {
-      sprintf(sstr, "DEVADD dev0 127.0.0.1"); 
-      counter++;
+      sprintf(sstr, 
+              "{"
+              " \"id\":%Ld, "
+              " \"src\":\"%s\", "
+              " \"tag\":\"%s\", "
+              " \"arg\":"
+              "{ \"name\": \"gpioPut\", \"funarg\" : [10 1] } }",
+              counter++, addr, 
+              "FUNC_CALL");
+      // sprintf(sstr, "DEVADD dev0 127.0.0.1"); 
+      // counter++;
       /* sprintf(sstr, "DEVADD dev0 127.0.0.1")
               "{"
               " \"id\":%Ld, "

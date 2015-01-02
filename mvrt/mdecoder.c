@@ -149,17 +149,19 @@ mvrt_value_t _mdecoder_decode(mvrt_message_t *mvmsg)
     }
     break;
   case MVRT_MESSAGE_PROP_SET:
-    {
-    }
+    arg_v = mvmsg->arg;
+    event = mvrt_system_event_get(MVRT_SYSEV_PROP_SET);
+    event_v = mvrt_value_event(event, arg_v);
     break;
   case MVRT_MESSAGE_PROP_GET:
-    {
-    }
+    arg_v = mvmsg->arg;
+    event = mvrt_system_event_get(MVRT_SYSEV_PROP_GET);
+    event_v = mvrt_value_event(event, arg_v);
     break;
   case MVRT_MESSAGE_FUNC_CALL:
     arg_v = mvmsg->arg;
     event = mvrt_system_event_get(MVRT_SYSEV_FUNC_CALL);
-    event_v = mvrt_value_event(event, pair_v);
+    event_v = mvrt_value_event(event, arg_v);
     return event_v;
   case MVRT_MESSAGE_INVALID:
   default:

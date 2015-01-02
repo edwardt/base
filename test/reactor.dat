@@ -4,22 +4,28 @@
 
 reactor _R_func_call {
   getarg              # put event arg to stack top
-  getf "funarg"       # get "funarg" value of "arg map"
+  pushs "funarg"      # get "funarg" value of "arg map"
+  getf
   getarg              # put event arg again to stack top
-  getf "name"         # get "name" value of "arg map"
+  pushs "name"        # get "name" value of "arg map"
+  getf
   call_func           # call the function
 }
 
 reactor _R_func_call_ret {
   getarg
-  getf "funarg"
+  pushs "funarg"
+  getf
   getarg
-  getf "name"
+  pushs "name"
+  getf
   call_func
   getarg
-  getf "retid"
+  pushs "retid"
+  getf
   getarg
-  getf "retaddr"
+  pushs "retaddr"
+  getf
   call_return              # initiate return sequence #1
 }
 
@@ -50,7 +56,7 @@ reactor _R_func_call_ret {
 reactor r1 {
   pushi 10                # 0: pin value for button
   pushs ":gpioGet"        # 1:
-  call_native             # 2:  :gpioGet(pin)
+  call_func               # 2:  :gpioGet(pin)
   pushs "cval"            # 3:
   prop_set                # 4:  cval = retval
   pushs "cval"            # 5:
@@ -64,7 +70,7 @@ reactor r1 {
   pushi 10                # 13: pin value for remote LED
   cons                    # 14: [10 ledval] -- fargs to gpioPut
   pushs "polya:gpioPut"   # 15:
-  call_remote             # 16: polya:gpioPut(10, ledval)
+  call_func               # 16: polya:gpioPut(10, ledval)
   pushs "cval"            # 17:
   prop_get                # 18: get cval
   pushs "pval"            # 19: 

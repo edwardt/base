@@ -273,7 +273,6 @@ static const char *_tag_strs[] = {
 
   "PROP_GET",
   "PROP_SET",
-  "PROP_RET",
   
   /* funtions */
   "FUNC_ADD",
@@ -281,7 +280,7 @@ static const char *_tag_strs[] = {
   "FUNC_CHK",
 
   "FUNC_CALL",
-  "FUNC_CALL_NORET",
+  "FUNC_CALL_RET",
 
   /* reactors */
   "REACT_ADD",
