@@ -51,9 +51,8 @@ extern mvrt_eventag_t mvrt_event_tag(mvrt_event_t ev);
  */
 extern int mvrt_timer_module_init();
 
-/* Creates a timer event with the given interval in miliseconds. Note that
-   timer event has a single instance. */
-extern mvrt_event_t mvrt_timer_new(const char *name, size_t msec);
+/* Creates a timer event with the interval in seconds and nanoseconds. */
+extern mvrt_event_t mvrt_timer_new(const char *name, size_t s, size_t ns);
 
 /* Starts and stops the timer event. */
 extern int mvrt_timer_start(mvrt_event_t ev);

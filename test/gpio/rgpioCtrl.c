@@ -3,7 +3,7 @@
 
 void gpioPut(int pout, int value)
 {
-  printf("gpioPut(%d, %d)", pout, value);
+  printf("gpioPut(%d, %d)\n", pout, value);
   GPIOExport(pout); 
   GPIODirection(pout, OUT);
   GPIOWrite(pout, value);
@@ -12,7 +12,7 @@ void gpioPut(int pout, int value)
 
 int gpioGet(int pin)
 {
-  printf("gpioGet(%d)", pin);
+  printf("gpioGet(%d)\n", pin);
   GPIOExport(pin);
   GPIODirection(pin, IN);
   int tmp = GPIORead(pin);

@@ -137,14 +137,17 @@ int main(int argc, char *argv[])
 
   /* user events */
   mvrt_timer_module_init();
-  mvrt_event_t timer0 = mvrt_timer_new("timer0", 10);  /* 10ms */
-  mvrt_event_t timer1 = mvrt_timer_new("timer1", 1000);  /* 1s */
+  mvrt_event_t timer1 = mvrt_timer_new("timer1", 1, 0);  /* 1s 0ns*/
+  mvrt_event_t timer2 = mvrt_timer_new("timer2", 2, 0);  /* 2s 0ns */
+  mvrt_event_t timer3 = mvrt_timer_new("timer3", 3, 0);  /* 3s 0ns */
 
   /* add reactors to events */
   mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
   mvrt_reactor_t *r2 = mvrt_reactor_lookup("r2");
-  if (r1) mvrt_add_reactor_to_event(timer0, r1);
-  if (r2) mvrt_add_reactor_to_event(timer1, r2);
+  mvrt_reactor_t *r3 = mvrt_reactor_lookup("r3");
+  if (r1) mvrt_add_reactor_to_event(timer1, r1);
+  if (r2) mvrt_add_reactor_to_event(timer2, r2);
+  if (r3) mvrt_add_reactor_to_event(timer3, r3);
 
   /*
    * main thread perform infinite loop - Is there a better way?

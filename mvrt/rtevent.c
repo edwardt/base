@@ -15,7 +15,8 @@
 #define MAX_RTIMER_TABLE 16
 typedef struct _rtimer {
   timer_t timerid;          /* timer */
-  size_t msec;              /* interval in msec */
+  size_t sec;               /* interval sec */
+  size_t nsec;              /* interval nsec */
   mvrt_event_t rtev;        /* back pointer to _rtevent_t */
   unsigned stopped : 1;     /* timer is stopped */
   unsigned pad     : 31;    /* pad */
@@ -47,7 +48,7 @@ static _rtevent_t *_rtevent_get_free();
 static int _rtevent_delete(_rtevent_t *rtev);
 static _rtevent_t *_rtevent_lookup(const char *dev, const char *name);
 
-static _rtimer_t *_rtimer_create(const char *name, int interval);
+static _rtimer_t *_rtimer_create(const char *name, size_t sec, size_t nsec);
 static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc);
 
 int _rtevent_table_init()
@@ -106,7 +107,7 @@ _rtevent_t *_rtevent_lookup(const char *dev, const char *name)
 }
 
 static size_t _rtimerid = 0;
-_rtimer_t *_rtimer_create(const char *name, int interval)
+_rtimer_t *_rtimer_create(const char *name, size_t sec, size_t nsec)
 {
   struct sigevent sev;
   struct itimerspec its;
@@ -123,10 +124,10 @@ _rtimer_t *_rtimer_create(const char *name, int interval)
 
   timer_create(CLOCK_REALTIME, &sev, &rtimer->timerid);
 
-  its.it_interval.tv_sec = 0;
-  its.it_interval.tv_nsec = interval * 1000000;
-  its.it_value.tv_sec = 0;
-  its.it_value.tv_nsec = interval * 1000000;
+  its.it_interval.tv_sec = sec;
+  its.it_interval.tv_nsec = nsec;
+  its.it_value.tv_sec = sec;
+  its.it_value.tv_nsec = nsec;
 
   timer_settime(rtimer->timerid, 0, &its, NULL);
 
@@ -152,6 +153,8 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
       mvrt_event_t rtev = rtimer->rtev;
       if (rtimer->stopped)
         continue;
+
+      printf("TIMER for %d.\n", i);
 
       mv_value_t evdata = mv_value_null();
       mvrt_eventinst_t *ev = mvrt_eventinst_new(rtev, evdata);
@@ -261,13 +264,14 @@ int mvrt_timer_module_init()
   return 0;
 }
 
-mvrt_event_t mvrt_timer_new(const char *name, size_t msec)
+mvrt_event_t mvrt_timer_new(const char *name, size_t sec, size_t nsec)
 {
-  fprintf(stdout, "Create timer: %s (%d ms)\n", name, msec);
+  fprintf(stdout, "Create timer: %s (%d sec %d nsec)\n", name, sec, nsec);
   const char *dev = mv_device_self();
   _rtevent_t *rtev = (_rtevent_t *) mvrt_event_new(dev, name, MVRT_EVENT_TIMER);
-  rtev->u.timer = _rtimer_create(name, msec);
-  rtev->u.timer->msec = msec;
+  rtev->u.timer = _rtimer_create(name, sec, nsec);
+  rtev->u.timer->sec = sec;
+  rtev->u.timer->nsec = nsec;
   rtev->u.timer->rtev = (mvrt_event_t) rtev;
   rtev->u.timer->stopped = 0;
 

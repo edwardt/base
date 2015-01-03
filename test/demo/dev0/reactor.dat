@@ -97,6 +97,11 @@ reactor r2 {
   pushs "erdos:gpioPut"
   call_func              # call polya:gpioPut(10 1)
 }
+reactor r3 {
+  pushi 10                
+  pushs "erdos:foo"
+  call_func              # call polya:gpioPut(10 1)
+}
 # ----------------------- IGNORE BELOW -- FOR LATER LOOKUP ONLY
 #
 #  pushi iargs 2

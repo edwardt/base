@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int foo()
+int foo(int arg)
 {
-  fprintf(stdout, "hello, world\n");
+  fprintf(stdout, "hello, world (ARG = %d)\n", arg);
 }

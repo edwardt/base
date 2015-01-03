@@ -45,7 +45,9 @@ int _eval(mvrt_code_t *code, mvrt_context_t* ctx)
   while (instr && ctx->iptr < code->size) {
     const char *opstr = mvrt_opcode_str(instr->opcode);
 
+    /*
       fprintf(stdout, "\tEVAL[%d]: %s\n", ctx->iptr, opstr);
+    */
 
     next_ip = _eval_instr(instr, ctx);
     if (next_ip == _EVAL_FAILURE) {
@@ -214,9 +216,6 @@ int _eval_cons(mvrt_instr_t *instr, mvrt_context_t *ctx)
     val1 = mvrt_stack_pop(stack);
     mv_value_cons_setcar(cons, val0);
     mv_value_cons_setcdr(cons, val1);
-    printf("VAL0: "); mv_value_print(val0);
-    printf("VAL1: "); mv_value_print(val1);
-    printf("CONS: "); mv_value_print(cons);
     mvrt_stack_push(stack, cons);
     break;
   case MVRT_OP_CONS_CAR:
@@ -296,8 +295,6 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
 
   mv_value_t value_v = mvrt_prop_getvalue(mvprop);
   mvrt_stack_push(stack, value_v);
-
-  printf("PGET(%s): ", prop); mv_value_print(value_v);
 
   return ip + 1;
 }
