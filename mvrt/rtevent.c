@@ -143,8 +143,6 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
   struct timespec ts; /* 1ms */
   ts.tv_sec = 0;
   ts.tv_nsec = 1000; 
-
-  fprintf(stdout, "rtimer_handler\n");
   
   mvrt_evqueue_t *evq = mvrt_evqueue_getcurrent();
   tid = sinfo->si_value.sival_ptr;
@@ -245,7 +243,6 @@ int mvrt_timer_module_init()
   sigemptyset(&sigmask);
   sigaddset(&sigmask, SIGRTMIN);
   if (pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL) != 0) {
-    //if (sigprocmask(SIG_UNBLOCK, &sigmask, NULL) != 0) {
     perror("sigprocmask@mvrt_timer_module_init");
     return -1;
   }

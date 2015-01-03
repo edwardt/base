@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 
   /* user events */
   mvrt_timer_module_init();
-  mvrt_event_t timer0 = mvrt_timer_new("timer0", 1);
+  mvrt_event_t timer0 = mvrt_timer_new("timer0", 10);
 
   /* add reactors to events */
   mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
