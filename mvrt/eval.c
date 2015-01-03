@@ -27,6 +27,7 @@ static int _eval_call_native(mv_value_t f, mv_value_t a, mvrt_context_t *c);
 static int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static mvrt_func_t _eval_get_func(const char *func_s);
+static mvrt_prop_t _eval_get_prop(const char *prop_s);
 
 extern mv_mqueue_t *mq;
 extern char *dest;
@@ -55,7 +56,6 @@ int _eval(mvrt_code_t *code, mvrt_context_t* ctx)
       break;
     }
     else if (next_ip == _EVAL_SUSPEND) {
-      mvrt_continue_t *cont = mvrt_continuation_new(code, ctx);
       break;
     }
     else if (next_ip == _EVAL_RETURN) {
@@ -289,14 +289,36 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
   int ip = ctx->iptr;
 
   mv_value_t prop_v = mvrt_stack_pop(stack);
-  char *prop = mv_value_string_get(prop_v);
-  mvrt_prop_t mvprop = mvrt_prop_lookup(mv_device_self(), prop);
+  char *prop_s = mv_value_string_get(prop_v);
+
+  mvrt_prop_t mvprop = _eval_get_prop(prop_s);
   assert(mvprop && "No such property exists.");
 
-  mv_value_t value_v = mvrt_prop_getvalue(mvprop);
-  mvrt_stack_push(stack, value_v);
+  if (mvrt_prop_tag(mvprop) != MVRT_PROP_GLOBAL) {
+    mv_value_t value_v = mvrt_prop_getvalue(mvprop);
+    mvrt_stack_push(stack, value_v);
 
-  return ip + 1;
+    return ip + 1;
+  }
+
+  static char msg[4096];
+
+  const char *dev = mvrt_prop_dev(mvprop);
+  const char *name = mvrt_prop_name(mvprop);
+  const char *destaddr = mv_device_addr(dev);
+
+  int retid = mvrt_continuation_new(ctx);
+  sprintf(msg, 
+          "%s {"
+          " \"tag\":\"PROP_GET\", "
+          " \"src\":\"%s\", "
+          " \"arg\":"
+          "{ \"name\": \"%s\" \"retid\" : %d, \"retaddr\": \"%s\" } }",
+          destaddr, mv_mqueue_addr(mq), name, retid, mv_mqueue_addr(mq));
+  fprintf(stdout, "MQSEND: %s\n", msg);
+  mv_mqueue_put(mq, msg);
+
+  return _EVAL_SUSPEND;
 }
 
 int _eval_prop_set(mvrt_instr_t *instr, mvrt_context_t *ctx)
@@ -352,6 +374,32 @@ mvrt_func_t _eval_get_func(const char *func_s)
   return func;
 }
 
+mvrt_prop_t _eval_get_prop(const char *prop_s)
+{
+  mvrt_prop_t prop;
+  char *charp;
+
+  if (((charp = strstr(prop_s, ":")) == NULL) || charp == prop_s) {
+    /* "foo" or ":foo" - local prop */
+    if (charp == prop_s)
+      prop = mvrt_prop_lookup(mv_device_self(), prop_s+1);
+    else
+      prop = mvrt_prop_lookup(mv_device_self(), prop_s);
+  }
+  else {
+    /* "dev:foo" - remote proption */
+    char *name = strdup(charp + 1);
+    char save = *charp;
+    *charp = '\0';
+    prop = mvrt_prop_lookup(prop_s, name);
+    if (prop == 0)
+      prop = mvrt_prop_new(prop_s, name, MVRT_PROP_GLOBAL);
+    *charp = save;
+  }
+
+  return prop;
+}
+
 int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
 {
   mvrt_stack_t *stack = ctx->stack;
@@ -377,7 +425,7 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_native_t *native = NULL;
 
   static char msg[4096];
-  int rid = 0;
+  int retid;
 
   switch (mvrt_func_tag(func)) {
   case MVRT_FUNC_LOCAL:
@@ -397,6 +445,7 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
       mv_mqueue_put(mq, msg);
       break;
     case MVRT_OP_CALL_FUNC_RET:
+      retid = mvrt_continuation_new(ctx);
       sprintf(msg, 
               "%s {"
               " \"tag\":\"FUNC_CALL_RET\", "
@@ -405,7 +454,7 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
               "{ \"name\": \"%s\", \"funarg\" : %s, \"retid\" : %d, "
               "  \"retaddr\": \"%s\" } }",
               destaddr, mv_mqueue_addr(mq), name, mv_value_to_str(farg_v), 
-              rid, mv_mqueue_addr(mq));
+              retid, mv_mqueue_addr(mq));
       fprintf(stdout, "MQSEND: %s\n", msg);
       mv_mqueue_put(mq, msg);
       return _EVAL_SUSPEND;
@@ -492,7 +541,7 @@ int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx)
   static char msg[4096];
   sprintf(msg, 
           "%s {"
-          " \"tag\":\"FUNC_RET\", "
+          " \"tag\":\"REPLY\", "
           " \"src\":\"%s\", "
           " \"arg\":"
           "{ \"retid\": \"%d\", \"retval\" : %s } }",
@@ -512,7 +561,7 @@ int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx)
 
   mvrt_continue_t *cont = mvrt_continuation_get(retid);
   mvrt_context_t *cont_ctx = cont->ctx;
-  return _eval(cont->code, cont_ctx);
+  return _eval(cont_ctx->code, cont_ctx);
 }
 
 
@@ -529,13 +578,13 @@ int mvrt_eval_reactor(mvrt_reactor_t *reactor, mvrt_eventinst_t *evinst)
      . iptr = 0
      . stack is newly created with the evdata as its only element
   */
-  mvrt_context_t *ctx = mvrt_context_new();
+  mvrt_context_t *ctx = mvrt_context_new(reactor->code);
   ctx->iptr = 0;
   ctx->stack = mvrt_stack_new();
   ctx->arg = evdata;
   mvrt_stack_push(ctx->stack, evdata);
   
-  int retval = _eval(reactor->code, ctx);
+  int retval = _eval(ctx->code, ctx);
   
   if (retval != _EVAL_SUSPEND)
     mvrt_context_delete(ctx);

@@ -34,6 +34,10 @@ extern int mvrt_prop_delete(mvrt_prop_t prop);
 
 extern mvrt_prop_t mvrt_prop_lookup(const char *dev, const char *name);
 
+extern const char *mvrt_prop_dev(mvrt_prop_t prop);
+extern const char *mvrt_prop_name(mvrt_prop_t prop);
+extern mvrt_proptag_t mvrt_prop_tag(mvrt_prop_t prop);
+
 extern mv_value_t mvrt_prop_getvalue(mvrt_prop_t prop);
 extern int mvrt_prop_setvalue(mvrt_prop_t prop, mv_value_t value);
 

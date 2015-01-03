@@ -63,8 +63,6 @@ struct {
 
   /* load/save values */
   { "getarg",   0 },
-  { "getp",     1 },
-  { "setp",     1 },
 
   { "getf",     1 },
   { "setf",     1 },

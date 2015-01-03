@@ -228,7 +228,6 @@ int mvrt_func_savefile(const char *file, mvrt_functag_t tag)
   return _rtfunc_savefile(file, tag);
 }
 
-
 const char *mvrt_func_dev(mvrt_func_t func)
 {
   _rtfunc_t *rtfunc = (_rtfunc_t *) func;

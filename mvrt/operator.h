@@ -65,8 +65,6 @@ typedef enum {
 
   /* load/save values from [constant|stack|prop] to [stack|prop] */
   MVRT_OP_GETARG,           /* put the reactor/function arg to stack top */
-  MVRT_OP_GETP,             /* get local property */
-  MVRT_OP_SETP,             /* set local property */
  
   MVRT_OP_GETF,             /* get field of a record value */
   MVRT_OP_SETF,             /* set field of a record value */

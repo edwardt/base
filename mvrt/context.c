@@ -46,9 +46,10 @@ int mvrt_stack_push(mvrt_stack_t *stack, mv_value_t value)
   return stack->sptr;
 }
 
-mvrt_context_t *mvrt_context_new()
+mvrt_context_t *mvrt_context_new(mvrt_code_t *code)
 {
   mvrt_context_t *ctx = malloc(sizeof(mvrt_context_t));
+  ctx->code = code;
   ctx->iptr = 0;
   ctx->stack = NULL;
 
@@ -68,7 +69,7 @@ int mvrt_context_delete(mvrt_context_t *ctx)
 #define MAX_CONT_TABLE 1024
 static mvrt_continue_t _cont_table[MAX_CONT_TABLE];
 static int _contid = 0;
-mvrt_continue_t *mvrt_continuation_new(mvrt_code_t *code, mvrt_context_t *ctx)
+int mvrt_continuation_new(mvrt_context_t *ctx)
 {
   if (_contid == MAX_CONT_TABLE) {
     fprintf(stdout, "MAX contination table reached. Reimplement!\n");
@@ -76,11 +77,10 @@ mvrt_continue_t *mvrt_continuation_new(mvrt_code_t *code, mvrt_context_t *ctx)
   }
 
   mvrt_continue_t *cont = _cont_table + _contid;
-  cont->code = code;
   cont->id = _contid++;
   cont->ctx = ctx;;
 
-  return cont;
+  return cont->id;
 }
 
 int mvrt_continuation_delete(mvrt_continue_t *cont)

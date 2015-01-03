@@ -240,6 +240,24 @@ int mvrt_prop_setvalue(mvrt_prop_t prop, mv_value_t value)
   return 0;
 }
 
+const char *mvrt_prop_dev(mvrt_prop_t prop)
+{
+  _rtprop_t *rtprop = (_rtprop_t *) prop;
+  return rtprop->dev;
+}
+
+const char *mvrt_prop_name(mvrt_prop_t prop)
+{
+  _rtprop_t *rtprop = (_rtprop_t *) prop;
+  return rtprop->name;
+}
+
+mvrt_proptag_t mvrt_prop_tag(mvrt_prop_t prop)
+{
+  _rtprop_t *rtprop = (_rtprop_t *) prop;
+  return rtprop->tag;
+}
+
 mv_value_t mvrt_prop_getvalue(mvrt_prop_t prop)
 {
   _rtprop_t *rtprop = (_rtprop_t *) prop;

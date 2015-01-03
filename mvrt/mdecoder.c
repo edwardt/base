@@ -168,6 +168,11 @@ mvrt_eventinst_t *_mdecoder_decode(mv_message_t *mvmsg)
     event = mvrt_event_lookup(mv_device_self(), "_E_func_call");
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
+  case MV_MESSAGE_REPLY:
+    arg_v = mvmsg->arg;
+    event = mvrt_event_lookup(mv_device_self(), "_E_reply");
+    evinst = mvrt_eventinst_new(event, arg_v);
+    return evinst;
   default:
     break;
   }

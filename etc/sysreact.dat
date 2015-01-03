@@ -27,6 +27,24 @@ reactor _R_func_call_ret {
   call_return         # initiate return sequence #1
 }
 
+reactor _R_prop_get {
+  getarg
+  pushs "name"
+  getf
+  prop_get
+  call_return
+}
+
+reactor _R_reply {
+  getarg
+  pushs "retval"
+  getf
+  getarg
+  pushs "retid"
+  getf
+  call_continue
+}
+
 #reactor func_ret_reactor {
 # getarg
 # getf "retval" 
