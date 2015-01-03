@@ -29,6 +29,8 @@ static int _rtfunc_table_init();
 static _rtfunc_t *_rtfunc_get_free();
 static int _rtfunc_delete(_rtfunc_t *func);
 static _rtfunc_t *_rtfunc_lookup(const char *dev, const char *name);
+static int _rtfunc_loadfile(const char *file, mvrt_functag_t tag);
+static int _rtfunc_savefile(const char *file, mvrt_functag_t tag);
 static int _rtfunc_tokenize(char *line, char **tag, char **lib, char **fun);
 
 int _rtfunc_table_init()
@@ -92,12 +94,12 @@ _rtfunc_t *_rtfunc_lookup(const char *dev, const char *name)
   return NULL;
 }
 
-int _rtfunc_tokenize(char *line, char **tag, char **lib, char **fun)
+int _rtfunc_tokenize(char *line, char **type, char **lib, char **fun)
 {
   char *token;
   if ((token = strtok(line, " \t")) == NULL)
     return -1;
-  *tag = token;
+  *type = token;
   if ((token = strtok(NULL, " \t")) == NULL)
     return -1;
   *lib = token;
@@ -107,24 +109,24 @@ int _rtfunc_tokenize(char *line, char **tag, char **lib, char **fun)
   return 0;
 }
 
-/*
- * Functions for the rtfunc API.
- */
-int mvrt_func_module_init(const char *file)
+int _rtfunc_loadfile(const char *file, mvrt_functag_t tag)
 {
-  _rtfunc_table_init();
-
-  if (!file)
-    return 0;
-
   FILE *fp;
   if ((fp = fopen(file, "r")) == NULL) {
     fprintf(stderr, "Failed to open %s\n", file);
     return -1;
   }
 
+  /* Property table contains one property per line:
+
+     prop0 [value in JSON format]
+     prop1 [value in JSON format]
+     ...
+  */
+  const char *self = mv_device_self();
+
   char line[1024];
-  char *tag;
+  char *type;
   char *lib;
   char *name;
   _rtfunc_t *rtfunc;
@@ -134,19 +136,36 @@ int mvrt_func_module_init(const char *file)
     char *charp = strstr(line, "\n");
     if (charp)
       *charp = '\0';
-    fprintf(stdout, "line: [%s]\n", line);
-    _rtfunc_tokenize(line, &tag, &lib, &name);
-    fprintf(stdout, "tag: [%s], lib: [%s], func: [%s]\n", tag, lib, name);
 
+    if (_rtfunc_tokenize(line, &type, &lib, &name) == -1) {
+      fprintf(stderr, "Line not recognized: %s\n", line);
+      continue;
+    }
     /* Currently, only native functions supported */
-    if (strcmp(tag, "native"))
+    if (strcmp(type, "native"))
       continue;
 
     rtfunc = (_rtfunc_t *) mvrt_func_new(dev, name, MVRT_FUNC_NATIVE);
     rtfunc->u.native->name = strdup(name);
     rtfunc->u.native->lib = strdup(lib);
   }
+}
 
+int _rtfunc_savefile(const char *file, mvrt_functag_t tag)
+{
+  return 0;
+}
+
+
+
+/*
+ * Functions for the rtfunc API.
+ */
+int mvrt_func_module_init(const char *file)
+{
+  _rtfunc_table_init();
+  fprintf(stdout, "Function module initialized...\n");
+  
   return 0;
 }
 
@@ -198,6 +217,17 @@ mvrt_func_t mvrt_func_lookup(const char *dev, const char *name)
 
   return (mvrt_func_t) rtfunc;
 }
+
+int mvrt_func_loadfile(const char *file, mvrt_functag_t tag)
+{
+  return _rtfunc_loadfile(file, tag);
+}
+
+int mvrt_func_savefile(const char *file, mvrt_functag_t tag)
+{
+  return _rtfunc_savefile(file, tag);
+}
+
 
 const char *mvrt_func_dev(mvrt_func_t func)
 {

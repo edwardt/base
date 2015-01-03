@@ -1,7 +1,6 @@
 noinst_LIBRARIES = libmq.a
 libmq_a_SOURCES = \
 	mqueue.c \
-	callback.c \
 	mqutil.c
 
 STRICT_CHECK_C = \

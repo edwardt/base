@@ -114,23 +114,21 @@ int mv_device_service_init(const char *dev, const char *file)
     return -1;
   }
 
-  if (file) {
-    char line[1024];
-    char *name;
-    char *addr;
-    _device_t *dev;
-    while (fgets(line, 1024, fp)) {
-      char *charp = strstr(line, "\n");
-      if (charp)
-        *charp = '\0';
-      _device_tokenize(line, &name, &addr);
-      
-      dev = _device_get_free(name);
-      if (!dev)
-        continue;
-      dev->name = strdup(name);
-      dev->addr = strdup(addr);
-    }
+  char line[1024];
+  char *name;
+  char *addr;
+  _device_t *mvdev;
+  while (fgets(line, 1024, fp)) {
+    char *charp = strstr(line, "\n");
+    if (charp)
+      *charp = '\0';
+    _device_tokenize(line, &name, &addr);
+    
+    mvdev = _device_get_free(name);
+    if (!mvdev)
+      continue;
+    mvdev->name = strdup(name);
+    mvdev->addr = strdup(addr);
   }
 
   fprintf(stdout, "Device service initiated...\n");

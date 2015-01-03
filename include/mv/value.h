@@ -29,9 +29,10 @@ int mv_value_eq(mv_value_t u, mv_value_t v);
 int mv_value_delete(mv_value_t v);
 int mv_value_print(mv_value_t v);
 
-/* Returns the string in JSON format. Caller is reponsible for freeing 
-   the returned string. */
+/* Transforms values to JSON format and vice versa. For mv_value_to_str,
+   the caller is responsible for freeing the returned string. */
 char *mv_value_to_str(mv_value_t v);
+mv_value_t mv_value_from_str(const char *s);
 
 /* null */
 extern mv_value_t mv_value_null();

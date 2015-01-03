@@ -31,7 +31,10 @@ typedef struct mv_native {
 typedef mv_ptr_t mvrt_func_t;
 
 /* Call this at time 0. */
-extern int mvrt_func_module_init(const char *file);
+extern int mvrt_func_module_init();
+
+extern int mvrt_func_loadfile(const char *file, mvrt_functag_t tag);
+extern int mvrt_func_savefile(const char *file, mvrt_functag_t tag);
 
 extern mvrt_func_t mvrt_func_new(const char *dev, const char *name, int tag);
 extern int mvrt_func_delete(mvrt_func_t func);

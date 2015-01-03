@@ -16,14 +16,18 @@
 typedef mv_ptr_t mvrt_prop_t;
 
 typedef enum {
-  MVRT_PROP_SYSTEM,
-  MVRT_PROP_LOCAL,
-  MVRT_PROP_GLOBAL,
+  MVRT_PROP_SYSTEM  = 0x1,
+  MVRT_PROP_LOCAL   = 0x2,
+  MVRT_PROP_GLOBAL  = 0x4,
   MVRT_PROP_NTAGS
 } mvrt_proptag_t;
 
 /* Initializes the property module. Be sure to call at time 0. */
-extern int mvrt_prop_module_init(const char *file);
+extern int mvrt_prop_module_init();
+
+/* Load or save properties using the given file. */
+extern int mvrt_prop_loadfile(const char *file, mvrt_proptag_t tag);
+extern int mvrt_prop_savefile(const char *file, mvrt_proptag_t tag);
 
 extern mvrt_prop_t mvrt_prop_new(const char *dev, const char *name, int tag);
 extern int mvrt_prop_delete(mvrt_prop_t prop);

@@ -25,7 +25,10 @@ typedef struct mvrt_reactor_list {
 
 
 /* Initializes the event module. Be sure to call this at time 0. */
-extern int mvrt_reactor_module_init(const char *file);
+extern int mvrt_reactor_module_init();
+
+extern int mvrt_reactor_loadfile(const char *file);
+extern int mvrt_reactor_assoc_loadfile(const char *file);
 
 extern mvrt_reactor_t *mvrt_reactor(const char *name);
 extern int mvrt_reactor_delete(mvrt_reactor_t *react);

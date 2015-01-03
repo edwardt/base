@@ -33,6 +33,10 @@ typedef struct mvrt_eventinst {
  */ 
 extern int mvrt_event_module_init();
 
+/* Load or save events and/or timers using the given file. */
+extern int mvrt_event_loadfile(const char *file, mvrt_eventag_t tag);
+extern int mvrt_event_savefile(const char *file, mvrt_eventag_t tag);
+
 /* Creates/deletes a new event type in a device. The mvrt_event_t object
    will represent the given event type. */
 extern mvrt_event_t mvrt_event_new(const char *dev, const char *ev, int tag);

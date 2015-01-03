@@ -47,8 +47,7 @@ AR = ar
 ARFLAGS = cru
 libmq_a_AR = $(AR) $(ARFLAGS)
 libmq_a_LIBADD =
-am_libmq_a_OBJECTS = libmq_a-mqueue.$(OBJEXT) \
-	libmq_a-callback.$(OBJEXT) libmq_a-mqutil.$(OBJEXT)
+am_libmq_a_OBJECTS = libmq_a-mqueue.$(OBJEXT) libmq_a-mqutil.$(OBJEXT)
 libmq_a_OBJECTS = $(am_libmq_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -159,7 +158,6 @@ top_srcdir = ..
 noinst_LIBRARIES = libmq.a
 libmq_a_SOURCES = \
 	mqueue.c \
-	callback.c \
 	mqutil.c
 
 STRICT_CHECK_C = \
@@ -225,7 +223,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/libmq_a-callback.Po
 include ./$(DEPDIR)/libmq_a-mqueue.Po
 include ./$(DEPDIR)/libmq_a-mqutil.Po
 
@@ -256,20 +253,6 @@ libmq_a-mqueue.obj: mqueue.c
 #	source='mqueue.c' object='libmq_a-mqueue.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmq_a_CPPFLAGS) $(CPPFLAGS) $(libmq_a_CFLAGS) $(CFLAGS) -c -o libmq_a-mqueue.obj `if test -f 'mqueue.c'; then $(CYGPATH_W) 'mqueue.c'; else $(CYGPATH_W) '$(srcdir)/mqueue.c'; fi`
-
-libmq_a-callback.o: callback.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmq_a_CPPFLAGS) $(CPPFLAGS) $(libmq_a_CFLAGS) $(CFLAGS) -MT libmq_a-callback.o -MD -MP -MF $(DEPDIR)/libmq_a-callback.Tpo -c -o libmq_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c
-	$(am__mv) $(DEPDIR)/libmq_a-callback.Tpo $(DEPDIR)/libmq_a-callback.Po
-#	source='callback.c' object='libmq_a-callback.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmq_a_CPPFLAGS) $(CPPFLAGS) $(libmq_a_CFLAGS) $(CFLAGS) -c -o libmq_a-callback.o `test -f 'callback.c' || echo '$(srcdir)/'`callback.c
-
-libmq_a-callback.obj: callback.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmq_a_CPPFLAGS) $(CPPFLAGS) $(libmq_a_CFLAGS) $(CFLAGS) -MT libmq_a-callback.obj -MD -MP -MF $(DEPDIR)/libmq_a-callback.Tpo -c -o libmq_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`
-	$(am__mv) $(DEPDIR)/libmq_a-callback.Tpo $(DEPDIR)/libmq_a-callback.Po
-#	source='callback.c' object='libmq_a-callback.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmq_a_CPPFLAGS) $(CPPFLAGS) $(libmq_a_CFLAGS) $(CFLAGS) -c -o libmq_a-callback.obj `if test -f 'callback.c'; then $(CYGPATH_W) 'callback.c'; else $(CYGPATH_W) '$(srcdir)/callback.c'; fi`
 
 libmq_a-mqutil.o: mqutil.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmq_a_CPPFLAGS) $(CPPFLAGS) $(libmq_a_CFLAGS) $(CFLAGS) -MT libmq_a-mqutil.o -MD -MP -MF $(DEPDIR)/libmq_a-mqutil.Tpo -c -o libmq_a-mqutil.o `test -f 'mqutil.c' || echo '$(srcdir)/'`mqutil.c

@@ -61,23 +61,19 @@ int main(int argc, char *argv[])
   char *self = strdup(argv[1]);
 
   /* initialize device service */
-  mv_device_service_init(self, "device.dat");
+  mv_device_service_init(self, "etc/device.dat");
   
-  /* initialize local event module */
+  /* initialize service modules */
+  mvrt_prop_module_init();
+  mvrt_func_module_init();
   mvrt_event_module_init();
-  mvrt_system_event_init();
+  mvrt_reactor_module_init();
 
-  /* initialize local function module */
-  mvrt_func_module_init((char *) "native.dat");
-  mvrt_system_func_init();
-
-  /* initialize local prop module */
-  mvrt_prop_module_init((char *) 0);
-  mvrt_system_prop_init();
-
-  /* initialize reactor module */
-  mvrt_reactor_module_init((char *) "reactor.dat");
-  mvrt_system_reactor_init();
+  /* load system properties, reactors, etc. */
+  mvrt_prop_loadfile((char *) "etc/sysprop.dat", MVRT_PROP_SYSTEM);
+  mvrt_event_loadfile((char *) "etc/sysevent.dat", MVRT_EVENT_SYSTEM);
+  mvrt_reactor_loadfile((char *) "etc/sysreact.dat");
+  mvrt_reactor_assoc_loadfile((char *) "etc/sysassoc.dat");
 
   /* 
    * initialize message queue handler 
@@ -117,40 +113,19 @@ int main(int argc, char *argv[])
   mvrt_sched_t *sched = mvrt_sched(evq);
   mvrt_sched_run(sched);
 
-  /* 
-   * Hardcode user-defined events, props, etc.
-   *
-   * NOTE: timer initialization must happen after mv_mqueue_new, 
-   * mvrt_sched_run, mvrt_decoder_run is finished. This is to ensure 
-   * SIGRTMIN is blocked in those threads but is respected in timer.
-   */
-  /* user props */
-  mvrt_prop_t prev = mvrt_prop_new(self, "pval", MVRT_PROP_LOCAL);
-  mvrt_prop_t curr = mvrt_prop_new(self, "cval", MVRT_PROP_LOCAL);
-  mvrt_prop_t led = mvrt_prop_new(self, "ledval", MVRT_PROP_LOCAL);
-  mv_value_t prev_init = mv_value_int(0);
-  mv_value_t curr_init = mv_value_int(0);
-  mv_value_t led_init = mv_value_int(0);
-  mvrt_prop_setvalue(prev, prev_init);
-  mvrt_prop_setvalue(curr, curr_init);
-  mvrt_prop_setvalue(led, led_init);
-
-  /* user events */
+  /* Load user property, reactors, etc. 
+     
+     NOTE: timer initialization must happen after mv_mqueue_new, 
+     mvrt_sched_run, mvrt_decoder_run is finished. This is to ensure 
+     SIGRTMIN is blocked in those threads but is respected in timer.
+  */
   mvrt_timer_module_init();
-  size_t ms1   = 1000000;
-  size_t ms10  = 10000000;
-  size_t ms100 = 100000000;
-  mvrt_event_t timer1 = mvrt_timer_new("timer1", 1, 0);       /* 1s 0ns*/
-  mvrt_event_t timer2 = mvrt_timer_new("timer2", 2, 0);       /* 2s 0ns */
-  mvrt_event_t timer3 = mvrt_timer_new("timer3", 3, 0);       /* 3s 0ns */
 
-  /* add reactors to events */
-  mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
-  mvrt_reactor_t *r2 = mvrt_reactor_lookup("r2");
-  mvrt_reactor_t *r3 = mvrt_reactor_lookup("r3");
-  if (r1) mvrt_add_reactor_to_event(timer1, r1);
-  if (r2) mvrt_add_reactor_to_event(timer2, r2);
-  if (r3) mvrt_add_reactor_to_event(timer3, r3);
+  mvrt_prop_loadfile((char *) "prop.dat", MVRT_PROP_LOCAL);
+  mvrt_func_loadfile((char *) "native.dat", MVRT_FUNC_NATIVE);
+  mvrt_event_loadfile((char *) "timer.dat", MVRT_PROP_LOCAL);
+  mvrt_reactor_loadfile((char *) "reactor.dat");
+  mvrt_reactor_assoc_loadfile((char *) "assoc.dat");
 
   /*
    * main thread perform infinite loop - Is there a better way?

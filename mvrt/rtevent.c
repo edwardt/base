@@ -2,7 +2,7 @@
  * @file rtevent.c
  */
 #include <stdio.h>        /* fprintf */
-#include <stdlib.h>       /* free, exit */
+#include <stdlib.h>       /* free, exit, atoi */
 #include <string.h>       /* strdup */
 #include <assert.h>       /* assert */
 #include <signal.h>       /* sigaction */
@@ -47,7 +47,9 @@ static int _rtevent_table_init();
 static _rtevent_t *_rtevent_get_free();
 static int _rtevent_delete(_rtevent_t *rtev);
 static _rtevent_t *_rtevent_lookup(const char *dev, const char *name);
-
+static int _rtevent_loadfile(const char *file, mvrt_eventag_t tag);
+static int _rtevent_savefile(const char *file, mvrt_eventag_t tag);
+static int _rtevent_tokenize(char *line, char **ty, char **n, char **s, char **t);
 static _rtimer_t *_rtimer_create(const char *name, size_t sec, size_t nsec);
 static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc);
 
@@ -105,6 +107,87 @@ _rtevent_t *_rtevent_lookup(const char *dev, const char *name)
 
   return NULL;
 }
+
+int _rtevent_loadfile(const char *file, mvrt_eventag_t tag)
+{
+  FILE *fp;
+  if ((fp = fopen(file, "r")) == NULL) {
+    fprintf(stderr, "Failed to open %s\n", file);
+    return -1;
+  }
+
+  /* Property table contains one property per line:
+
+     event ev0
+     event ev1
+     timer timer0 1 1000
+     timer timer1 0 1000000
+     ...
+  */
+
+  char line[1024];
+  char *type;
+  char *name;
+  char *sec;
+  char *nsec;
+  mvrt_event_t event;
+  const char *self = mv_device_self();
+  while (fgets(line, 1024, fp)) {
+    char *charp = strstr(line, "\n");
+    if (charp)
+      *charp = '\0';
+
+    if (line[0] == '#')
+      continue;
+
+    if (_rtevent_tokenize(line, &type, &name, &sec, &nsec) == -1) {
+      fprintf(stderr, "Line not recognized: %s\n", line);
+      continue;
+    }
+      
+    if (!strcmp(type, "event")) {
+      event = mvrt_event_new(self, name, tag);
+    }
+    else if (!strcmp(type, "timer")) {
+      event = mvrt_timer_new(name, atoi(sec), atoi(nsec));
+    }
+    else {
+      fprintf(stderr, "Invalid line: %s\n", line);
+      continue;
+    }
+  }
+
+  fprintf(stdout, "Event file loaded: %s...\n", file);
+}
+
+int _rtevent_savefile(const char *file, mvrt_eventag_t tag)
+{
+  return 0;
+}
+
+int _rtevent_tokenize(char *line, char **type, char **name, char **s, char **ns)
+{
+  char *token;
+  if ((token = strtok(line, " \t")) == NULL)
+    return -1;
+  *type = token;
+  if ((token = strtok(NULL, " \t")) == NULL)
+    return -1;
+  *name = token;
+
+  if (!strcmp(*type, "timer")) {
+    if ((token = strtok(NULL, " \t")) == NULL)
+      return -1;
+    *s = token;
+
+    if ((token = strtok(NULL, " \t")) == NULL)
+      return -1;
+    *ns = token;
+  }
+
+  return 0;
+}
+
 
 static size_t _rtimerid = 0;
 _rtimer_t *_rtimer_create(const char *name, size_t sec, size_t nsec)
@@ -204,6 +287,16 @@ mvrt_event_t mvrt_event_new(const char *dev, const char *name, int tag)
 int mvrt_event_delete(mvrt_event_t ev)
 {
   return 0;
+}
+
+int mvrt_event_loadfile(const char *file, mvrt_eventag_t tag)
+{
+  return _rtevent_loadfile(file, tag);
+}
+
+int mvrt_event_savefile(const char *file, mvrt_eventag_t tag)
+{
+  return _rtevent_savefile(file, tag);
 }
 
 mvrt_event_t mvrt_event_lookup(const char *dev, const char *name)
