@@ -69,6 +69,7 @@ struct {
   { "getf",     1 },
   { "setf",     1 },
 
+  { "pushn",    0 },
   { "push0",    0 },
   { "push1",    0 },
   { "pushi",    1 },

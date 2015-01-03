@@ -1,10 +1,5 @@
+* create LABEL's in operator
 
-* events, functions, props, etc.
-  - must be 
-
-* timer
-  - one UNIX timer which can support multiple MV timer events
-
-* error handling
-  - remote errors must be passed as messages
+* remote error handling
+  - how to pass errors between devices
 

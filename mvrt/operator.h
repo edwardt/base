@@ -71,8 +71,9 @@ typedef enum {
   MVRT_OP_GETF,             /* get field of a record value */
   MVRT_OP_SETF,             /* set field of a record value */
  
-  MVRT_OP_PUSH0,            /* push constant 0 */
-  MVRT_OP_PUSH1,            /* push constant 1 */
+  MVRT_OP_PUSHN,            /* push null value */
+  MVRT_OP_PUSH0,            /* push integer constant 0 */
+  MVRT_OP_PUSH1,            /* push integer constant 1 */
   MVRT_OP_PUSHI,            /* push integer constant */
   MVRT_OP_PUSHS,            /* push string */
 

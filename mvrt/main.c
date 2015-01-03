@@ -133,16 +133,18 @@ int main(int argc, char *argv[])
   mv_value_t led_init = mv_value_int(0);
   mvrt_prop_setvalue(prev, prev_init);
   mvrt_prop_setvalue(curr, curr_init);
-  mvrt_prop_setvalue(curr, led_init);
+  mvrt_prop_setvalue(led, led_init);
 
   /* user events */
   mvrt_timer_module_init();
-  mvrt_event_t timer0 = mvrt_timer_new("timer0", 10);
+  mvrt_event_t timer0 = mvrt_timer_new("timer0", 10);  /* 10ms */
+  mvrt_event_t timer1 = mvrt_timer_new("timer1", 1000);  /* 1s */
 
   /* add reactors to events */
   mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
-  if (r1)
-    mvrt_add_reactor_to_event(timer0, r1);
+  mvrt_reactor_t *r2 = mvrt_reactor_lookup("r2");
+  if (r1) mvrt_add_reactor_to_event(timer0, r1);
+  if (r2) mvrt_add_reactor_to_event(timer1, r2);
 
   /*
    * main thread perform infinite loop - Is there a better way?

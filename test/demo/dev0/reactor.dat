@@ -63,29 +63,39 @@ reactor r1 {
   prop_get                # 6:  get cval
   pushs "pval"            # 7:
   prop_get                # 8:  get pval
-  beq 21                  # 9:  if (cval == pval) 
-  pushs "ledval"          # 10: 
-  prop_get                # 11:
-  cons                    # 12: [ledval]
-  pushi 10                # 13: pin value for remote LED
-  cons                    # 14: [10 ledval] -- fargs to gpioPut
-  pushs "polya:gpioPut"   # 15:
-  call_func               # 16: polya:gpioPut(10, ledval)
-  pushs "cval"            # 17:
-  prop_get                # 18: get cval
-  pushs "pval"            # 19: 
-  prop_set                # 20: pval = cval
-  pushs "ledval"          # 21: 
-  prop_get                # 22: get ledval
-  pushi 1                 # 23:  
-  beq 29                  # 24: if (ledval == 1)
-  pushi 1                 # 25:
-  pushs "ledval"          # 26:
-  prop_set                # 27: ledval = 1
-  ret                     # 28: ret
-  pushi 0                 # 29:
-  pushs "ledval"          # 30:
-  prop_set                # 31: ledval = 0
+  beq 22                  # 9:  if (cval == pval) 
+  pushn                   # 10: push null
+  pushs "ledval"          # 11: 
+  prop_get                # 12:
+  cons                    # 13: [ledval] = [ledval.null]
+  pushi 10                # 14: pin value for remote LED
+  cons                    # 15: [10 ledval] -- funarg to gpioPut
+  pushs "erdos:gpioPut"   # 16: funcname
+  call_func               # 17: polya:gpioPut(10, ledval)
+  pushs "cval"            # 18:
+  prop_get                # 19: get cval
+  pushs "pval"            # 20: 
+  prop_set                # 21: pval = cval
+  pushs "ledval"          # 22: 
+  prop_get                # 23: get ledval
+  pushi 1                 # 24:  
+  beq 30                  # 25: if (ledval == 1)
+  pushi 1                 # 26:
+  pushs "ledval"          # 27:
+  prop_set                # 28: ledval = 1
+  ret                     # 29: ret
+  pushi 0                 # 30:
+  pushs "ledval"          # 31:
+  prop_set                # 32: ledval = 0
+}
+reactor r2 {
+  pushn
+  pushi 1
+  cons
+  pushi 10                
+  cons                    
+  pushs "erdos:gpioPut"
+  call_func              # call polya:gpioPut(10 1)
 }
 # ----------------------- IGNORE BELOW -- FOR LATER LOOKUP ONLY
 #

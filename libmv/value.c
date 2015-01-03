@@ -69,7 +69,7 @@ int _value_print(mv_value_t v, char *buf, int bufptr, int maxbuf)
 
   switch (mv_value_tag(v)) {
   case MV_VALUE_NULL:
-    sprintf(buf+bufptr, "NULL");
+    sprintf(buf+bufptr, "null");
     bufptr += 4;
     break;
   case MV_VALUE_INT:

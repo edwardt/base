@@ -12,7 +12,7 @@
 #include "evqueue.h"      /* mvrt_evqueue_instance */
 #include "rtevent.h"
 
-#define MAX_RTIMER_TABLE 128
+#define MAX_RTIMER_TABLE 16
 typedef struct _rtimer {
   timer_t timerid;          /* timer */
   size_t msec;              /* interval in msec */
@@ -105,17 +105,17 @@ _rtevent_t *_rtevent_lookup(const char *dev, const char *name)
   return NULL;
 }
 
-static size_t _rtimer_id = 0;
+static size_t _rtimerid = 0;
 _rtimer_t *_rtimer_create(const char *name, int interval)
 {
   struct sigevent sev;
   struct itimerspec its;
 
-  if (_rtimer_id == MAX_RTIMER_TABLE) {
+  if (_rtimerid == MAX_RTIMER_TABLE) {
     fprintf(stderr, "Cannot create more timers.\n");
     return NULL;
   }
-  _rtimer_t *rtimer = _rtimer_table + _rtimer_id++;
+  _rtimer_t *rtimer = _rtimer_table + _rtimerid++;
 
   sev.sigev_notify = SIGEV_SIGNAL;
   sev.sigev_signo = SIGRTMIN;
@@ -129,7 +129,7 @@ _rtimer_t *_rtimer_create(const char *name, int interval)
   its.it_value.tv_nsec = interval * 1000000;
 
   timer_settime(rtimer->timerid, 0, &its, NULL);
-    
+
   return rtimer;
 }
 
@@ -146,14 +146,15 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
   
   mvrt_evqueue_t *evq = mvrt_evqueue_getcurrent();
   tid = sinfo->si_value.sival_ptr;
-  for (i = 0; i < _rtimer_id; i++) {
+  for (i = 0; i < _rtimerid; i++) {
     rtimer = _rtimer_table + i;
     if (*tid == rtimer->timerid) {
       mvrt_event_t rtev = rtimer->rtev;
       if (rtimer->stopped)
         continue;
 
-      mvrt_eventinst_t *ev = mvrt_eventinst_new(rtev, mv_value_null());
+      mv_value_t evdata = mv_value_null();
+      mvrt_eventinst_t *ev = mvrt_eventinst_new(rtev, evdata);
 
       while (mvrt_evqueue_full(evq))
         nanosleep(&ts, NULL);
