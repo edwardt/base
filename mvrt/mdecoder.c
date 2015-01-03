@@ -6,6 +6,7 @@
 #include <stdio.h>        /* printf */
 #include <stdlib.h>       /* malloc, free */
 #include <pthread.h>      /* pthread_create */
+#include <signal.h>       /* sigemptyset */
 #include <time.h>         /* nanosleep */
 #include <assert.h>       /* aasert */
 #include <mv/device.h>    /* mv_device_self */
@@ -197,8 +198,16 @@ int mvrt_mdecoder_run(mvrt_mdecoder_t *f)
 {
   _mdecoder_t *mf = (_mdecoder_t *) f;
 
+  sigset_t sigmask;
+  sigemptyset(&sigmask);
+  sigaddset(&sigmask, SIGRTMIN);
+  if (pthread_sigmask(SIG_BLOCK, &sigmask, NULL) != 0) {
+    perror("pthread_sigmask@mvrt_mdecoder_run");
+    return -1;
+  }
+
   if (pthread_create(&mf->thr, NULL, _mdecoder_thread, mf) != 0) {
-    perror("pthread_create@mv_message_mdecoder_run");
+    perror("pthread_create@mvrt_mdecoder_run");
     return -1;
   }
   return 0;

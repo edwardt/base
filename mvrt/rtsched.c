@@ -6,6 +6,7 @@
 #include <stdio.h>       /* printf */
 #include <stdlib.h>      /* malloc */
 #include <pthread.h>     /* pthread_create */
+#include <signal.h>      /* sigemptyset */
 #include <time.h>        /* nanosleep */
 #include "rtevent.h"     /* mvrt_event_t */
 #include "evqueue.h"     /* mvrt_evqueue_t */
@@ -107,7 +108,15 @@ int mvrt_sched_delete(mvrt_sched_t *sch)
 int mvrt_sched_run(mvrt_sched_t *sch) 
 {
   _sched_t *sched = (_sched_t *) sch;
-  
+
+  sigset_t sigmask;
+  sigemptyset(&sigmask);
+  sigaddset(&sigmask, SIGRTMIN);
+  if (pthread_sigmask(SIG_BLOCK, &sigmask, NULL) != 0) {
+    perror("pthread_sigmask@mvrt_sched_run");
+    return -1;
+  }
+
   if (pthread_create(&sched->thr, NULL, _sched_thread, sched) != 0) {
     perror("pthread_create@mvrt_sched_run");
     return -1;

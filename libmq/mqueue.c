@@ -9,6 +9,7 @@
 #include <time.h>        /* nanosleep */
 #include <errno.h>       /* errno */
 #include <pthread.h>     /* pthread_create */
+#include <signal.h>      /* sigemptyset */
 #include <assert.h>      /* assert */
 #include <zmq.h>         /* zmq_ctx_new */
 #include <mq/mqueue.h>
@@ -322,6 +323,16 @@ int mv_delete_new(mv_mqueue_t *q)
 int mv_mqueue_run(mv_mqueue_t *q) 
 {
   _mqinfo_t *mq = (_mqinfo_t *) q;
+
+  /* SIGRTMIN will be used by runtime in interval timers. Blcok this
+     signal in any thread. */
+  sigset_t sigmask;
+  sigemptyset(&sigmask);
+  sigaddset(&sigmask, SIGRTMIN);
+  if (pthread_sigmask(SIG_BLOCK, &sigmask, NULL) != 0) {
+    perror("pthread_sigmask@mv_mqueue_run");
+    return -1;
+  }
   
   if (pthread_create(&mq->thr_rep, NULL, _mqueue_input_thread, mq) != 0) {
     perror("pthread_create@mv_mqueue_run");

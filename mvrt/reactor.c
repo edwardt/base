@@ -91,9 +91,9 @@ void _reactor_parse_file(const char *file)
 
        # comment starts with # on 0th column
        reactor r0 {
-         push 1
-         push 2
-         add 2
+         pushi 1
+         pushi 2
+         add
        }
   */
   

@@ -28,20 +28,15 @@ typedef struct mvrt_eventinst {
   mv_value_t data;           /* event payload */
 } mvrt_eventinst_t;
 
-extern int mvrt_event_module_init();
-
 /*
  * Functions for events.
  */ 
+extern int mvrt_event_module_init();
 
 /* Creates/deletes a new event type in a device. The mvrt_event_t object
    will represent the given event type. */
 extern mvrt_event_t mvrt_event_new(const char *dev, const char *ev, int tag);
 extern int mvrt_event_delete(mvrt_event_t ev);
-
-/* Creates a timer event with the given interval in miliseconds. Note that
-   timer event has a single instance. */
-extern mvrt_event_t mvrt_timer_new(const char *name, size_t msec);
 
 /* Finds the handle to the given event in a given device. */
 extern mvrt_event_t mvrt_event_lookup(const char *dev, const char *name);
@@ -50,6 +45,15 @@ extern mvrt_event_t mvrt_event_lookup(const char *dev, const char *name);
 extern const char *mvrt_event_dev(mvrt_event_t ev);
 extern const char *mvrt_event_name(mvrt_event_t ev);
 extern mvrt_eventag_t mvrt_event_tag(mvrt_event_t ev);
+
+/*
+ * Functions for timers.
+ */
+extern int mvrt_timer_module_init();
+
+/* Creates a timer event with the given interval in miliseconds. Note that
+   timer event has a single instance. */
+extern mvrt_event_t mvrt_timer_new(const char *name, size_t msec);
 
 /* Starts and stops the timer event. */
 extern int mvrt_timer_start(mvrt_event_t ev);

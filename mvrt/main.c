@@ -4,7 +4,7 @@
  * @brief Daemon which runs the Meadow runtime.
  */
 #include <stdio.h>           /* printf */
-#include <unistd.h>          /* sysconf, sleep */
+#include <unistd.h>          /* sysconf, sleep, pause */
 #include <stdlib.h>          /* EXIT_SUCCESS */
 #include <string.h>          /* strdup */
 #include <fcntl.h>           /* O_RDWR */
@@ -119,9 +119,14 @@ int main(int argc, char *argv[])
 
   /* 
    * Hardcode user-defined events, props, etc.
+   *
+   * NOTE: timer initialization must happen after mv_mqueue_new, 
+   * mvrt_sched_run, mvrt_decoder_run is finished. This is to ensure 
+   * SIGRTMIN is blocked in those threads but is respected in timer.
    */
   /* user events */
-  mvrt_event_t timer0 = mvrt_timer_new("timer0", 10);
+  mvrt_timer_module_init();
+  mvrt_event_t timer0 = mvrt_timer_new("timer0", 1);
 
   /* user props */
   mvrt_prop_t prev = mvrt_prop_new(self, "pval", MVRT_PROP_LOCAL);
@@ -138,8 +143,7 @@ int main(int argc, char *argv[])
   /*
    * main thread perform infinite loop - Is there a better way?
    */
-  while (1)
-    sleep(1000);
+  while (1) ;
 
   return EXIT_SUCCESS;
 }

@@ -6,7 +6,6 @@
 #include <stdio.h>       /* fprintf */
 #include <stdlib.h>      /* malloc */
 #include <string.h>      /* strstr */
-#include <pthread.h>     /* pthread_create */
 #include <dlfcn.h>       /* dlopen */
 #include <assert.h>      /* assert */
 #include <mq/mqueue.h>   /* mv_mqueue_t */

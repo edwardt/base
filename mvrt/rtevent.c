@@ -17,6 +17,8 @@ typedef struct _rtimer {
   timer_t timerid;          /* timer */
   size_t msec;              /* interval in msec */
   mvrt_event_t rtev;        /* back pointer to _rtevent_t */
+  unsigned stopped : 1;     /* timer is stopped */
+  unsigned pad     : 31;    /* pad */
 } _rtimer_t;
 static _rtimer_t _rtimer_table[MAX_RTIMER_TABLE];
 
@@ -108,8 +110,6 @@ _rtimer_t *_rtimer_create(const char *name, int interval)
 {
   struct sigevent sev;
   struct itimerspec its;
-  struct sigaction sa;
-  int signo = SIGRTMIN;
 
   if (_rtimer_id == MAX_RTIMER_TABLE) {
     fprintf(stderr, "Cannot create more timers.\n");
@@ -117,16 +117,8 @@ _rtimer_t *_rtimer_create(const char *name, int interval)
   }
   _rtimer_t *rtimer = _rtimer_table + _rtimer_id++;
 
-  sa.sa_flags = SA_SIGINFO;
-  sa.sa_sigaction = _rtimer_handler;
-  sigemptyset(&sa.sa_mask);
-  if (sigaction(signo, &sa, NULL) == -1) {
-    fprintf(stderr, "Failed to setup signal handler for timer %s.\n", name);
-    return NULL;
-  }
-
   sev.sigev_notify = SIGEV_SIGNAL;
-  sev.sigev_signo = signo;
+  sev.sigev_signo = SIGRTMIN;
   sev.sigev_value.sival_ptr = &rtimer->timerid;
 
   timer_create(CLOCK_REALTIME, &sev, &rtimer->timerid);
@@ -134,10 +126,10 @@ _rtimer_t *_rtimer_create(const char *name, int interval)
   its.it_interval.tv_sec = 0;
   its.it_interval.tv_nsec = interval * 1000000;
   its.it_value.tv_sec = 0;
-  its.it_value.tv_nsec = 0;
+  its.it_value.tv_nsec = interval * 1000000;
 
   timer_settime(rtimer->timerid, 0, &its, NULL);
-
+    
   return rtimer;
 }
 
@@ -151,6 +143,8 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
   struct timespec ts; /* 1ms */
   ts.tv_sec = 0;
   ts.tv_nsec = 1000; 
+
+  fprintf(stdout, "rtimer_handler\n");
   
   mvrt_evqueue_t *evq = mvrt_evqueue_getcurrent();
   tid = sinfo->si_value.sival_ptr;
@@ -158,12 +152,15 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
     rtimer = _rtimer_table + i;
     if (*tid == rtimer->timerid) {
       mvrt_event_t rtev = rtimer->rtev;
-      mv_value_t null_v = mv_value_null();
-      mvrt_eventinst_t *evinst = mvrt_eventinst_new(rtev, null_v);
+      if (rtimer->stopped)
+        continue;
+
+      mvrt_eventinst_t *ev = mvrt_eventinst_new(rtev, mv_value_null());
 
       while (mvrt_evqueue_full(evq))
         nanosleep(&ts, NULL);
-      mvrt_evqueue_put(evq, evinst);
+
+      mvrt_evqueue_put(evq, ev);
     }
   }
 }
@@ -204,17 +201,6 @@ mvrt_event_t mvrt_event_new(const char *dev, const char *name, int tag)
   return (mvrt_event_t) 0;
 }
 
-mvrt_event_t mvrt_timer_new(const char *name, size_t msec)
-{
-  const char *dev = mv_device_self();
-  _rtevent_t *rtev = (_rtevent_t *) mvrt_event_new(dev, name, MVRT_EVENT_TIMER);
-  rtev->u.timer = _rtimer_create(name, msec);
-  rtev->u.timer->msec = msec;
-  rtev->u.timer->rtev = (mvrt_event_t) rtev;
-
-  return (mvrt_event_t) rtev;
-}
-
 int mvrt_event_delete(mvrt_event_t ev)
 {
   return 0;
@@ -246,6 +232,62 @@ mvrt_eventag_t mvrt_event_tag(mvrt_event_t event)
 {
   _rtevent_t *rtev = (_rtevent_t *) event;
   return rtev->tag;
+}
+
+/*
+ * Functions for timers.
+ */
+int mvrt_timer_module_init()
+{
+  struct sigaction sa;
+
+  sigset_t sigmask;
+  sigemptyset(&sigmask);
+  sigaddset(&sigmask, SIGRTMIN);
+  if (pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL) != 0) {
+    //if (sigprocmask(SIG_UNBLOCK, &sigmask, NULL) != 0) {
+    perror("sigprocmask@mvrt_timer_module_init");
+    return -1;
+  }
+
+  sa.sa_flags = SA_SIGINFO;
+  sa.sa_sigaction = _rtimer_handler;
+  sigemptyset(&sa.sa_mask);
+  if (sigaction(SIGRTMIN, &sa, NULL) != 0) {
+    fprintf(stderr, "Failed to set up signal handler for timers.\n");
+    return -1;
+  }
+
+  fprintf(stdout, "Timer module initialized...\n");
+
+  return 0;
+}
+
+mvrt_event_t mvrt_timer_new(const char *name, size_t msec)
+{
+  fprintf(stdout, "Create timer: %s (%d ms)\n", name, msec);
+  const char *dev = mv_device_self();
+  _rtevent_t *rtev = (_rtevent_t *) mvrt_event_new(dev, name, MVRT_EVENT_TIMER);
+  rtev->u.timer = _rtimer_create(name, msec);
+  rtev->u.timer->msec = msec;
+  rtev->u.timer->rtev = (mvrt_event_t) rtev;
+  rtev->u.timer->stopped = 0;
+
+  return (mvrt_event_t) rtev;
+}
+
+int mvrt_timer_start(mvrt_event_t event)
+{
+  _rtevent_t *rtev = (_rtevent_t *) event;
+  assert(rtev->tag == MVRT_EVENT_TIMER);
+  rtev->u.timer->stopped = 0;
+}
+
+int mvrt_timer_stop(mvrt_event_t event)
+{
+  _rtevent_t *rtev = (_rtevent_t *) event;
+  assert(rtev->tag == MVRT_EVENT_TIMER);
+  rtev->u.timer->stopped = 1;
 }
 
 

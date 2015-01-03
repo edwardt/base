@@ -8,7 +8,6 @@
 #include <string.h>      /* memcpy */
 #include <time.h>        /* nanosleep */
 #include <errno.h>       /* errno */
-#include <pthread.h>     /* pthread_create */
 #include <assert.h>      /* assert */
 #include "evqueue.h"
 

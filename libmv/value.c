@@ -5,7 +5,7 @@
 #include <stdlib.h>    /* malloc */
 #include <string.h>    /* strdup */
 #include <assert.h>    /* assert */
-#include "mv/value.h"  /* mv_value_t */
+#include <mv/value.h>  /* mv_value_t */
 
 
 #define _VALUE_TAG(val) ((val) & 0x7)
