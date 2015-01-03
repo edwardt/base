@@ -154,8 +154,6 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
       if (rtimer->stopped)
         continue;
 
-      printf("TIMER for %d.\n", i);
-
       mv_value_t evdata = mv_value_null();
       mvrt_eventinst_t *ev = mvrt_eventinst_new(rtev, evdata);
 
