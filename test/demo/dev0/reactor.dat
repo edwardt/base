@@ -31,8 +31,8 @@ reactor r1 {
   cons                    # 13: [ledval] = [ledval.null]
   pushi 10                # 14: pin value for remote LED
   cons                    # 15: [10 ledval] -- funarg to gpioPut
-  pushs "erdos:gpioPut"   # 16: funcname
-  call_func               # 17: polya:gpioPut(10, ledval)
+  pushs "dev1:gpioPut"    # 16: funcname
+  call_func               # 17: dev1:gpioPut(10, ledval)
   pushs "cval"            # 18:
   prop_get                # 19: get cval
   pushs "pval"            # 20: 
@@ -55,13 +55,13 @@ reactor r2 {
   cons
   pushi 10                
   cons                    
-  pushs "erdos:gpioPut"
-  call_func              # call polya:gpioPut(10 1)
+  pushs "dev1:gpioPut"
+  call_func              # call dev1:gpioPut(10 1)
 }
 reactor r3 {
   pushi 10                
-  pushs "erdos:foo"
-  call_func              # call polya:gpioPut(10 1)
+  pushs "dev1:foo"
+  call_func              # call dev1:gpioPut(10 1)
 }
 # ----------------------- IGNORE BELOW -- FOR LATER LOOKUP ONLY
 #
