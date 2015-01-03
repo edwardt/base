@@ -139,9 +139,10 @@ void _reactor_parse_file(const char *file)
         break;
       case _STATE_EXPECT_NAME:
         if (token_tag == _TOKEN_ID) {
-          // reactor = _reactor_new(token);
           reactor = mvrt_reactor(token);
           reactor->code = mvrt_code_new();
+          nopers = 0;
+          fprintf(stdout, "REACTOR %s:\n", token);
           state = _STATE_EXPECT_LPAREN;
         }
         else {
@@ -166,7 +167,8 @@ void _reactor_parse_file(const char *file)
             arg[strlen(arg)-1] = '\0';
             fprintf(stdout, "\treactor[%d]: %s \"%s\"\n", nopers,  
                     mvrt_opcode_str(reactor->code->instrs[nopers].opcode), arg);
-            reactor->code->instrs[nopers++].ptr = (mv_ptr_t) arg;
+            reactor->code->instrs[nopers].ptr = (mv_ptr_t) arg;
+            nopers++;
           }
           break;
         case MVRT_OP_PUSHI:
@@ -175,7 +177,8 @@ void _reactor_parse_file(const char *file)
             int arg = atoi(token);
             fprintf(stdout, "\treactor[%d]: %s %d\n", nopers,  
                     mvrt_opcode_str(reactor->code->instrs[nopers].opcode), arg);
-            reactor->code->instrs[nopers++].ptr = (mv_ptr_t) arg;
+            reactor->code->instrs[nopers].ptr = (mv_ptr_t) arg;
+            nopers++;
           }
           break;
         default:

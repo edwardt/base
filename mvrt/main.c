@@ -124,17 +124,20 @@ int main(int argc, char *argv[])
    * mvrt_sched_run, mvrt_decoder_run is finished. This is to ensure 
    * SIGRTMIN is blocked in those threads but is respected in timer.
    */
-  /* user events */
-  mvrt_timer_module_init();
-  mvrt_event_t timer0 = mvrt_timer_new("timer0", 1);
-
   /* user props */
   mvrt_prop_t prev = mvrt_prop_new(self, "pval", MVRT_PROP_LOCAL);
   mvrt_prop_t curr = mvrt_prop_new(self, "cval", MVRT_PROP_LOCAL);
+  mvrt_prop_t led = mvrt_prop_new(self, "ledval", MVRT_PROP_LOCAL);
   mv_value_t prev_init = mv_value_int(0);
   mv_value_t curr_init = mv_value_int(0);
+  mv_value_t led_init = mv_value_int(0);
   mvrt_prop_setvalue(prev, prev_init);
   mvrt_prop_setvalue(curr, curr_init);
+  mvrt_prop_setvalue(curr, led_init);
+
+  /* user events */
+  mvrt_timer_module_init();
+  mvrt_event_t timer0 = mvrt_timer_new("timer0", 1);
 
   /* add reactors to events */
   mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");

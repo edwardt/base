@@ -63,7 +63,7 @@ reactor r1 {
   prop_get                # 6:  get cval
   pushs "pval"            # 7:
   prop_get                # 8:  get pval
-  beq 22                  # 9:  if (cval == pval) 
+  beq 21                  # 9:  if (cval == pval) 
   pushs "ledval"          # 10: 
   prop_get                # 11:
   cons                    # 12: [ledval]
