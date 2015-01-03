@@ -132,7 +132,7 @@ mvrt_eventinst_t *_mdecoder_decode(mv_message_t *mvmsg)
     dev_s = mv_value_string_get(dev_v);
     event = mvrt_event_lookup(dev_s, name_s);
     if (!event) {
-      fprintf(stderr, "ERROR: No such event: %s.\n", name_s);
+      fprintf(stderr, "Failed to find the event handle for %s.\n", name_s);
       return NULL;
     }
     evinst = mvrt_eventinst_new(event, arg_v);

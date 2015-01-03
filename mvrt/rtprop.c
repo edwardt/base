@@ -5,7 +5,6 @@
 #include <stdlib.h>    /* free, exit */
 #include <string.h>    /* strdup */
 #include <assert.h>    /* assert */
-#include <mv/prop.h>   /* mv_prop_value */
 #include "rtprop.h"
 
 
@@ -167,7 +166,8 @@ mv_value_t mvrt_prop_getvalue(mvrt_prop_t prop)
 
   switch (rtprop->tag) {
   case MVRT_PROP_GLOBAL:
-    return (mv_value_t) mv_prop_value(rtprop->dev, rtprop->name, 0);
+    assert(0 && "Remote property cannot be obtained using this function.");
+    break;
   case MVRT_PROP_SYSTEM:
   case MVRT_PROP_LOCAL:
     return rtprop->value;

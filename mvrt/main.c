@@ -62,11 +62,6 @@ int main(int argc, char *argv[])
 
   /* initialize device service */
   mv_device_service_init(self, "device.dat");
-
-  /* initialize other remote services */
-  mv_prop_service_init((char *) 0);
-  mv_event_service_init((char *) 0);
-  mv_func_service_init((char *) 0);
   
   /* initialize local event module */
   mvrt_event_module_init();
@@ -84,7 +79,9 @@ int main(int argc, char *argv[])
   mvrt_reactor_module_init((char *) "reactor.dat");
   mvrt_system_reactor_init();
 
-  /* initialize message queue handler */
+  /* 
+   * initialize message queue handler 
+   */
   mq = mv_mqueue_init(DEFAULT_PORT);
   if (mv_mqueue_run(mq) == -1) {
     fprintf(stderr, "mv_mqueue_run: failed.\n");
@@ -92,15 +89,21 @@ int main(int argc, char *argv[])
   }
   fprintf(stdout, "Message queue thread started...\n");
 
-  /* device sign on */
+  /*
+   * device sign using the MQ address
+   */
   mv_device_signon(self, mv_mqueue_addr(mq));
   fprintf(stdout, "Device %s signed on at %s.\n", self, mv_device_addr(self));
 
-  /* initialize event queue */
+  /* 
+   * initialize event queue 
+   */
   mvrt_evqueue_t *evq = mvrt_evqueue();
   mvrt_evqueue_setcurrent(evq);
 
-  /* initialize message decoder */
+  /*
+   * initialize message decoder 
+   */
   mvrt_mdecoder_t *mf = mvrt_mdecoder(mq, evq);
   if (mvrt_mdecoder_run(mf) == -1) {
     fprintf(stderr, "mvrt_mdeocoder_run: failed.\n");
@@ -108,12 +111,14 @@ int main(int argc, char *argv[])
   }
   fprintf(stdout, "Message decoder thread started...\n");
 
-  /* initialize scheduler */
+  /* 
+   * initialize scheduler 
+   */
   mvrt_sched_t *sched = mvrt_sched(evq);
   mvrt_sched_run(sched);
 
   /* 
-   *
+   * Hardcode user-defined events, props, etc.
    */
   /* user events */
   mvrt_event_t timer0 = mvrt_timer_new("timer0", 10);
@@ -129,6 +134,7 @@ int main(int argc, char *argv[])
   /* add reactors to events */
   mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
   mvrt_add_reactor_to_event(timer0, r1);
+
   /*
    * main thread perform infinite loop - Is there a better way?
    */

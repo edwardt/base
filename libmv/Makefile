@@ -47,9 +47,8 @@ AR = ar
 ARFLAGS = cru
 libmv_a_AR = $(AR) $(ARFLAGS)
 libmv_a_DEPENDENCIES = /usr/local/lib/libjsmn.a
-am_libmv_a_OBJECTS = libmv_a-value.$(OBJEXT) libmv_a-event.$(OBJEXT) \
-	libmv_a-device.$(OBJEXT) libmv_a-prop.$(OBJEXT) \
-	libmv_a-func.$(OBJEXT) libmv_a-message.$(OBJEXT)
+am_libmv_a_OBJECTS = libmv_a-value.$(OBJEXT) libmv_a-device.$(OBJEXT) \
+	libmv_a-message.$(OBJEXT)
 libmv_a_OBJECTS = $(am_libmv_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -160,10 +159,7 @@ top_srcdir = ..
 noinst_LIBRARIES = libmv.a
 libmv_a_SOURCES = \
 	value.c \
-	event.c \
 	device.c \
-	prop.c \
-	func.c \
 	message.c
 
 STRICT_CHECK_C = \
@@ -229,10 +225,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include ./$(DEPDIR)/libmv_a-device.Po
-include ./$(DEPDIR)/libmv_a-event.Po
-include ./$(DEPDIR)/libmv_a-func.Po
 include ./$(DEPDIR)/libmv_a-message.Po
-include ./$(DEPDIR)/libmv_a-prop.Po
 include ./$(DEPDIR)/libmv_a-value.Po
 
 .c.o:
@@ -263,20 +256,6 @@ libmv_a-value.obj: value.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-value.obj `if test -f 'value.c'; then $(CYGPATH_W) 'value.c'; else $(CYGPATH_W) '$(srcdir)/value.c'; fi`
 
-libmv_a-event.o: event.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-event.o -MD -MP -MF $(DEPDIR)/libmv_a-event.Tpo -c -o libmv_a-event.o `test -f 'event.c' || echo '$(srcdir)/'`event.c
-	$(am__mv) $(DEPDIR)/libmv_a-event.Tpo $(DEPDIR)/libmv_a-event.Po
-#	source='event.c' object='libmv_a-event.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-event.o `test -f 'event.c' || echo '$(srcdir)/'`event.c
-
-libmv_a-event.obj: event.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-event.obj -MD -MP -MF $(DEPDIR)/libmv_a-event.Tpo -c -o libmv_a-event.obj `if test -f 'event.c'; then $(CYGPATH_W) 'event.c'; else $(CYGPATH_W) '$(srcdir)/event.c'; fi`
-	$(am__mv) $(DEPDIR)/libmv_a-event.Tpo $(DEPDIR)/libmv_a-event.Po
-#	source='event.c' object='libmv_a-event.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-event.obj `if test -f 'event.c'; then $(CYGPATH_W) 'event.c'; else $(CYGPATH_W) '$(srcdir)/event.c'; fi`
-
 libmv_a-device.o: device.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-device.o -MD -MP -MF $(DEPDIR)/libmv_a-device.Tpo -c -o libmv_a-device.o `test -f 'device.c' || echo '$(srcdir)/'`device.c
 	$(am__mv) $(DEPDIR)/libmv_a-device.Tpo $(DEPDIR)/libmv_a-device.Po
@@ -290,34 +269,6 @@ libmv_a-device.obj: device.c
 #	source='device.c' object='libmv_a-device.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-device.obj `if test -f 'device.c'; then $(CYGPATH_W) 'device.c'; else $(CYGPATH_W) '$(srcdir)/device.c'; fi`
-
-libmv_a-prop.o: prop.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-prop.o -MD -MP -MF $(DEPDIR)/libmv_a-prop.Tpo -c -o libmv_a-prop.o `test -f 'prop.c' || echo '$(srcdir)/'`prop.c
-	$(am__mv) $(DEPDIR)/libmv_a-prop.Tpo $(DEPDIR)/libmv_a-prop.Po
-#	source='prop.c' object='libmv_a-prop.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-prop.o `test -f 'prop.c' || echo '$(srcdir)/'`prop.c
-
-libmv_a-prop.obj: prop.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-prop.obj -MD -MP -MF $(DEPDIR)/libmv_a-prop.Tpo -c -o libmv_a-prop.obj `if test -f 'prop.c'; then $(CYGPATH_W) 'prop.c'; else $(CYGPATH_W) '$(srcdir)/prop.c'; fi`
-	$(am__mv) $(DEPDIR)/libmv_a-prop.Tpo $(DEPDIR)/libmv_a-prop.Po
-#	source='prop.c' object='libmv_a-prop.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-prop.obj `if test -f 'prop.c'; then $(CYGPATH_W) 'prop.c'; else $(CYGPATH_W) '$(srcdir)/prop.c'; fi`
-
-libmv_a-func.o: func.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-func.o -MD -MP -MF $(DEPDIR)/libmv_a-func.Tpo -c -o libmv_a-func.o `test -f 'func.c' || echo '$(srcdir)/'`func.c
-	$(am__mv) $(DEPDIR)/libmv_a-func.Tpo $(DEPDIR)/libmv_a-func.Po
-#	source='func.c' object='libmv_a-func.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-func.o `test -f 'func.c' || echo '$(srcdir)/'`func.c
-
-libmv_a-func.obj: func.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-func.obj -MD -MP -MF $(DEPDIR)/libmv_a-func.Tpo -c -o libmv_a-func.obj `if test -f 'func.c'; then $(CYGPATH_W) 'func.c'; else $(CYGPATH_W) '$(srcdir)/func.c'; fi`
-	$(am__mv) $(DEPDIR)/libmv_a-func.Tpo $(DEPDIR)/libmv_a-func.Po
-#	source='func.c' object='libmv_a-func.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-func.obj `if test -f 'func.c'; then $(CYGPATH_W) 'func.c'; else $(CYGPATH_W) '$(srcdir)/func.c'; fi`
 
 libmv_a-message.o: message.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-message.o -MD -MP -MF $(DEPDIR)/libmv_a-message.Tpo -c -o libmv_a-message.o `test -f 'message.c' || echo '$(srcdir)/'`message.c

@@ -7,7 +7,6 @@
 #include <assert.h>       /* assert */
 #include <signal.h>       /* sigaction */
 #include <time.h>         /* timer_settime */
-#include <mv/event.h>     /* mv_event_publish */
 #include <mv/device.h>    /* mv_device_self */
 #include <mv/value.h>     /* mv_value_t */
 #include "evqueue.h"      /* mvrt_evqueue_instance */

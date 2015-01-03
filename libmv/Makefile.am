@@ -1,10 +1,7 @@
 noinst_LIBRARIES = libmv.a
 libmv_a_SOURCES = \
 	value.c \
-	event.c \
 	device.c \
-	prop.c \
-	func.c \
 	message.c
 
 STRICT_CHECK_C = \
