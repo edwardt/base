@@ -141,7 +141,8 @@ int main(int argc, char *argv[])
 
   /* add reactors to events */
   mvrt_reactor_t *r1 = mvrt_reactor_lookup("r1");
-  mvrt_add_reactor_to_event(timer0, r1);
+  if (r1)
+    mvrt_add_reactor_to_event(timer0, r1);
 
   /*
    * main thread perform infinite loop - Is there a better way?
