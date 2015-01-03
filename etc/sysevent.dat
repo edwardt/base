@@ -1,0 +1,6 @@
+# system events
+event _E_prop_get
+event _E_prop_set
+event _E_func_call
+event _E_func_call_ret
+event _E_func_return

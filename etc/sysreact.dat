@@ -1,0 +1,36 @@
+# system reactors
+
+reactor _R_func_call {
+  getarg              # put event arg to stack top
+  pushs "funarg"      # get "funarg" value of "arg map"
+  getf
+  getarg              # put event arg again to stack top
+  pushs "name"        # get "name" value of "arg map"
+  getf
+  call_func           # call the function
+}
+
+reactor _R_func_call_ret {
+  getarg
+  pushs "funarg"
+  getf
+  getarg
+  pushs "name"
+  getf
+  call_func
+  getarg
+  pushs "retid"
+  getf
+  getarg
+  pushs "retaddr"
+  getf
+  call_return         # initiate return sequence #1
+}
+
+#reactor func_ret_reactor {
+# getarg
+# getf "retval" 
+# getarg
+# getf "retid" 
+# call_continue retid
+#}
