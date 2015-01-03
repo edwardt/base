@@ -50,8 +50,7 @@ am_mvrt_OBJECTS = mvrt-rtevent.$(OBJEXT) mvrt-rtprop.$(OBJEXT) \
 	mvrt-context.$(OBJEXT) mvrt-code.$(OBJEXT) \
 	mvrt-evqueue.$(OBJEXT) mvrt-mdecoder.$(OBJEXT) \
 	mvrt-reactor.$(OBJEXT) mvrt-eval.$(OBJEXT) \
-	mvrt-rtsched.$(OBJEXT) mvrt-sysinit.$(OBJEXT) \
-	mvrt-main.$(OBJEXT)
+	mvrt-rtsched.$(OBJEXT) mvrt-main.$(OBJEXT)
 mvrt_OBJECTS = $(am_mvrt_OBJECTS)
 mvrt_DEPENDENCIES = ../libmq/libmq.a ../libmv/libmv.a
 mvrt_LINK = $(CCLD) $(mvrt_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
@@ -174,7 +173,6 @@ mvrt_SOURCES = \
 	reactor.c \
 	eval.c \
 	rtsched.c \
-	sysinit.c \
 	main.c
 
 STRICT_CHECK_C = \
@@ -286,7 +284,6 @@ include ./$(DEPDIR)/mvrt-rtevent.Po
 include ./$(DEPDIR)/mvrt-rtfunc.Po
 include ./$(DEPDIR)/mvrt-rtprop.Po
 include ./$(DEPDIR)/mvrt-rtsched.Po
-include ./$(DEPDIR)/mvrt-sysinit.Po
 
 .c.o:
 	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -455,20 +452,6 @@ mvrt-rtsched.obj: rtsched.c
 #	source='rtsched.c' object='mvrt-rtsched.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtsched.obj `if test -f 'rtsched.c'; then $(CYGPATH_W) 'rtsched.c'; else $(CYGPATH_W) '$(srcdir)/rtsched.c'; fi`
-
-mvrt-sysinit.o: sysinit.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-sysinit.o -MD -MP -MF $(DEPDIR)/mvrt-sysinit.Tpo -c -o mvrt-sysinit.o `test -f 'sysinit.c' || echo '$(srcdir)/'`sysinit.c
-	$(am__mv) $(DEPDIR)/mvrt-sysinit.Tpo $(DEPDIR)/mvrt-sysinit.Po
-#	source='sysinit.c' object='mvrt-sysinit.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-sysinit.o `test -f 'sysinit.c' || echo '$(srcdir)/'`sysinit.c
-
-mvrt-sysinit.obj: sysinit.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-sysinit.obj -MD -MP -MF $(DEPDIR)/mvrt-sysinit.Tpo -c -o mvrt-sysinit.obj `if test -f 'sysinit.c'; then $(CYGPATH_W) 'sysinit.c'; else $(CYGPATH_W) '$(srcdir)/sysinit.c'; fi`
-	$(am__mv) $(DEPDIR)/mvrt-sysinit.Tpo $(DEPDIR)/mvrt-sysinit.Po
-#	source='sysinit.c' object='mvrt-sysinit.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-sysinit.obj `if test -f 'sysinit.c'; then $(CYGPATH_W) 'sysinit.c'; else $(CYGPATH_W) '$(srcdir)/sysinit.c'; fi`
 
 mvrt-main.o: main.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-main.o -MD -MP -MF $(DEPDIR)/mvrt-main.Tpo -c -o mvrt-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c

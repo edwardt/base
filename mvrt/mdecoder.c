@@ -14,7 +14,6 @@
 #include <mv/message.h>   /* mv_message_t */
 #include "rtprop.h"       /* mvrt_prop_t */
 #include "rtfunc.h"       /* mvrt_func_t */
-#include "sysinit.h"      /* mvrt_system_event_get */
 #include "mdecoder.h"
 
 
