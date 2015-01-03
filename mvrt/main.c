@@ -22,7 +22,6 @@
 #include "rtprop.h"
 #include "rtfunc.h"
 #include "reactor.h"
-#include "sysinit.h"
 
 extern void sched();
 

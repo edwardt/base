@@ -155,17 +155,17 @@ mvrt_eventinst_t *_mdecoder_decode(mv_message_t *mvmsg)
     break;
   case MV_MESSAGE_PROP_SET:
     arg_v = mvmsg->arg;
-    event = mvrt_system_event_get(MVRT_SYSEV_PROP_SET);
+    event = mvrt_event_lookup(mv_device_self(), "_E_prop_set");
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
   case MV_MESSAGE_PROP_GET:
     arg_v = mvmsg->arg;
-    event = mvrt_system_event_get(MVRT_SYSEV_PROP_GET);
+    event = mvrt_event_lookup(mv_device_self(), "_E_prop_get");
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
   case MV_MESSAGE_FUNC_CALL:
     arg_v = mvmsg->arg;
-    event = mvrt_system_event_get(MVRT_SYSEV_FUNC_CALL);
+    event = mvrt_event_lookup(mv_device_self(), "_E_func_call");
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
   default:
