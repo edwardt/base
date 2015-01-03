@@ -25,7 +25,7 @@ typedef struct _sched {
 static _sched_t *_sched_new(mvrt_evqueue_t *evq);
 static int _sched_delete(_sched_t *sched);
 static void *_sched_thread(void *arg);
-static void _sched_exec_reactor(mvrt_reactor_t *reactor, mvrt_value_t event);
+static void _sched_exec_reactor(mvrt_reactor_t *reactor, mvrt_eventinst_t *ev);
 
 _sched_t *_sched_new(mvrt_evqueue_t *evq)
 {
@@ -49,8 +49,7 @@ void *_sched_thread(void *arg)
   mvrt_evqueue_t *evq = sched->evq;    /* event queue */
   struct timespec ts;                  /* time for nanosleep */
 
-  mvrt_value_t nullval = mvrt_value_null();
-  mvrt_value_t eventval;
+  mvrt_eventinst_t *evinst;
   mvrt_event_t ev;
 
   mvrt_reactor_list_t *rptr;
@@ -63,17 +62,17 @@ void *_sched_thread(void *arg)
     while (mvrt_evqueue_empty(evq)) {
       nanosleep(&ts, NULL);
     }
-    if ((eventval = mvrt_evqueue_get(evq)) == nullval) 
+    if ((evinst = mvrt_evqueue_get(evq)) == NULL)
       continue;
 
-    ev = mvrt_value_event_type(eventval);
+    ev = evinst->type;
     rptr = mvrt_get_reactors_for_event(ev);
     if (!rptr)
       continue;
 
     while (rptr) {
       reactor = rptr->reactor;
-      _sched_exec_reactor(reactor, eventval);
+      _sched_exec_reactor(reactor, evinst);
       
       rptr = rptr->next;
     }
@@ -82,9 +81,9 @@ void *_sched_thread(void *arg)
   return NULL;
 }
 
-void _sched_exec_reactor(mvrt_reactor_t *reactor, mvrt_value_t ev)
+void _sched_exec_reactor(mvrt_reactor_t *reactor, mvrt_eventinst_t *evinst)
 {
-  mvrt_eval_reactor(reactor, ev);
+  mvrt_eval_reactor(reactor, evinst);
 }
 
 

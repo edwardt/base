@@ -12,9 +12,7 @@
 #include <mq/mqueue.h>   /* mv_mqueue_t */
 #include <mv/device.h>   /* mv_device_t */
 #include "rtprop.h"      /* mvrt_prop_t */
-#include "rtvalue.h"     /* mvrt_value_t */
 #include "rtfunc.h"      /* mvrt_func_t */
-#include "message.h"     /* mvrt_message_t */
 #include "context.h"     /* mvrt_stack_t */
 #include "eval.h"
 
@@ -26,7 +24,7 @@ static int _eval_push(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_cons(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_stackop(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx);
-static int _eval_call_native(mvrt_value_t f, mvrt_value_t a, mvrt_context_t *c);
+static int _eval_call_native(mv_value_t f, mv_value_t a, mvrt_context_t *c);
 static int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static mvrt_func_t _eval_get_func(const char *func_s);
@@ -137,8 +135,8 @@ int _eval_branch(mvrt_instr_t *instr, mvrt_context_t *ctx)
      jump to <branch ip>. Otherwise, just increase the ip by 2.
    */
   int jmpval;
-  mvrt_value_t val0;
-  mvrt_value_t val1;
+  mv_value_t val0;
+  mv_value_t val1;
   switch (instr->opcode) {
   case MVRT_OP_JMP:
     jmpval = (int) instr->ptr;
@@ -147,7 +145,7 @@ int _eval_branch(mvrt_instr_t *instr, mvrt_context_t *ctx)
     jmpval = (int) instr->ptr;
     val0 = mvrt_stack_pop(stack);
     val1 = mvrt_stack_pop(stack);
-    if (mvrt_value_eq(val0, val1))
+    if (mv_value_eq(val0, val1))
       return jmpval;
     break;
   case MVRT_OP_RET:
@@ -167,7 +165,7 @@ int _eval_push(mvrt_instr_t *instr, mvrt_context_t *ctx)
   /*
     PUSH <arg>
 
-    Transforms scalar arg (which is int, char *, etc.) into mvrt_value_t
+    Transforms scalar arg (which is int, char *, etc.) into mv_value_t
     and push it into stack.
   */
 
@@ -175,14 +173,14 @@ int _eval_push(mvrt_instr_t *instr, mvrt_context_t *ctx)
   case MVRT_OP_PUSHI:
     {
       int intval = (int) instr->ptr;
-      mvrt_value_t intval_v = mvrt_value_int(intval);
+      mv_value_t intval_v = mv_value_int(intval);
       mvrt_stack_push(stack, intval_v);
     }
     break;
   case MVRT_OP_PUSHS:
     {
       char *strval = (char *) instr->ptr;
-      mvrt_value_t str_v = mvrt_value_string(strval);
+      mv_value_t str_v = mv_value_string(strval);
       mvrt_stack_push(stack, str_v);
     }
     break;
@@ -197,37 +195,37 @@ int _eval_cons(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
   
-  mvrt_value_t val0;
-  mvrt_value_t val1;
-  mvrt_value_t cons;
+  mv_value_t val0;
+  mv_value_t val1;
+  mv_value_t cons;
   switch (instr->opcode) {
   case MVRT_OP_CONS_NEW:
-    cons = mvrt_value_cons();
+    cons = mv_value_cons();
     val0 = mvrt_stack_pop(stack);
-    mvrt_value_cons_setcar(cons, val0);
-    mvrt_value_cons_setcdr(cons, mvrt_value_null());
+    mv_value_cons_setcar(cons, val0);
+    mv_value_cons_setcdr(cons, mv_value_null());
     mvrt_stack_push(stack, cons);
     break;
   case MVRT_OP_CONS_CAR:
     cons = mvrt_stack_pop(stack);
-    val0 = mvrt_value_cons_car(cons);
+    val0 = mv_value_cons_car(cons);
     mvrt_stack_push(stack, val0);
     break;
   case MVRT_OP_CONS_CDR:
     cons = mvrt_stack_pop(stack);
-    val0 = mvrt_value_cons_cdr(cons);
+    val0 = mv_value_cons_cdr(cons);
     mvrt_stack_push(stack, val0);
     break;
   case MVRT_OP_CONS_SETCAR:
     cons = mvrt_stack_pop(stack);
     val0 = mvrt_stack_pop(stack);
-    mvrt_value_cons_setcar(cons, val0);
+    mv_value_cons_setcar(cons, val0);
     mvrt_stack_push(stack, cons);
     break;
   case MVRT_OP_CONS_SETCDR:
     cons = mvrt_stack_pop(stack);
     val0 = mvrt_stack_pop(stack);
-    mvrt_value_cons_setcdr(cons, val0);
+    mv_value_cons_setcdr(cons, val0);
     mvrt_stack_push(stack, cons);
     break;
   default:
@@ -243,10 +241,10 @@ int _eval_stackop(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_value_t val0;
-  mvrt_value_t val1;
-  mvrt_value_t val2;
-  mvrt_value_t val3;
+  mv_value_t val0;
+  mv_value_t val1;
+  mv_value_t val2;
+  mv_value_t val3;
   switch (instr->opcode) {
   case MVRT_OP_GETARG:
     val0 = ctx->arg;
@@ -255,14 +253,14 @@ int _eval_stackop(mvrt_instr_t *instr, mvrt_context_t *ctx)
   case MVRT_OP_GETF:
     val0 = mvrt_stack_pop(stack);
     val1 = mvrt_stack_pop(stack);
-    val2 = mvrt_value_map_lookup(val1, val0);
+    val2 = mv_value_map_lookup(val1, val0);
     mvrt_stack_push(stack, val2);
     break;
   case MVRT_OP_SETF:
     val0 = mvrt_stack_pop(stack);
     val1 = mvrt_stack_pop(stack);
     val2 = mvrt_stack_pop(stack);
-    val3 = mvrt_value_map_add(val2, val0, val1);
+    val3 = mv_value_map_add(val2, val0, val1);
     mvrt_stack_push(stack, val3);
     break;
   default:
@@ -278,12 +276,12 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_value_t prop_v = mvrt_stack_pop(stack);
-  char *prop = mvrt_value_string_get(prop_v);
+  mv_value_t prop_v = mvrt_stack_pop(stack);
+  char *prop = mv_value_string_get(prop_v);
   mvrt_prop_t mvprop = mvrt_prop_lookup(mv_device_self(), prop);
   assert(mvprop && "No such property exists.");
 
-  mvrt_value_t value_v = mvrt_prop_getvalue(mvprop);
+  mv_value_t value_v = mvrt_prop_getvalue(mvprop);
   mvrt_stack_push(stack, value_v);
 
   return ip + 1;
@@ -294,9 +292,9 @@ int _eval_prop_set(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_value_t prop_v = mvrt_stack_pop(stack);
-  mvrt_value_t value_v = mvrt_stack_pop(stack);
-  char *prop = mvrt_value_string_get(prop_v);
+  mv_value_t prop_v = mvrt_stack_pop(stack);
+  mv_value_t value_v = mvrt_stack_pop(stack);
+  char *prop = mv_value_string_get(prop_v);
   mvrt_prop_t mvprop = mvrt_prop_lookup(mv_device_self(), prop);
   assert(prop && "No such property exists.");
   
@@ -353,14 +351,13 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
      Call a remote function with/without waiting for the return value. Stack
      top should contain function value, number of arguments, and arguments.
    */
-  mvrt_value_t fnam_v = mvrt_stack_pop(stack);
-  mvrt_value_t farg_v = mvrt_stack_pop(stack);
+  mv_value_t fnam_v = mvrt_stack_pop(stack);
+  mv_value_t farg_v = mvrt_stack_pop(stack);
 
-  char *func_s = (char *) mvrt_value_string_get(fnam_v);
+  char *func_s = (char *) mv_value_string_get(fnam_v);
   mvrt_func_t func = _eval_get_func(func_s);
-  mvrt_value_t func_v = mvrt_value_func(func);
   if (mvrt_func_tag(func) == MVRT_FUNC_NATIVE)
-    return _eval_call_native(func_v, farg_v, ctx);
+    return _eval_call_native(func, farg_v, ctx);
 
   const char *dev = mvrt_func_dev(func);
   const char *name = mvrt_func_name(func);
@@ -383,7 +380,7 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
               " \"src\":\"%s\", "
               " \"arg\":"
               "{ \"name\": \"%s\", \"funarg\" : %s } }",
-              destaddr, mv_mqueue_addr(mq), name, mvrt_value_to_str(farg_v));
+              destaddr, mv_mqueue_addr(mq), name, mv_value_to_str(farg_v));
       mv_mqueue_put(mq, msg);
       break;
     case MVRT_OP_CALL_FUNC_RET:
@@ -394,7 +391,7 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
               " \"arg\":"
               "{ \"name\": \"%s\", \"funarg\" : %s, \"retid\" : %d, "
               "  \"retaddr\": \"%s\" } }",
-              destaddr, mv_mqueue_addr(mq), name, mvrt_value_to_str(farg_v), 
+              destaddr, mv_mqueue_addr(mq), name, mv_value_to_str(farg_v), 
               rid, mv_mqueue_addr(mq));
       mv_mqueue_put(mq, msg);
       return _EVAL_SUSPEND;
@@ -410,13 +407,12 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
   return ip + 1;
 }
 
-int _eval_call_native(mvrt_value_t func_v, mvrt_value_t farg_v, 
+int _eval_call_native(mvrt_func_t func, mv_value_t farg_v, 
                       mvrt_context_t *ctx)
 {
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_func_t func = mvrt_value_func_get(func_v);
   mvrt_native_t *native = mvrt_func_native(func);
 
   /* get function */
@@ -461,7 +457,7 @@ int _eval_call_native(mvrt_value_t func_v, mvrt_value_t farg_v,
   else
     (native->func2)(arg1, arg2);
 
-  mvrt_value_t retval_v = mvrt_value_int(retval);
+  mv_value_t retval_v = mv_value_int(retval);
   mvrt_stack_push(stack, retval_v);
 
   return ip + 1;
@@ -472,12 +468,12 @@ int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_value_t retid_v = mvrt_stack_pop(stack);
-  mvrt_value_t retaddr_v = mvrt_stack_pop(stack);
-  mvrt_value_t retval_v = mvrt_stack_pop(stack);
+  mv_value_t retid_v = mvrt_stack_pop(stack);
+  mv_value_t retaddr_v = mvrt_stack_pop(stack);
+  mv_value_t retval_v = mvrt_stack_pop(stack);
 
-  int retid = mvrt_value_int_get(retid_v);
-  const char *retaddr = mvrt_value_string_get(retaddr_v);
+  int retid = mv_value_int_get(retid_v);
+  const char *retaddr = mv_value_string_get(retaddr_v);
 
   static char msg[4096];
   sprintf(msg, 
@@ -486,7 +482,7 @@ int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx)
           " \"src\":\"%s\", "
           " \"arg\":"
           "{ \"retid\": \"%d\", \"retval\" : %s } }",
-          retaddr, mv_mqueue_addr(mq), retid, mvrt_value_to_str(retval_v));
+          retaddr, mv_mqueue_addr(mq), retid, mv_value_to_str(retval_v));
 
   return ip + 1;
 }
@@ -496,9 +492,9 @@ int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_value_t retid_v = mvrt_stack_pop(stack);
-  mvrt_value_t retval_v = mvrt_stack_pop(stack);
-  int retid = mvrt_value_int_get(retid_v);
+  mv_value_t retid_v = mvrt_stack_pop(stack);
+  mv_value_t retval_v = mvrt_stack_pop(stack);
+  int retid = mv_value_int_get(retid_v);
 
   mvrt_continue_t *cont = mvrt_continuation_get(retid);
   mvrt_context_t *cont_ctx = cont->ctx;
@@ -509,13 +505,10 @@ int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx)
 /*
  * Functions for the eval interface.
  */
-int mvrt_eval_reactor(mvrt_reactor_t *reactor, mvrt_value_t event)
+int mvrt_eval_reactor(mvrt_reactor_t *reactor, mvrt_eventinst_t *evinst)
 {
-  fprintf(stdout, "EVAL: "); 
-  mvrt_value_print(event);
-
-  mvrt_event_t evtype = mvrt_value_event_type(event);
-  mvrt_value_t evdata = mvrt_value_event_data(event);
+  mvrt_event_t evtype = evinst->type;
+  mv_value_t evdata = evinst->data;
 
   /* Create a new context
      . code

@@ -3,12 +3,10 @@
  *
  * @brief Interface to event queues.
  */
-#include "rtevent.h"
-#include "rtvalue.h"
-
 #ifndef MVRT_EVQUEUE_H
 #define MVRT_EVQUEUE_H
 
+#include "rtevent.h"
 
 typedef void mvrt_evqueue_t;
 
@@ -33,10 +31,10 @@ extern int mvrt_evqueue_run(mvrt_evqueue_t *evq);
 extern int mvrt_evqueue_stop(mvrt_evqueue_t *evq);
 
 /* Blocking get. Returns -1 on failure. */
-extern mvrt_value_t mvrt_evqueue_get(mvrt_evqueue_t *evq);
+extern mvrt_eventinst_t *mvrt_evqueue_get(mvrt_evqueue_t *evq);
 
 /* Blocking put. Returns -1 on failure. */
-extern int mvrt_evqueue_put(mvrt_evqueue_t *evq, mvrt_value_t ev);
+extern int mvrt_evqueue_put(mvrt_evqueue_t *evq, mvrt_eventinst_t *ev);
 
 /* Returns 1 iff the event queue is full. */
 extern int mvrt_evqueue_full(mvrt_evqueue_t *evq);

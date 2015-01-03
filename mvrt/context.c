@@ -13,7 +13,7 @@ mvrt_stack_t *mvrt_stack_new()
 {
   mvrt_stack_t *stack = malloc(sizeof(mvrt_stack_t));
   stack->sptr = 0;
-  stack->values[0] = mvrt_value_null();
+  stack->values[0] = mv_value_null();
 
   return stack;
 }
@@ -25,20 +25,20 @@ int mvrt_stack_delete(mvrt_stack_t *stack)
   return 0;
 }
 
-mvrt_value_t mvrt_stack_pop(mvrt_stack_t *stack)
+mv_value_t mvrt_stack_pop(mvrt_stack_t *stack)
 {
   assert(stack->sptr > 0);
-  mvrt_value_t top = stack->values[stack->sptr--];
+  mv_value_t top = stack->values[stack->sptr--];
 
   return top;
 }
 
-mvrt_value_t mvrt_stack_top(mvrt_stack_t *stack)
+mv_value_t mvrt_stack_top(mvrt_stack_t *stack)
 {
   return stack->values[stack->sptr];
 }
 
-int mvrt_stack_push(mvrt_stack_t *stack, mvrt_value_t value)
+int mvrt_stack_push(mvrt_stack_t *stack, mv_value_t value)
 {
   assert(stack->sptr < MAX_STACK_SIZE - 1);
   stack->values[++stack->sptr] = value;

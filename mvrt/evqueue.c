@@ -19,15 +19,15 @@ typedef struct _evqueue_struct {
   int size;
   int head;
   int tail;
-  mvrt_value_t *evs;
+  mvrt_eventinst_t **evs;
 } _evqueue_t;
 
 static _evqueue_t *_evq_inst = NULL;
 
 static _evqueue_t *_evqueue_new(int size);
 static int _evqueue_delete(_evqueue_t *evq);
-static int _evqueue_enqueue(_evqueue_t *evq, mvrt_value_t ev);
-static mvrt_value_t _evqueue_dequeue(_evqueue_t *evq);
+static int _evqueue_enqueue(_evqueue_t *evq, mvrt_eventinst_t *evinst);
+static mvrt_eventinst_t *_evqueue_dequeue(_evqueue_t *evq);
 
 _evqueue_t *_evqueue_new(int size)
 {
@@ -46,7 +46,7 @@ _evqueue_t *_evqueue_new(int size)
   evq->size = size;
   evq->head = 0;
   evq->tail = 0;
-  evq->evs = malloc(sizeof(mvrt_value_t) * size);
+  evq->evs = malloc(sizeof(mvrt_eventinst_t *) * size);
 
   return evq;
 }
@@ -69,7 +69,7 @@ int _evqueue_empty(_evqueue_t *evq)
   return evq->tail == evq->head;
 }
 
-int _evqueue_enqueue(_evqueue_t *evq, mvrt_value_t ev)
+int _evqueue_enqueue(_evqueue_t *evq, mvrt_eventinst_t *evinst)
 {
   if (pthread_mutex_lock(&evq->lock) != 0) {
     perror("pthread_mutex_lock@_evqueue_enqueue");
@@ -83,7 +83,7 @@ int _evqueue_enqueue(_evqueue_t *evq, mvrt_value_t ev)
     return -1;
   }
 
-  evq->evs[evq->tail] = ev;
+  evq->evs[evq->tail] = evinst;
   evq->tail = (evq->tail + 1) % evq->size;
 
   if (pthread_mutex_unlock(&evq->lock) != 0)  {
@@ -94,19 +94,19 @@ int _evqueue_enqueue(_evqueue_t *evq, mvrt_value_t ev)
   return 0;
 }
 
-mvrt_value_t _evqueue_dequeue(_evqueue_t *evq)
+mvrt_eventinst_t *_evqueue_dequeue(_evqueue_t *evq)
 {
   pthread_mutex_lock(&evq->lock);
   if (_evqueue_empty(evq)) {
     pthread_mutex_unlock(&evq->lock);
-    return mvrt_value_null();
+    return NULL;
   }
 
-  mvrt_value_t ev = evq->evs[evq->head];
+  mvrt_eventinst_t *evinst = evq->evs[evq->head];
   evq->head = (evq->head + 1) % evq->size;
 
   pthread_mutex_unlock(&evq->lock);
-  return ev;
+  return evinst;
 }
 
 /*
@@ -130,24 +130,24 @@ mvrt_evqueue_t *mvrt_evqueue_getcurrent()
   return _current_evq;
 }
 
-mvrt_value_t mvrt_evqueue_get(mvrt_evqueue_t *q)
+mvrt_eventinst_t *mvrt_evqueue_get(mvrt_evqueue_t *q)
 {
   if (!q)
-    return mvrt_value_null();
+    return NULL;
 
   _evqueue_t *evq = (_evqueue_t *) q;
 
   return _evqueue_dequeue(evq);
 }
 
-int mvrt_evqueue_put(mvrt_evqueue_t *q, mvrt_value_t ev)
+int mvrt_evqueue_put(mvrt_evqueue_t *q, mvrt_eventinst_t *evinst)
 {
-  if (!ev)
+  if (!evinst)
     return -1;
 
   _evqueue_t *evq = (_evqueue_t *) q;
 
-  return _evqueue_enqueue(evq, ev);
+  return _evqueue_enqueue(evq, evinst);
 }
 
 int mvrt_evqueue_full(mvrt_evqueue_t *q)

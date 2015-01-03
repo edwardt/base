@@ -6,7 +6,7 @@
 #ifndef MV_CONTEXT_H
 #define MV_CONTEXT_H
 
-#include "rtvalue.h"   /* mvrt_value_t */
+#include <mv/value.h>  /* mv_value_t */
 #include "code.h"      /* mvrt_code_t */
 
 /*
@@ -15,7 +15,7 @@
 #define MAX_STACK_SIZE 1024
 typedef struct mvrt_stack {
   size_t sptr;
-  mvrt_value_t values[MAX_STACK_SIZE];
+  mv_value_t values[MAX_STACK_SIZE];
 } mvrt_stack_t;
 
 /*
@@ -24,7 +24,7 @@ typedef struct mvrt_stack {
 typedef struct mvrt_context {
   int iptr;              /* index to code array */
   mvrt_stack_t *stack;   /* stack */
-  mvrt_value_t arg;      /* argument to reactor/function */
+  mv_value_t arg;      /* argument to reactor/function */
 } mvrt_context_t;
 
 
@@ -43,9 +43,9 @@ extern int mvrt_code_delete(mvrt_code_t *code);
 
 extern mvrt_stack_t *mvrt_stack_new();
 extern int mvrt_stack_delete(mvrt_stack_t *stk);
-extern mvrt_value_t mvrt_stack_top(mvrt_stack_t *stk);
-extern mvrt_value_t mvrt_stack_pop(mvrt_stack_t *stk);
-extern int mvrt_stack_push(mvrt_stack_t *stk, mvrt_value_t value);
+extern mv_value_t mvrt_stack_top(mvrt_stack_t *stk);
+extern mv_value_t mvrt_stack_pop(mvrt_stack_t *stk);
+extern int mvrt_stack_push(mvrt_stack_t *stk, mv_value_t value);
 
 extern mvrt_context_t *mvrt_context_new();
 extern int mvrt_context_delete(mvrt_context_t *ctx);

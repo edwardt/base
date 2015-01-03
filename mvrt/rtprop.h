@@ -9,7 +9,7 @@
 #define MVRT_PROP_H
 
 #include <common/defs.h>   /* mv_ptr_t */
-#include "rtvalue.h"       /* mvrt_value_t */
+#include <mv/value.h>      /* mv_value_t */
 
 
 /* Opaque handle for the property structure. */
@@ -30,8 +30,7 @@ extern int mvrt_prop_delete(mvrt_prop_t prop);
 
 extern mvrt_prop_t mvrt_prop_lookup(const char *dev, const char *name);
 
-extern mvrt_value_t mvrt_prop_getvalue(mvrt_prop_t prop);
-extern int mvrt_prop_setvalue(mvrt_prop_t prop, mvrt_value_t value);
-
+extern mv_value_t mvrt_prop_getvalue(mvrt_prop_t prop);
+extern int mvrt_prop_setvalue(mvrt_prop_t prop, mv_value_t value);
 
 #endif /* MVRT_PROP_H */

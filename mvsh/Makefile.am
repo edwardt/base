@@ -1,11 +1,6 @@
-noinst_LIBRARIES = libmv.a
-libmv_a_SOURCES = \
-	value.c \
-	event.c \
-	device.c \
-	prop.c \
-	func.c \
-	message.c
+bin_PROGRAMS = mvsh
+mvsh_SOURCES = \
+	main.c
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \
@@ -15,18 +10,23 @@ STRICT_CHECK_CPP = \
 	-fno-elide-constructors -pedantic-errors -ansi -Wextra -Wall \
 	-Wold-style-cast -Wuninitialized -Wmissing-declarations -Werror
 
-libmv_a_CPPFLAGS = -I$(top_srcdir)/include
+mvsh_CPPFLAGS = -I$(top_srcdir)/include
 
-libmv_a_CFLAGS =
+mvsh_CFLAGS = -rdynamic
 
-libmv_a_LIBADD = /usr/local/lib/libjsmn.a
+mvsh_LDADD =  ../libmq/libmq.a ../libmv/libmv.a -lpthread -lzmq -ljsmn \
+	-ldl -lrt
+
+
 
 check_SCRIPTS = greptest.sh
 TESTS = $(check_SCRIPTS)
 
+run: $(bin_PROGRAMS)
+	./mvsh
+
 greptest.sh:
-	echo './meadowd | grep "hello"' > greptest.sh
+	echo './mvsh | grep "hello"' > greptest.sh
 	chmod +x greptest.sh
 
 CLEANFILES = greptest.sh
-

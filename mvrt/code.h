@@ -6,8 +6,7 @@
 #ifndef MV_CODE_H
 #define MV_CODE_H
 
-#include "operator.h"  /* mvrt_instr_t */
-#include "rtvalue.h"   /* mvrt_value_t */
+#include "operator.h"    /* mvrt_instr_t */
 
 #define MAX_CODE_SIZE 1024
 typedef struct mvrt_code {

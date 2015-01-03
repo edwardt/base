@@ -16,7 +16,6 @@
 #include <mv/device.h>       /* mv_device_self */
 #include <support/daemon.h>  /* daemon_init */
 
-#include "message.h"
 #include "mdecoder.h"
 #include "rtsched.h"
 #include "rtevent.h"
@@ -122,8 +121,8 @@ int main(int argc, char *argv[])
   /* user props */
   mvrt_prop_t prev = mvrt_prop_new(self, "pval", MVRT_PROP_LOCAL);
   mvrt_prop_t curr = mvrt_prop_new(self, "cval", MVRT_PROP_LOCAL);
-  mvrt_value_t prev_init = mvrt_value_int(0);
-  mvrt_value_t curr_init = mvrt_value_int(0);
+  mv_value_t prev_init = mv_value_int(0);
+  mv_value_t curr_init = mv_value_int(0);
   mvrt_prop_setvalue(prev, prev_init);
   mvrt_prop_setvalue(curr, curr_init);
 

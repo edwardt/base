@@ -1,10 +1,8 @@
 bin_PROGRAMS = mvrt
 mvrt_SOURCES = \
-	message.c \
 	rtevent.c \
 	rtprop.c \
 	rtfunc.c \
-	rtvalue.c \
 	operator.c \
 	context.c \
 	code.c \

@@ -19,13 +19,7 @@ typedef mv_ptr_t mvrt_func_t;
    number of value tags to 8 so that we can all value structs to be 8-byte 
    aligned (multiples of 64-bit)? 
 */
-typedef enum {
-  MVRT_VALUE_EVENT = 0x7,
-  MVRT_VALUE_FUNC  = 0x8,
-  MVRT_VALUE_NTAGS
-} mvrt_valuetag_t;
-
-typedef mv_ptr_t mvrt_value_t;
+typedef mv_value_t mvrt_value_t;
 
 /* FIXME: mvrt_eventval and mvrt_funcval must be allocated in 16-byte 
    aligned way to allow tag to be stored in 4 LSB bits. */

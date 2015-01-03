@@ -46,10 +46,10 @@ LIBRARIES = $(noinst_LIBRARIES)
 AR = ar
 ARFLAGS = cru
 libmv_a_AR = $(AR) $(ARFLAGS)
-libmv_a_DEPENDENCIES =
+libmv_a_DEPENDENCIES = /usr/local/lib/libjsmn.a
 am_libmv_a_OBJECTS = libmv_a-value.$(OBJEXT) libmv_a-event.$(OBJEXT) \
 	libmv_a-device.$(OBJEXT) libmv_a-prop.$(OBJEXT) \
-	libmv_a-func.$(OBJEXT)
+	libmv_a-func.$(OBJEXT) libmv_a-message.$(OBJEXT)
 libmv_a_OBJECTS = $(am_libmv_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -163,7 +163,8 @@ libmv_a_SOURCES = \
 	event.c \
 	device.c \
 	prop.c \
-	func.c
+	func.c \
+	message.c
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \
@@ -175,7 +176,7 @@ STRICT_CHECK_CPP = \
 
 libmv_a_CPPFLAGS = -I$(top_srcdir)/include
 libmv_a_CFLAGS = 
-libmv_a_LIBADD = 
+libmv_a_LIBADD = /usr/local/lib/libjsmn.a
 check_SCRIPTS = greptest.sh
 TESTS = $(check_SCRIPTS)
 CLEANFILES = greptest.sh
@@ -230,6 +231,7 @@ distclean-compile:
 include ./$(DEPDIR)/libmv_a-device.Po
 include ./$(DEPDIR)/libmv_a-event.Po
 include ./$(DEPDIR)/libmv_a-func.Po
+include ./$(DEPDIR)/libmv_a-message.Po
 include ./$(DEPDIR)/libmv_a-prop.Po
 include ./$(DEPDIR)/libmv_a-value.Po
 
@@ -316,6 +318,20 @@ libmv_a-func.obj: func.c
 #	source='func.c' object='libmv_a-func.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-func.obj `if test -f 'func.c'; then $(CYGPATH_W) 'func.c'; else $(CYGPATH_W) '$(srcdir)/func.c'; fi`
+
+libmv_a-message.o: message.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-message.o -MD -MP -MF $(DEPDIR)/libmv_a-message.Tpo -c -o libmv_a-message.o `test -f 'message.c' || echo '$(srcdir)/'`message.c
+	$(am__mv) $(DEPDIR)/libmv_a-message.Tpo $(DEPDIR)/libmv_a-message.Po
+#	source='message.c' object='libmv_a-message.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-message.o `test -f 'message.c' || echo '$(srcdir)/'`message.c
+
+libmv_a-message.obj: message.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -MT libmv_a-message.obj -MD -MP -MF $(DEPDIR)/libmv_a-message.Tpo -c -o libmv_a-message.obj `if test -f 'message.c'; then $(CYGPATH_W) 'message.c'; else $(CYGPATH_W) '$(srcdir)/message.c'; fi`
+	$(am__mv) $(DEPDIR)/libmv_a-message.Tpo $(DEPDIR)/libmv_a-message.Po
+#	source='message.c' object='libmv_a-message.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libmv_a_CPPFLAGS) $(CPPFLAGS) $(libmv_a_CFLAGS) $(CFLAGS) -c -o libmv_a-message.obj `if test -f 'message.c'; then $(CYGPATH_W) 'message.c'; else $(CYGPATH_W) '$(srcdir)/message.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

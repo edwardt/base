@@ -13,7 +13,7 @@
 typedef struct _rtprop {
   char *dev;
   char *name;
-  mvrt_value_t value;       /* value */
+  mv_value_t value;         /* value */
 
   unsigned tag :      3;    /* tag */
   unsigned free     : 1;    /* free or not */
@@ -38,7 +38,7 @@ int _rtprop_table_init(const char *file)
     p = _rtprop_table + i;
     p->dev = NULL;
     p->name = NULL;
-    p->value = mvrt_value_null();
+    p->value = mv_value_null();
 
     p->free = 1;
     p->free_idx = i;
@@ -112,7 +112,7 @@ mvrt_prop_t mvrt_prop_new(const char *dev, const char *name, int tag)
   case MVRT_PROP_GLOBAL:
   case MVRT_PROP_SYSTEM:
   case MVRT_PROP_LOCAL:
-    rtprop->value = mvrt_value_null();
+    rtprop->value = mv_value_null();
     return (mvrt_prop_t) rtprop;
   default:
     assert(0 && "mvrt_prop_new: Invalid tag");
@@ -136,7 +136,7 @@ mvrt_prop_t mvrt_prop_lookup(const char *dev, const char *name)
   return (mvrt_prop_t) rtprop;
 }
 
-int mvrt_prop_setvalue(mvrt_prop_t prop, mvrt_value_t value)
+int mvrt_prop_setvalue(mvrt_prop_t prop, mv_value_t value)
 {
   _rtprop_t *rtprop = (_rtprop_t *) prop;
   if (!rtprop)
@@ -148,7 +148,7 @@ int mvrt_prop_setvalue(mvrt_prop_t prop, mvrt_value_t value)
     return -1;
   case MVRT_PROP_SYSTEM:
   case MVRT_PROP_LOCAL:
-    mvrt_value_delete(rtprop->value);
+    mv_value_delete(rtprop->value);
     rtprop->value = value;
     break;
   default:
@@ -159,15 +159,15 @@ int mvrt_prop_setvalue(mvrt_prop_t prop, mvrt_value_t value)
   return 0;
 }
 
-mvrt_value_t mvrt_prop_getvalue(mvrt_prop_t prop)
+mv_value_t mvrt_prop_getvalue(mvrt_prop_t prop)
 {
   _rtprop_t *rtprop = (_rtprop_t *) prop;
   if (!rtprop)
-    return mvrt_value_null();
+    return mv_value_null();
 
   switch (rtprop->tag) {
   case MVRT_PROP_GLOBAL:
-    return (mvrt_value_t) mv_prop_value(rtprop->dev, rtprop->name, 0);
+    return (mv_value_t) mv_prop_value(rtprop->dev, rtprop->name, 0);
   case MVRT_PROP_SYSTEM:
   case MVRT_PROP_LOCAL:
     return rtprop->value;
@@ -176,5 +176,5 @@ mvrt_value_t mvrt_prop_getvalue(mvrt_prop_t prop)
     break;
   }
 
-  return mvrt_value_null();
+  return mv_value_null();
 }

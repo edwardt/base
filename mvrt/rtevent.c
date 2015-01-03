@@ -1,18 +1,17 @@
 /**
  * @file rtevent.c
  */
-#include <stdio.h>      /* fprintf */
-#include <stdlib.h>     /* free, exit */
-#include <string.h>     /* strdup */
-#include <assert.h>     /* assert */
-#include <signal.h>     /* sigaction */
-#include <time.h>       /* timer_settime */
-#include <mv/event.h>   /* mv_event_publish */
-#include <mv/device.h>  /* mv_device_self */
-#include "evqueue.h"    /* mvrt_evqueue_instance */
-#include "rtvalue.h"    /* mvrt_value_t */
+#include <stdio.h>        /* fprintf */
+#include <stdlib.h>       /* free, exit */
+#include <string.h>       /* strdup */
+#include <assert.h>       /* assert */
+#include <signal.h>       /* sigaction */
+#include <time.h>         /* timer_settime */
+#include <mv/event.h>     /* mv_event_publish */
+#include <mv/device.h>    /* mv_device_self */
+#include <mv/value.h>     /* mv_value_t */
+#include "evqueue.h"      /* mvrt_evqueue_instance */
 #include "rtevent.h"
-
 
 #define MAX_RTIMER_TABLE 128
 typedef struct _rtimer {
@@ -160,19 +159,19 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
     rtimer = _rtimer_table + i;
     if (*tid == rtimer->timerid) {
       mvrt_event_t rtev = rtimer->rtev;
-      mvrt_value_t null_v = mv_value_null();
-      mvrt_value_t eval = mvrt_value_event(rtev, null_v);
+      mv_value_t null_v = mv_value_null();
+      mvrt_eventinst_t *evinst = mvrt_eventinst_new(rtev, null_v);
 
       while (mvrt_evqueue_full(evq))
         nanosleep(&ts, NULL);
-      mvrt_evqueue_put(evq, eval);
+      mvrt_evqueue_put(evq, evinst);
     }
   }
 }
 
 
 /*
- * API for the event module.
+ * Functions for events.
  */
 int mvrt_event_module_init()
 {
@@ -249,4 +248,26 @@ mvrt_eventag_t mvrt_event_tag(mvrt_event_t event)
   _rtevent_t *rtev = (_rtevent_t *) event;
   return rtev->tag;
 }
+
+
+/*
+ * Functions for event instances.
+ */
+mvrt_eventinst_t *mvrt_eventinst_new(mvrt_event_t ev, mv_value_t data)
+{
+  /* TODO: rather than directly doing malloc, we can maintain an instance
+     pool to reuse preallocated instance object, keep track of memory
+     for event instances, etc. */
+
+  mvrt_eventinst_t *evinst = malloc(sizeof(mvrt_eventinst_t));
+  evinst->type = ev;
+  evinst->data = data;
+
+  return evinst;
+}
+
+int mvrt_eventinst_delete(mvrt_eventinst_t *evinst)
+{
+  free(evinst);
+  return 0;}
 

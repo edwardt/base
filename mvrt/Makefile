@@ -45,9 +45,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_mvrt_OBJECTS = mvrt-message.$(OBJEXT) mvrt-rtevent.$(OBJEXT) \
-	mvrt-rtprop.$(OBJEXT) mvrt-rtfunc.$(OBJEXT) \
-	mvrt-rtvalue.$(OBJEXT) mvrt-operator.$(OBJEXT) \
+am_mvrt_OBJECTS = mvrt-rtevent.$(OBJEXT) mvrt-rtprop.$(OBJEXT) \
+	mvrt-rtfunc.$(OBJEXT) mvrt-operator.$(OBJEXT) \
 	mvrt-context.$(OBJEXT) mvrt-code.$(OBJEXT) \
 	mvrt-evqueue.$(OBJEXT) mvrt-mdecoder.$(OBJEXT) \
 	mvrt-reactor.$(OBJEXT) mvrt-eval.$(OBJEXT) \
@@ -164,11 +163,9 @@ top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
 mvrt_SOURCES = \
-	message.c \
 	rtevent.c \
 	rtprop.c \
 	rtfunc.c \
-	rtvalue.c \
 	operator.c \
 	context.c \
 	code.c \
@@ -283,14 +280,12 @@ include ./$(DEPDIR)/mvrt-eval.Po
 include ./$(DEPDIR)/mvrt-evqueue.Po
 include ./$(DEPDIR)/mvrt-main.Po
 include ./$(DEPDIR)/mvrt-mdecoder.Po
-include ./$(DEPDIR)/mvrt-message.Po
 include ./$(DEPDIR)/mvrt-operator.Po
 include ./$(DEPDIR)/mvrt-reactor.Po
 include ./$(DEPDIR)/mvrt-rtevent.Po
 include ./$(DEPDIR)/mvrt-rtfunc.Po
 include ./$(DEPDIR)/mvrt-rtprop.Po
 include ./$(DEPDIR)/mvrt-rtsched.Po
-include ./$(DEPDIR)/mvrt-rtvalue.Po
 include ./$(DEPDIR)/mvrt-sysinit.Po
 
 .c.o:
@@ -306,20 +301,6 @@ include ./$(DEPDIR)/mvrt-sysinit.Po
 #	source='$<' object='$@' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-mvrt-message.o: message.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-message.o -MD -MP -MF $(DEPDIR)/mvrt-message.Tpo -c -o mvrt-message.o `test -f 'message.c' || echo '$(srcdir)/'`message.c
-	$(am__mv) $(DEPDIR)/mvrt-message.Tpo $(DEPDIR)/mvrt-message.Po
-#	source='message.c' object='mvrt-message.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-message.o `test -f 'message.c' || echo '$(srcdir)/'`message.c
-
-mvrt-message.obj: message.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-message.obj -MD -MP -MF $(DEPDIR)/mvrt-message.Tpo -c -o mvrt-message.obj `if test -f 'message.c'; then $(CYGPATH_W) 'message.c'; else $(CYGPATH_W) '$(srcdir)/message.c'; fi`
-	$(am__mv) $(DEPDIR)/mvrt-message.Tpo $(DEPDIR)/mvrt-message.Po
-#	source='message.c' object='mvrt-message.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-message.obj `if test -f 'message.c'; then $(CYGPATH_W) 'message.c'; else $(CYGPATH_W) '$(srcdir)/message.c'; fi`
 
 mvrt-rtevent.o: rtevent.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rtevent.o -MD -MP -MF $(DEPDIR)/mvrt-rtevent.Tpo -c -o mvrt-rtevent.o `test -f 'rtevent.c' || echo '$(srcdir)/'`rtevent.c
@@ -362,20 +343,6 @@ mvrt-rtfunc.obj: rtfunc.c
 #	source='rtfunc.c' object='mvrt-rtfunc.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtfunc.obj `if test -f 'rtfunc.c'; then $(CYGPATH_W) 'rtfunc.c'; else $(CYGPATH_W) '$(srcdir)/rtfunc.c'; fi`
-
-mvrt-rtvalue.o: rtvalue.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rtvalue.o -MD -MP -MF $(DEPDIR)/mvrt-rtvalue.Tpo -c -o mvrt-rtvalue.o `test -f 'rtvalue.c' || echo '$(srcdir)/'`rtvalue.c
-	$(am__mv) $(DEPDIR)/mvrt-rtvalue.Tpo $(DEPDIR)/mvrt-rtvalue.Po
-#	source='rtvalue.c' object='mvrt-rtvalue.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtvalue.o `test -f 'rtvalue.c' || echo '$(srcdir)/'`rtvalue.c
-
-mvrt-rtvalue.obj: rtvalue.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rtvalue.obj -MD -MP -MF $(DEPDIR)/mvrt-rtvalue.Tpo -c -o mvrt-rtvalue.obj `if test -f 'rtvalue.c'; then $(CYGPATH_W) 'rtvalue.c'; else $(CYGPATH_W) '$(srcdir)/rtvalue.c'; fi`
-	$(am__mv) $(DEPDIR)/mvrt-rtvalue.Tpo $(DEPDIR)/mvrt-rtvalue.Po
-#	source='rtvalue.c' object='mvrt-rtvalue.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtvalue.obj `if test -f 'rtvalue.c'; then $(CYGPATH_W) 'rtvalue.c'; else $(CYGPATH_W) '$(srcdir)/rtvalue.c'; fi`
 
 mvrt-operator.o: operator.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-operator.o -MD -MP -MF $(DEPDIR)/mvrt-operator.Tpo -c -o mvrt-operator.o `test -f 'operator.c' || echo '$(srcdir)/'`operator.c
