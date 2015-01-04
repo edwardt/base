@@ -33,10 +33,10 @@ reactor _R_prop_get {
   getf
   prop_get
   getarg
-  pushs "retid"
+  pushs "retaddr"
   getf
   getarg
-  pushs "retaddr"
+  pushs "retid"
   getf
   call_return
 }

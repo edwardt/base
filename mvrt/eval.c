@@ -544,8 +544,10 @@ int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx)
           " \"tag\":\"REPLY\", "
           " \"src\":\"%s\", "
           " \"arg\":"
-          "{ \"retid\": \"%d\", \"retval\" : %s } }",
+          "{ \"retid\": %d, \"retval\" : %s } }",
           retaddr, mv_mqueue_addr(mq), retid, mv_value_to_str(retval_v));
+  fprintf(stdout, "REPLY: %s\n", msg);
+  mv_mqueue_put(mq, msg);
 
   return ip + 1;
 }

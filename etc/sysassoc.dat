@@ -1,4 +1,5 @@
 # system event-reactor assoc
 _E_func_call      _R_func_call
 _E_func_call_ret  _R_func_call_ret
+_E_prop_get       _R_prop_get
 _E_reply          _R_reply
