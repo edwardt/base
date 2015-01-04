@@ -63,6 +63,14 @@ reactor r3 {
   pushs "dev1:foo"
   call_func              # call dev1:gpioPut(10 1)
 }
+
+reactor r4 {
+  pushs "dev1:batterylife"
+  get_prop
+  pushs "sysprint"
+  call_func
+}
+
 # ----------------------- IGNORE BELOW -- FOR LATER LOOKUP ONLY
 #
 #  pushi iargs 2
