@@ -131,7 +131,7 @@ int mv_device_service_init(const char *dev, const char *file)
     mvdev->addr = strdup(addr);
   }
 
-  fprintf(stdout, "Device service initiated...\n");
+  fprintf(stdout, "Device address lookup service initiated...\n");
   return 0;
 }
 

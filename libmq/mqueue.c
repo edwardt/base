@@ -124,6 +124,10 @@ char *_mqueue_dequeue(_mqueue_t *mq)
   char *s = mq->msgs[mq->head];
   mq->head = (mq->head + 1) % mq->size;
 
+  /*
+    fprintf(stdout, "_mqueue_dequeue: %s\n", s);
+  */
+
   pthread_mutex_unlock(&mq->lock);
   return s;
 }
@@ -180,20 +184,13 @@ void *_mqueue_input_thread(void *arg)
     /*
       fprintf(stdout, "Message received: [%s]:%d\n", recvstr, recvsz);
     */
-     
-    while (_mqueue_full(mq->imq)) {
+
+    while (_mqueue_enqueue(mq->imq, recvstr) != 0) {
       nanosleep(&ts, NULL);
     }
 
-    if (_mqueue_enqueue(mq->imq, recvstr) != 0) {
-      strcpy(sendstr, "REPLY:mqueue_full");
-      free(recvstr);
-    }
-    else {
-      strcpy(sendstr, "REPLY:mqueue_added");
-    }
-
     /* ACK - optimize away this later */
+    strcpy(sendstr, "REPLY");
     sendsz = strlen(sendstr);
     zmq_msg_init_size(&sendmsg, sendsz);
     memcpy(zmq_msg_data(&sendmsg), sendstr, sendsz);
@@ -216,24 +213,23 @@ void *_mqueue_output_thread(void *arg)
   char *recvstr;                      /* msg str from zmq_msg_recv */
   char *sendstr;                      /* msg str for zmq_msg_send */
   struct timespec ts;                 /* time for nanosleep */
+  ts.tv_sec = 0;
+  ts.tv_nsec = 1000;
 
   char *smsg;
 
   while (1) {
-    while (_mqueue_empty(mq->omq)) {
-      nanosleep(&ts, NULL);
-    }
-
     if ((sendstr = _mqueue_dequeue(mq->omq)) == NULL) {
+      nanosleep(&ts, NULL);
       continue;
     }
 
     const char *sendaddr = _mqueue_getaddr(sendstr);
     const char *senddata = _mqueue_getdata(sendstr);
 
-    //printf("SENDADDR: %s\n",  sendaddr);
-    //printf("SENDDATA: %s\n",  senddata);
     void *sendsock = mqutil_getsock(sendaddr);
+    if (sendsock == NULL) 
+      continue;
 
     zmq_msg_t sendmsg;
     int sendsz = strlen(senddata);
@@ -241,26 +237,19 @@ void *_mqueue_output_thread(void *arg)
     memcpy(zmq_msg_data(&sendmsg), senddata, sendsz);
     int sz;
     if ((sz = zmq_msg_send(&sendmsg, sendsock, 0)) == -1) {
-      perror("zmq_msg_send");
+      perror("zmq_msg_send@_mqueue_output_thread");
+      zmq_msg_close(&sendmsg);
+      continue;
     }
     zmq_msg_close(&sendmsg);
 
     zmq_msg_t recvmsg;
     int recvsz;
     zmq_msg_init(&recvmsg);
-    if ((recvsz = zmq_msg_recv(&recvmsg, sendsock, 0)) != -1) {
+    if ((recvsz = zmq_msg_recv(&recvmsg, sendsock, ZMQ_DONTWAIT)) != -1) {
       char *recvstr = malloc(recvsz + 1);
       memcpy(recvstr, (char *) zmq_msg_data(&recvmsg), recvsz);
       recvstr[recvsz] = '\0';
-
-      /*
-        while (_mqueue_full(mq->imq)) {
-        nanosleep(&ts, NULL);
-        }
-        while (_mqueue_enqueue(mq->imq, recvstr) == 0) {
-        nanosleep(&ts, NULL);
-        }
-      */
     }
   }
 }
@@ -292,12 +281,12 @@ mv_mqueue_t *mv_mqueue_init(unsigned port)
   mq->omq = _mqueue_new(MAX_MESSAGE_QUEUE);
 
   char addr[1024];
-  sprintf(addr, "tcp://*:%d", port);
+  sprintf(addr, "tcp://%s:%d", mqutil_getaddr(), port);
 
   /* initialize mqutil */
   mqutil_init();
 
-  mq->addr = strdup(mqutil_getaddr());
+  mq->addr = strdup(addr);
   mq->ctx = zmq_ctx_new();
 
   /* create socket for receiving requests */
@@ -354,7 +343,11 @@ char *mv_mqueue_get(mv_mqueue_t *q)
 
   _mqinfo_t *mq = (_mqinfo_t *) q;
 
-  return _mqueue_dequeue(mq->imq);
+  char *s = NULL;
+  while ((s = _mqueue_dequeue(mq->imq)) == NULL) ;
+  return s;
+
+  //  return _mqueue_dequeue(mq->imq);
 }
 
 int mv_mqueue_put(mv_mqueue_t *q, char *msg)
@@ -364,20 +357,10 @@ int mv_mqueue_put(mv_mqueue_t *q, char *msg)
 
   _mqinfo_t *mq = (_mqinfo_t *) q;
 
-  return _mqueue_enqueue(mq->omq, msg);
-}
+  while (_mqueue_enqueue(mq->omq, msg) != 0) ;
+  //return _mqueue_enqueue(mq->omq, msg);
 
-int mv_mqueue_full(mv_mqueue_t *q)
-{
-  _mqinfo_t *mq = (_mqinfo_t *) q;
-  return _mqueue_full(mq->omq);
-}
-
-
-int mv_mqueue_empty(mv_mqueue_t *q)
-{
-  _mqinfo_t *mq = (_mqinfo_t *) q;
-  return _mqueue_empty(mq->imq);
+  return 0;
 }
 
 const char *mv_mqueue_addr(mv_mqueue_t *q)

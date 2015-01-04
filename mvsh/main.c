@@ -12,7 +12,7 @@ int main(int args, char *argv[])
   /* initialize device service */
   mv_device_service_init("mvsh", "etc/device.dat");
   
-  mv_mqueue_t *mq = mv_mqueue_init(DEFAULT_PORT);
+  mv_mqueue_t *mq = mv_mqueue_init(DEFAULT_PORT+1);
   if (mv_mqueue_run(mq) == -1) {
     fprintf(stderr, "mv_mqueue_run: failed.\n");
     exit(1);

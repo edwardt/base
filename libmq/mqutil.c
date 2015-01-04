@@ -106,8 +106,9 @@ void mqutil_init()
 void *mqutil_getsock(const char *addr)
 {
   _mqsock_t *mqsock = _mqsock_lookup(addr);
-  if (mqsock)
+  if (mqsock) {
     return mqsock->sock;
+  }
 
   mqsock = _mqsock_get_free();
 
@@ -117,9 +118,7 @@ void *mqutil_getsock(const char *addr)
     return NULL;
   }
 
-  char transport[1024];
-  sprintf(transport, "tcp://%s:%d", addr, 5557);
-  if (zmq_connect(mqsock->sock, transport) == -1) {
+  if (zmq_connect(mqsock->sock, addr) != 0) {
     perror("zmq_connect");
     _mqsock_delete(mqsock);
     return NULL;

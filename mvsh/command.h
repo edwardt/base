@@ -10,6 +10,7 @@
 
 typedef enum {
   MVSH_CMD_PROP_GET,
+  MVSH_CMD_PROP_SET,
   MVSH_CMD_EXIT,
   MVSH_CMD_QUIT,
   MVSH_CMD_HELP,

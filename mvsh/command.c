@@ -69,10 +69,11 @@ static int _command_prop_get(char *arg0, mv_mqueue_t *mq)
           " \"arg\":"
           "{ \"name\": \"%s\" \"retid\" : 0, \"retaddr\": \"%s\" } }",
           destaddr, mv_mqueue_addr(mq), prop, mv_mqueue_addr(mq));
-  mv_mqueue_put(mq, msg);
+  fprintf(stdout, "request: %s\n", msg);
+  while (mv_mqueue_put(mq, msg) != 0) ;
 
-  while (mv_mqueue_empty(mq)) ;
-  char *reply = mv_mqueue_get(mq);
+  char *reply = NULL;
+  while ((reply = mv_mqueue_get(mq)) == NULL) ;
   fprintf(stdout, "reply: %s\n", reply);
 
   mv_value_t reply_v = mv_value_from_str(reply);
@@ -115,6 +116,7 @@ static int _command_prop_set(char *arg0, char *arg1, mv_mqueue_t *mq)
           " \"arg\":"
           "{ \"name\": \"%s\" \"value\" : %s } }",
           destaddr, mv_mqueue_addr(mq), prop, arg1);
+  fprintf(stdout, "request: %s\n", msg);
   mv_mqueue_put(mq, msg);
 
   return 0;
@@ -137,17 +139,23 @@ int _command_help()
  */
 int mvsh_command_process(char *line, mv_mqueue_t *mq)
 {
-  char *cmd;
-  char *arg0;
-  char *arg1;
+  char *cmd = NULL;
+  char *arg0 = NULL;
+  char *arg1 = NULL;
   if (_command_tokenize(line, &cmd, &arg0, &arg1) == -1) {
     fprintf(stderr, "Failed to process command: %s\n", line);
     return -1;
   }
+
+  if (!cmd)
+    return -1;
     
   switch (mvsh_command_tag(cmd)) {
   case MVSH_CMD_PROP_GET:
     _command_prop_get(arg0, mq);
+    break;
+  case MVSH_CMD_PROP_SET:
+    _command_prop_set(arg0, arg1, mq);
     break;
   case MVSH_CMD_HELP:
     _command_help();

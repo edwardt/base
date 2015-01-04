@@ -63,10 +63,6 @@ extern int mv_mqueue_put(mv_mqueue_t *mq, char *s);
    will be the JSON-MESSAGE sent from another device through mv_mqueue_put. */
 extern char *mv_mqueue_get(mv_mqueue_t *mq);
 
-/* Returns 1 iff the message queue is full/empty. */
-extern int mv_mqueue_full(mv_mqueue_t *mq);
-extern int mv_mqueue_empty(mv_mqueue_t *mq);
-
 #ifdef __cplusplus
 }
 #endif
