@@ -24,7 +24,7 @@ reactor _R_func_call_ret {
   getarg
   pushs "retaddr"
   getf
-  call_return         # initiate return sequence #1
+  call_return         # initiate return sequence (REPLY)
 }
 
 reactor _R_prop_get {
@@ -38,7 +38,17 @@ reactor _R_prop_get {
   getarg
   pushs "retid"
   getf
-  call_return
+  call_return        # initial return sequence (REPLY)
+}
+
+reactor _R_prop_set {
+  getarg
+  pushs "value"
+  getf
+  getarg
+  pushs "prop"
+  getf
+  prop_set
 }
 
 reactor _R_reply {

@@ -15,10 +15,11 @@ struct {
   const char *sig;
   const char *detail;
 } _cmdinfo[] = {
-  { "prop_get",   1, "prop_get [prop_name]", "prints the property value" },
-  { "exit",       0, "exit",                 "exit the shell" },
-  { "quit",       0, "quit",                 "exit the shell"  },
-  { "help",       0, "help",                 "prints help info"  },
+  { "prop_get",   1, "prop_get dev:prop",     "prints the property value" },
+  { "prop_set",   2, "prop_get dev:prop val", "prints the property value" },
+  { "exit",       0, "exit",                  "exit the shell" },
+  { "quit",       0, "quit",                  "exit the shell"  },
+  { "help",       0, "help",                  "prints help info"  },
   { "",           0}
 };
 
@@ -85,6 +86,40 @@ static int _command_prop_get(char *arg0, mv_mqueue_t *mq)
 
   return 0;
 }
+
+static int _command_prop_set(char *arg0, char *arg1, mv_mqueue_t *mq)
+{
+  char *charp;
+  if (!arg0 || ((charp = strstr(arg0, ":")) == NULL) || charp == arg0) {
+    fprintf(stdout, "Invalid property, %s: should be \"dev:name\"\n", arg0);
+    return -1;
+  }
+  if (!arg1) {
+    fprintf(stdout, "Property value must be provided.\n");
+    return -1;
+  }
+  
+  char *prop = strdup(charp + 1);
+  char save = *charp;
+  *charp = '\0';
+  char *dev = strdup(arg0);
+  *charp = save;
+
+  const char *destaddr = mv_device_addr(dev);
+
+  char msg[4096];
+  sprintf(msg, 
+          "%s {"
+          " \"tag\":\"PROP_SET\", "
+          " \"src\":\"%s\", "
+          " \"arg\":"
+          "{ \"name\": \"%s\" \"value\" : %s } }",
+          destaddr, mv_mqueue_addr(mq), prop, arg1);
+  mv_mqueue_put(mq, msg);
+
+  return 0;
+}
+
 
 int _command_help()
 {
