@@ -46,11 +46,9 @@ int _command_tokenize(char *line, char **cmd, char **arg0, char **arg1)
 
 static int _command_prop_get(char *arg0, mv_mqueue_t *mq)
 {
-  fprintf(stdout, "prop_get %s\n", arg0);
-
   char *charp;
-  if (((charp = strstr(arg0, ":")) == NULL) || charp == arg0) {
-    fprintf(stdout, "Invalid property: %s: should have form \"dev:name\"", arg0);
+  if (!arg0 || ((charp = strstr(arg0, ":")) == NULL) || charp == arg0) {
+    fprintf(stdout, "Invalid property, %s: should be \"dev:name\"\n", arg0);
     return -1;
   }
   
