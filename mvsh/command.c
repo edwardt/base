@@ -16,7 +16,7 @@ struct {
   const char *detail;
 } _cmdinfo[] = {
   { "prop_get",   1, "prop_get dev:prop",     "prints the property value" },
-  { "prop_set",   2, "prop_get dev:prop val", "prints the property value" },
+  { "prop_set",   2, "prop_set dev:prop val", "updates the property value" },
   { "exit",       0, "exit",                  "exit the shell" },
   { "quit",       0, "quit",                  "exit the shell"  },
   { "help",       0, "help",                  "prints help info"  },
