@@ -16,7 +16,7 @@ mvsh_CPPFLAGS = -I$(top_srcdir)/include
 
 mvsh_CFLAGS =
 
-mvsh_LDADD =  ../libmq/libmq.a ../libmv/libmv.a -lzmq -lpthread
+mvsh_LDADD =  ../libmq/libmq.a ../libmv/libmv.a -lzmq -lpthread -ljsmn
 
 
 

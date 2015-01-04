@@ -5,6 +5,7 @@
 #include <stdlib.h>      /* exit */
 #include <string.h>      /* strchr */
 #include <mv/device.h>   /* mv_device_addr */
+#include <mv/value.h>    /* mv_value_t */
 #include <mq/mqueue.h>   /* mv_mqueue_put */
 #include "command.h"
 
@@ -73,8 +74,16 @@ static int _command_prop_get(char *arg0, mv_mqueue_t *mq)
 
   while (mv_mqueue_empty(mq)) ;
   char *reply = mv_mqueue_get(mq);
+  fprintf(stdout, "reply: %s\n", reply);
 
-  printf("reply: %s\n", reply);
+  mv_value_t reply_v = mv_value_from_str(reply);
+  mv_value_t argstr_v = mv_value_string("arg");
+  mv_value_t arg_v = mv_value_map_lookup(reply_v, argstr_v);
+  mv_value_t retvalstr_v = mv_value_string("retval");
+  mv_value_t retval_v = mv_value_map_lookup(arg_v, retvalstr_v);
+  fprintf(stdout, "Value: "); 
+  mv_value_print(retval_v);
+  fprintf(stdout, "\n");
 
   return 0;
 }
