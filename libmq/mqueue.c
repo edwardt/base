@@ -367,6 +367,19 @@ int mv_mqueue_put(mv_mqueue_t *q, char *msg)
   return _mqueue_enqueue(mq->omq, msg);
 }
 
+int mv_mqueue_full(mv_mqueue_t *q)
+{
+  _mqinfo_t *mq = (_mqinfo_t *) q;
+  return _mqueue_full(mq->omq);
+}
+
+
+int mv_mqueue_empty(mv_mqueue_t *q)
+{
+  _mqinfo_t *mq = (_mqinfo_t *) q;
+  return _mqueue_empty(mq->imq);
+}
+
 const char *mv_mqueue_addr(mv_mqueue_t *q)
 {
   if (!q)

@@ -8,7 +8,7 @@
 struct {
   const char *str;    /* string */
   int nargs;          /* number of args on stack */
-} _oper_info[] = {
+} _operinfo[] = {
   /* nop */
   { "nop", 0 },
 
@@ -98,12 +98,12 @@ struct {
 
 const char *mvrt_opcode_str(mvrt_opcode_t op)
 {
-  return _oper_info[op].str;
+  return _operinfo[op].str;
 }
 
 size_t mvrt_opcode_nargs(mvrt_opcode_t op)
 {
-  return _oper_info[op].nargs;
+  return _operinfo[op].nargs;
 }
 
 int mvrt_opcode_tag(const char *str)
@@ -112,7 +112,7 @@ int mvrt_opcode_tag(const char *str)
 
   int op;
   for (op = 0; op < MVRT_OP_NTAGS; op++) {
-    if (!strcmp(_oper_info[op].str, str))
+    if (!strcmp(_operinfo[op].str, str))
       return op;
   }
   return -1;

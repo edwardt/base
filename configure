@@ -4558,7 +4558,7 @@ done
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files Makefile libmv/Makefile libmq/Makefile libsup/Makefile mvrt/Makefile server/Makefile test/Makefile"
+ac_config_files="$ac_config_files Makefile libmv/Makefile libmq/Makefile libsup/Makefile mvrt/Makefile mvsh/Makefile server/Makefile test/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -5301,6 +5301,7 @@ do
     "libmq/Makefile") CONFIG_FILES="$CONFIG_FILES libmq/Makefile" ;;
     "libsup/Makefile") CONFIG_FILES="$CONFIG_FILES libsup/Makefile" ;;
     "mvrt/Makefile") CONFIG_FILES="$CONFIG_FILES mvrt/Makefile" ;;
+    "mvsh/Makefile") CONFIG_FILES="$CONFIG_FILES mvsh/Makefile" ;;
     "server/Makefile") CONFIG_FILES="$CONFIG_FILES server/Makefile" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
 

@@ -28,6 +28,7 @@ AC_CONFIG_FILES([Makefile
                  libmq/Makefile
                  libsup/Makefile
                  mvrt/Makefile
+                 mvsh/Makefile
                  server/Makefile
                  test/Makefile
                 ])

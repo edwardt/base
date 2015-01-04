@@ -5,11 +5,12 @@
  */
 #include <stdio.h>     /* fprintf */
 #include <string.h>    /* strchr */
-#include "repl.h"
+#include "command.h"   /* mvsh_command_process */
+#include "repl.h"      /* mvsh_repl */
 
 #define MAX_LINE 4096
 
-int repl()
+int mvsh_repl(mv_mqueue_t *mq)
 {
   char line[MAX_LINE];
   char *charp;
@@ -17,11 +18,12 @@ int repl()
     fprintf(stdout, "%s ", MVSH_PROMPT);
     
 
-    fgets(line, MAX_LINE, stdin);
-    if ((charp = strchr(cmdline, '\n')) != NULL)
-      *charp = '\0';
+    if (fgets(line, MAX_LINE, stdin)) {
+      if ((charp = strchr(line, '\n')) != NULL)
+        *charp = '\0';
 
-    
+      mvsh_command_process(line, mq);
+    }
   }
 
   return 0;

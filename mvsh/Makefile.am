@@ -1,5 +1,7 @@
 bin_PROGRAMS = mvsh
 mvsh_SOURCES = \
+	command.c \
+	repl.c \
 	main.c
 
 STRICT_CHECK_C = \
@@ -12,10 +14,9 @@ STRICT_CHECK_CPP = \
 
 mvsh_CPPFLAGS = -I$(top_srcdir)/include
 
-mvsh_CFLAGS = -rdynamic
+mvsh_CFLAGS =
 
-mvsh_LDADD =  ../libmq/libmq.a ../libmv/libmv.a -lpthread -lzmq -ljsmn \
-	-ldl -lrt
+mvsh_LDADD =  ../libmq/libmq.a ../libmv/libmv.a -lzmq -lpthread
 
 
 
