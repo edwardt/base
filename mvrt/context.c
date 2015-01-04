@@ -79,6 +79,7 @@ int mvrt_continuation_new(mvrt_context_t *ctx)
   mvrt_continue_t *cont = _cont_table + _contid;
   cont->id = _contid++;
   cont->ctx = ctx;;
+  cont->ctx->iptr++;
 
   return cont->id;
 }
