@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./mvrt erdos
+./mvrt dev1
