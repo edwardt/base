@@ -46,7 +46,7 @@ reactor _R_prop_set {
   pushs "value"
   getf
   getarg
-  pushs "prop"
+  pushs "name"
   getf
   prop_set
 }

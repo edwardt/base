@@ -375,8 +375,10 @@ int _eval_prop_set(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mvrt_prop_t mvprop = mvrt_prop_lookup(mv_device_self(), prop);
   assert(prop && "No such property exists.");
   
-  if (mvrt_prop_setvalue(mvprop, value_v) == -1)
+  if (mvrt_prop_setvalue(mvprop, value_v) == -1) {
+    fprintf(stderr, "PROP_SET failed: %s.\n", prop);
     return _EVAL_FAILURE;
+  }
 
   return ip + 1;
 }
