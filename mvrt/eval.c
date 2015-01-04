@@ -46,9 +46,7 @@ int _eval(mvrt_code_t *code, mvrt_context_t* ctx)
   while (instr && ctx->iptr < code->size) {
     const char *opstr = mvrt_opcode_str(instr->opcode);
 
-    /*
       fprintf(stdout, "\tEVAL[%d]: %s\n", ctx->iptr, opstr);
-    */
 
     next_ip = _eval_instr(instr, ctx);
     if (next_ip == _EVAL_FAILURE) {
@@ -566,7 +564,9 @@ int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx)
 
   mvrt_stack_push(cont_ctx->stack, retval_v);
 
-  return _eval(cont_ctx->code, cont_ctx);
+  _eval(cont_ctx->code, cont_ctx);
+
+  return ip + 1;
 }
 
 
