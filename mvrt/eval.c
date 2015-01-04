@@ -18,6 +18,7 @@
 
 static int _eval(mvrt_code_t *code, mvrt_context_t *ctx);
 static int _eval_instr(mvrt_instr_t *instr, mvrt_context_t *ctx);
+static int _eval_arithmetic(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_branch(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_push(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_cons(mvrt_instr_t *instr, mvrt_context_t *ctx);
@@ -66,9 +67,9 @@ int _eval(mvrt_code_t *code, mvrt_context_t* ctx)
   return next_ip;
 }
 
-/* Returns the next IP >= 0 on normal situation. Returns -1 on error.
-   Returns -2 when we need to suspend execution and create a continuation 
-   point, to be rescheduled on some future event. */
+/* Returns the next IP >= 0 on normal situation. Returns _EVAL_FAILURE on error.
+   Returns _EVAL_SUSPEND when we execution was suspened. Retuens _EVAL_RETURN
+   when "ret" operator was evaluated. */
 int _eval_instr(mvrt_instr_t *instr, mvrt_context_t *ctx)
 {
   mvrt_stack_t *stack = ctx->stack;
@@ -76,6 +77,13 @@ int _eval_instr(mvrt_instr_t *instr, mvrt_context_t *ctx)
 
   int retval;
   switch (instr->opcode) {
+  /* arithmetic */
+  case MVRT_OP_ADD:
+  case MVRT_OP_SUB:
+  case MVRT_OP_MUL:
+  case MVRT_OP_DIV:
+    return _eval_arithmetic(instr, ctx);
+
   /* flow control */
   case MVRT_OP_JMP:
   case MVRT_OP_BEQ:
@@ -124,6 +132,43 @@ int _eval_instr(mvrt_instr_t *instr, mvrt_context_t *ctx)
   }
 
   assert(0 && "Either OP not implemented or something wrong.");
+  return ip + 1;
+}
+
+int _eval_arithmetic(mvrt_instr_t *instr, mvrt_context_t *ctx)
+{
+  mvrt_stack_t *stack = ctx->stack;
+  int ip = ctx->iptr;
+
+  mv_value_t val0_v = mvrt_stack_pop(stack);
+  mv_value_t val1_v = mvrt_stack_pop(stack);
+  int val0 = mv_value_int_get(val0_v);
+  int val1 = mv_value_int_get(val1_v);
+  int result;
+  switch (instr->opcode) {
+  case MVRT_OP_ADD:
+    result = val0 + val1;
+    break;
+  case MVRT_OP_SUB:
+    result = val0 - val1;
+    break;
+  case MVRT_OP_MUL:
+    result = val0 * val1;
+    break;
+  case MVRT_OP_DIV:
+    if (val1 == 0) {
+      assert(0 && "Divided by 0 error.");
+    }
+    result = val0 / val1;
+    break;
+  default:
+    assert(0 && "Invalid opcode.");
+    break;
+  }
+
+  mv_value_t result_v = mv_value_int(result);
+  mvrt_stack_push(stack, result_v);
+
   return ip + 1;
 }
 
