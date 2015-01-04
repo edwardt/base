@@ -32,6 +32,12 @@ reactor _R_prop_get {
   pushs "name"
   getf
   prop_get
+  getarg
+  pushs "retid"
+  getf
+  getarg
+  pushs "retaddr"
+  getf
   call_return
 }
 

@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
   /* Load user property, reactors, etc. 
      
      NOTE: timer initialization must happen after mv_mqueue_new, 
-     mvrt_sched_run, mvrt_decoder_run is finished. This is to ensure 
+     mvrt_sched_run, mvrt_decoder_run are finished. This is to ensure 
      SIGRTMIN is blocked in those threads but is respected in timer.
   */
   mvrt_timer_module_init();
@@ -127,7 +127,8 @@ int main(int argc, char *argv[])
   mvrt_reactor_assoc_loadfile((char *) "assoc.dat");
 
   /*
-   * main thread perform infinite loop - Is there a better way?
+   * main thread perform infinite loop - Is there a better way which would
+   * not wake up on SIGRTMIN?
    */
   while (1) ;
 
