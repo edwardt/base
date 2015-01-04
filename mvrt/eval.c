@@ -563,6 +563,9 @@ int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx)
 
   mvrt_continue_t *cont = mvrt_continuation_get(retid);
   mvrt_context_t *cont_ctx = cont->ctx;
+
+  mvrt_stack_push(cont_ctx->stack, retval_v);
+
   return _eval(cont_ctx->code, cont_ctx);
 }
 

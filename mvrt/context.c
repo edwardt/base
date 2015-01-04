@@ -9,6 +9,24 @@
 #include "context.h"
 
 
+static mvrt_stack_t *mvrt_stack_copy(mvrt_stack_t *stack);
+
+mvrt_stack_t *mvrt_stack_copy(mvrt_stack_t *stack)
+{
+  mvrt_stack_t *copy = mvrt_stack_new();
+  int i;
+  for (i = 0; i < stack->sptr; i++) {
+    copy->values[i] = stack->values[i];
+  }
+  copy->sptr = stack->sptr;
+
+  return copy;
+}
+
+
+/*
+ * Functions for context.
+ */
 mvrt_stack_t *mvrt_stack_new()
 {
   mvrt_stack_t *stack = malloc(sizeof(mvrt_stack_t));
@@ -78,8 +96,8 @@ int mvrt_continuation_new(mvrt_context_t *ctx)
 
   mvrt_continue_t *cont = _cont_table + _contid;
   cont->id = _contid++;
-  cont->ctx = ctx;;
-  cont->ctx->iptr++;
+  cont->ctx = mvrt_context_new(ctx->code);
+  cont->ctx->iptr = ctx->iptr + 1;
 
   return cont->id;
 }
