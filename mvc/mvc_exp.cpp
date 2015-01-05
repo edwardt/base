@@ -5,45 +5,34 @@
 
 namespace mvc {
 
-/**
- * @class ExpFactoryImpl
+/*
+ * ExpFactory
  */
-class ExpFactoryImpl : public ExpFactory {
-public:
-  ExpFactoryImpl();
-  ~ExpFactoryImpl();
+ExpFactory *ExpFactory::_instance = NULL;
+ExpFactory *ExpFactory::getInstance()
+{
+  if (!_instance)
+    _instance = new ExpFactory();
 
-public:
-  SymbolExp *createSymbol(const std::string& name);
-  FieldrefExp *createFieldref(Exp *varref, const std::string& field);
-  ArrayrefExp *createArrayref(Exp *varref, Exp *index);
+  return _instance;
+}
 
-  IntegerExp *createInteger(int v);
-  FloatExp *createFloat(float v);
-  StringExp *createString(const std::string& v);
-  UnaryExp *createUnary(UnaryTag utag);
-  BinaryExp *createBinary(BinaryTag btag, Exp *lexp, Exp *rexp);
-  
-  FuncallExp *createFuncall(SymbolExp *name, std::list<Exp *> *args);
-  TimeExp *createTime(size_t d, size_t h, size_t m, size_t s, size_t ms);
-};
-
-ExpFactoryImpl::ExpFactoryImpl()
+ExpFactory::ExpFactory()
 {
 }
 
-ExpFactoryImpl::~ExpFactoryImpl()
+ExpFactory::~ExpFactory()
 {
 }
 
-SymbolExp *ExpFactoryImpl::createSymbol(const std::string& name)
+SymbolExp *ExpFactory::createSymbol(const std::string& name)
 {
   SymbolExp *symbol = new SymbolExp(name);
   
   return symbol;
 }
 
-FieldrefExp *ExpFactoryImpl::createFieldref(Exp *varref, const std::string& field) 
+FieldrefExp *ExpFactory::createFieldref(Exp *varref, const std::string& field) 
 {
   FieldrefExp *fieldref = new FieldrefExp(varref, field);
   
@@ -55,27 +44,6 @@ ArrayrefExp *ExpFactory::createArrayref(Exp *varref, Exp *index)
   ArrayrefExp *arrayref = new ArrayrefExp(varref, index);
   
   return arrayref;
-}
-
-
-/*
- * ExpFactory
- */
-ExpFactory *ExpFactory::_instance = NULL;
-ExpFactory *ExpFactory::getInstance()
-{
-  if (!_instance)
-    _instance = new ExpFactoryImpl();
-
-  return _instance;
-}
-
-ExpFactory::ExpFactory()
-{
-}
-
-ExpFactory::~ExpFactory()
-{
 }
 
 
