@@ -1,6 +1,7 @@
-ACLOCAL_AMFLAGS = -I m4
+BUILT_SOURCES = mvc_parse.h
 
 AM_YFLAGS = -d --debug -v
+
 AM_LFLAGS = --header-file=mvc_scan.hh
 
 bin_PROGRAMS = mvc
@@ -27,9 +28,6 @@ mvc_CPPFLAGS = -I$(top_srcdir)/include
 mvc_CFLAGS = 
 
 mvc_LDADD =  
-
-BUILT_SOURCES = mvc_parse.h
-
 
 check_SCRIPTS = greptest.sh
 TESTS = $(check_SCRIPTS)

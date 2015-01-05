@@ -12,6 +12,7 @@
 /missing
 /stamp-h?
 /ylwrap
+/test-driver
 .deps/
 .dirstamp
 .libs/

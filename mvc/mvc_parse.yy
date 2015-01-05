@@ -10,8 +10,8 @@
 %skeleton "lalr1.cc" /* -*- C++ -*- */
 %require "2.5"
 %defines
-%define api.namespace {mvc::yy}
-%define parser_class_name {Parser}
+%define namespace "mvc::yy"
+%define parser_class_name "Parser"
 
 %code top {
 }
@@ -282,8 +282,8 @@ stm_funcdef:
     { 
       mvc::StmFactory *sf = StmFactory::getInstance();
       mvc::FuncdefStm *fundef = NULL;
-      fundef = smgr->createFuncdef(static_cast<SymbolExp *>($<expval>3),
-                                   $<explval>4,static_cast<Stm *>($<stmval>5));
+      fundef = sf->createFuncdef(static_cast<SymbolExp *>($<expval>3),
+                                 $<explval>4,static_cast<Stm *>($<stmval>5));
       $<stmval>$ = fundef;
     }
   ;
@@ -337,7 +337,7 @@ event_list:
 one_or_more_events:
     identifier
     {
-      std::list<mv::epl::Exp *> *exps = new std::list<mv::epl::Exp *>;
+      std::list<mvc::Exp *> *exps = new std::list<mvc::Exp *>;
       exps->push_back($<expval>1);
       $<explval>$ = exps;
     }

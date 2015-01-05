@@ -5,4 +5,5 @@ Makefile.in
 *.swp
 *.hh
 *.cc
+*.output
 mvc

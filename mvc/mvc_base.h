@@ -1,10 +1,10 @@
 /**
- * @file mvc.h
+ * @file mvc_base.h
  *
  * @brief Interface to services related to MVC Compiler.
  */
-#ifndef MVC_H
-#define MVC_H
+#ifndef MVC_BASE_H
+#define MVC_BASE_H
 
 #include <string>
 
