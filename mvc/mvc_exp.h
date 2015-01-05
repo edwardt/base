@@ -1,21 +1,22 @@
 /**
- * @file meadow_exp.h 
+ * @file mvc_exp.h 
  */
-#ifndef MEADOW_EXP_H
-#define MEADOW_EXP_H
+#ifndef MVC_EXP_H
+#define MVC_EXP_H
 
 #include <string>
 #include <list>
 #include <vector>
-#include "mv/common.h"
-#include "mv/epl/epl_visitor.h"
+#include <common/defs.h>
+#include "mvc_visitor.h"
 
-typedef enum {
+namespace mvc {
+
+enum ExpTag {
   /* literals */
   ET_INTEGER,    /* integer literal */
   ET_FLOAT,      /* float literal */
   ET_STRING,     /* string literal */
-  ET_CHAR,       /* char literal */
 
   /* reference expressions */
   ET_SYMBOL,     /* symbol */
@@ -29,10 +30,18 @@ typedef enum {
   /* related to functions */
   ET_FUNCALL,    /* function call */
 
-  ET_NTAGS       /* number of tags */
-} Meadow_ExpTag;
+  /* special expressions */
+  ET_TIME,       /* time interval */
 
-typedef enum {
+  ET_NTAGS       /* number of tags */
+};
+
+enum UnaryTag {
+  UOT_MINUS,  /* - */
+  UOT_NTAGS
+};
+
+enum BinaryTag {
   BOT_ADD,    /* + */
   BOT_SUB,    /* - */
   BOT_MUL,    /* * */
@@ -48,42 +57,12 @@ typedef enum {
   BOT_GT,     /* > */
   BOT_GE,     /* >= */
   BOT_NTAGS
-} Meadow_BinaryOpTag;
-
-typedef int Meadow_Int;
-typedef float Meadow_Float;
-typedef char *Meadow_String;
-typedef char Meadow_Char;
-typedef char *Meadow_Symbol;
-
-typedef struct {
-  Meadow_Oper op; 
-  struct Meadow_Exp *exp;
-} Meadow_Unary;
-
-typedef struct {
-  Meadow_Oper op;
-  struct Meadow_Exp *lexp;
-  struct Meadow_Exp *rexp;
-} Meadow_Binary;
-
-typedef struct {
-  Meadow_ExpTag tag;
-  union {
-    Meadow_Int ival;
-    Meadow_Real fval;
-    Meadow_String sval;
-    Meadow_Char *cval;
-    Meadow_Symbol *sym;
-    Meadow_FuncCall *sym;
-    Meadow_Unary *unary;
-    Meadow_Binary *binary;
-  } u;
-} Meadow_Exp;
+};
 
 /**
  * @class Exp
  */
+class ExpVisitor;
 class Exp {
 public:
   Exp(ExpTag t) : _tag(t) { }
@@ -152,19 +131,35 @@ private:
 };
 
 /**
- * @class NumberExp
+ * @class IntegerExp
  */
-class NumberExp : public Exp {
+class IntegerExp : public Exp {
 public:
-  NumberExp(int v) : Exp(ET_NUMBER), _value(v) { }
-  ~NumberExp() { }
+  IntegerExp(int v) : Exp(ET_INTEGER), _value(v) { }
+  ~IntegerExp() { }
 
   const int getValue() { return _value; }
 
-  void accept(ExpVisitor& v) { v.visitNumberExp(this); }
+  void accept(ExpVisitor& v) { v.visitIntegerExp(this); }
 
 private:
   int _value;
+};
+
+/**
+ * @class FloatExp
+ */
+class FloatExp : public Exp {
+public:
+  FloatExp(float v) : Exp(ET_FLOAT), _value(v) { }
+  ~FloatExp() { }
+
+  const float getValue() { return _value; }
+
+  void accept(ExpVisitor& v) { v.visitFloatExp(this); }
+
+private:
+  float _value;
 };
 
 /**
@@ -184,33 +179,9 @@ private:
 };
 
 /**
- * @class AliasExp
- */
-class AliasExp : public Exp {
-public:
-  AliasExp(Exp *e, Exp *alias) : Exp(ET_ALIAS), _exp(e), _alias(alias) { }
-  ~AliasExp() { }
-
-  Exp *getExp() { return _exp; }
-  Exp *getAlias() { return _alias; }
-
-  void accept(ExpVisitor& v) { v.visitAliasExp(this); }
-
-private:
-  Exp *_exp;
-  Exp *_alias;
-};
-
-/**
  * @class UnaryExp
  */
 class UnaryExp : public Exp {
-public:
-  enum UnaryTag {
-    UOT_MINUS,   /* - */
-    UOT_NTAGS
-  };
-
 public:
   UnaryExp(UnaryTag utag, Exp *exp) : Exp(ET_UNARY), _utag(utag), _exp(exp) { }
   ~UnaryExp() { }
@@ -251,27 +222,6 @@ private:
 };
 
 /**
- * @class ParamExp
- * @brief Typed parameters for function definition.
- */
-class Datatype;
-class ParamExp : public Exp {
-public:
-  ParamExp(Datatype *type, SymbolExp *name) 
-    : Exp(ET_PARAM), _type(type), _name(name) { }
-  ~ParamExp() { }
-
-  Datatype *getType() { return _type; }
-  SymbolExp *getName() { return _name; }
-
-  void accept(ExpVisitor& v) { v.visitParamExp(this); }
-
-private:
-  Datatype *_type;
-  SymbolExp *_name;
-};
-
-/**
  * @class FuncallExp
  */
 class FuncallExp : public Exp {
@@ -289,35 +239,12 @@ private:
   std::list<Exp *> *_args;
 };
 
-
-/**
- * @class StreamExp
- */
-class TimeExp;
-class StreamExp : public Exp {
-public:
-  StreamExp(SymbolExp *s, uint32_t n, TimeExp *time) 
-    : Exp(ET_STREAM), _event(s), _evcount(n), _time(time) { }
-  ~StreamExp() { }
-
-  SymbolExp *getEvent() { return _event; }
-  uint32_t getEventCount() { return _evcount; }
-  TimeExp *getTime() { return _time; }
-
-  void accept(ExpVisitor& v) { v.visitStreamExp(this); }
-
-private:
-  SymbolExp *_event;
-  uint32_t _evcount;
-  TimeExp *_time;
-};
-
 /**
  * @class TimeExp
  */
 class TimeExp : public Exp {
 public:
-  TimeExp(uint32_t day, uint32_t hr, uint32_t min, uint32_t sec, uint32_t ms) 
+  TimeExp(size_t day, size_t hr, size_t min, size_t sec, size_t ms) 
     : Exp(ET_TIME) {
     _msec = ms;
     _msec += (sec * 1000);
@@ -326,50 +253,46 @@ public:
     _msec += (day * 24 * 60 * 60 * 1000);
   }
   ~TimeExp() { }
-
-  uint64_t getMilliseconds() { return _msec; }
+  
+  size_t getMilliseconds() { return _msec; }
 
   void accept(ExpVisitor& v) { v.visitTimeExp(this); }
 
 
 private:
-  uint64_t _msec;
+  size_t _msec;
 };
 
 
 /**
- * @class ExpMgr
+ * @class ExpFactory
  */
-class ExpMgr {
+class ExpFactory {
 public:
-  static ExpMgr *getInstance();
-  static void shutdown();
+  static ExpFactory *getInstance();
 
+public:
   SymbolExp *createSymbol(const std::string& name);
   FieldrefExp *createFieldref(Exp *varref, const std::string& field);
   ArrayrefExp *createArrayref(Exp *varref, Exp *index);
 
-  NumberExp *createNumber(int v);
+  IntegerExp *createInteger(int v);
+  FloatExp *createFloat(float v);
   StringExp *createString(const std::string& v);
-  AliasExp *createAlias(Exp *e, Exp *alias);
-  UnaryExp *createUnary(UnaryExp::UnaryTag utag);
-  BinaryExp *createBinary(BinaryExp::BinaryTag btag, Exp *lexp, Exp *rexp);
-
-  ParamExp *createParam(Datatype *type, SymbolExp *name);
+  UnaryExp *createUnary(UnaryTag utag);
+  BinaryExp *createBinary(BinaryTag btag, Exp *lexp, Exp *rexp);
+  
   FuncallExp *createFuncall(SymbolExp *name, std::list<Exp *> *args);
-  StreamExp *createStream(SymbolExp *name, uint32_t n, TimeExp *time);
-  TimeExp *createTime(uint32_t d, uint32_t h, uint32_t m, uint32_t s, 
-                      uint32_t ms);
+  TimeExp *createTime(size_t d, size_t h, size_t m, size_t s, size_t ms);
+
+protected:
+  ExpFactory();
+  virtual ~ExpFactory();
 
 private:
-  ExpMgr();
-  ~ExpMgr();
-
-private:
-  static ExpMgr *_instance;
-
-private:
-  std::list<Exp *> _exps;
+  static ExpFactory *_instance;
 };
 
-#endif /* MEADOW_EXP_H */
+} /* mv */
+
+#endif /* MVC_EXP_H */

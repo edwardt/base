@@ -3,4 +3,6 @@ Makefile.in
 *.a
 *.o
 *.swp
+*.hh
+*.cc
 mvc

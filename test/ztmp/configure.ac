@@ -31,6 +31,7 @@ AC_CONFIG_FILES([Makefile
                  libsup/Makefile
                  mvrt/Makefile
                  mvsh/Makefile
+                 mvc/Makefile
                  server/Makefile
                  test/Makefile
                 ])

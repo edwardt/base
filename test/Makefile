@@ -16,10 +16,10 @@
 
 
 
-pkgdatadir = $(datadir)/meadow-projects
-pkgincludedir = $(includedir)/meadow-projects
-pkglibdir = $(libdir)/meadow-projects
-pkglibexecdir = $(libexecdir)/meadow-projects
+pkgdatadir = $(datadir)/mvcode
+pkgincludedir = $(includedir)/mvcode
+pkglibdir = $(libdir)/mvcode
+pkglibexecdir = $(libexecdir)/mvcode
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
@@ -92,17 +92,20 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = 
+LEX = flex
+LEXLIB = -lfl
+LEX_OUTPUT_ROOT = lex.yy
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /home/cjeong/work/meadow/mvcode/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
-PACKAGE = meadow-projects
+PACKAGE = mvcode
 PACKAGE_BUGREPORT = 
-PACKAGE_NAME = meadow-projects
-PACKAGE_STRING = meadow-projects 0.1
-PACKAGE_TARNAME = meadow-projects
+PACKAGE_NAME = mvcode
+PACKAGE_STRING = mvcode 0.1
+PACKAGE_TARNAME = mvcode
 PACKAGE_URL = 
 PACKAGE_VERSION = 0.1
 PATH_SEPARATOR = :
@@ -111,6 +114,8 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 0.1
+YACC = bison -y
+YFLAGS = 
 abs_builddir = /home/cjeong/work/meadow/mvcode/test
 abs_srcdir = /home/cjeong/work/meadow/mvcode/test
 abs_top_builddir = /home/cjeong/work/meadow/mvcode

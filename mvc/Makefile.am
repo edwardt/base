@@ -1,5 +1,17 @@
+ACLOCAL_AMFLAGS = -I m4
+
+AM_YFLAGS = -d --debug -v
+AM_LFLAGS = --header-file=mvc_scan.hh
+
 bin_PROGRAMS = mvc
+
 mvc_SOURCES = \
+	mvc_parse.yy \
+	mvc_scan.ll \
+	mvc_exp.cpp \
+	mvc_stm.cpp \
+	mvc_module.cpp \
+	mvc_parser_driver.cpp \
 	mvc_main.cpp
 
 STRICT_CHECK_C = \
@@ -14,8 +26,9 @@ mvc_CPPFLAGS = -I$(top_srcdir)/include
 
 mvc_CFLAGS = 
 
-mvc_LDADD =  ../libmq/libmq.a -lzmq -lpthread
+mvc_LDADD =  
 
+BUILT_SOURCES = mvc_parse.h
 
 
 check_SCRIPTS = greptest.sh
