@@ -1,18 +1,17 @@
 /**
- * @file epl_printer.h
- * @brief EPL abstract syntax trees printer
+ * @file mvc_printer.h
  *
- * @author cjeong
+ * @brief MVC abstract syntax trees printer
  */
 #include <iostream>
-#include "mv/epl/epl_util.h"
+#include "mvc_util.h"
 
-namespace mv { namespace epl {
+namespace mvc {
 
 /*
  * ExpPrinter
  */
-const static size_t INDENT_SIZE = 4;
+const static size_t INDENT_SIZE = 2;
 
 const static std::string unary_opers[] = {
   "+",  "-"
@@ -70,15 +69,16 @@ public:
     _os << "]";
   }
 
-  void visitNumberExp(NumberExp *e) {
+  void visitIntegerExp(IntegerExp *e) {
+    _os << e->getValue();
+  }
+ 
+  void visitFloatExp(FloatExp *e) {
     _os << e->getValue();
   }
  
  void visitStringExp(StringExp *e) {
     _os << e->getValue();
-  }
-
-  void visitAliasExp(AliasExp *e) {
   }
 
   void visitUnaryExp(UnaryExp *e) {
@@ -94,26 +94,7 @@ public:
     _os << ")";
   }
 
-  void visitParamExp(ParamExp *e) {
-    Util::print(_os, e->getType(), 0);
-    _os << " ";
-    Util::print(_os, e->getName(), 0);
-  }
-
   void visitFuncallExp(FuncallExp *e) {
-  }
-
-  void visitStreamExp(StreamExp *e) {
-    SymbolExp *event = e->getEvent();
-    event->accept((ExpVisitor&) *this);
-    uint32_t evcount = e->getEventCount();
-    if (evcount > 0) {
-      _os << "RETAIN " << evcount << " EVENTS";
-    }
-    TimeExp *time = e->getTime();
-    if (time) {
-      time->accept((ExpVisitor&) *this);
-    }
   }
 
   void visitTimeExp(TimeExp *e) {
@@ -133,21 +114,10 @@ public:
     : Indenter(os, indent, INDENT_SIZE), _os(os) { }
   ~StmPrinter() { }
 
-  void visitTypedefStm(TypedefStm *s) {
-    indent();
-    _os << "type ";
-    Util::print(_os, s->getName(), getIndent());
-    _os << " = ";
-    Util::print(_os, s->getType(), getIndent());
-    _os << ";" << std::endl;
-  }
-
   void visitEventdefStm(EventdefStm *s) {
     indent();
     _os << "event ";
     Util::print(_os, s->getName(), getIndent());
-    _os << " = ";
-    Util::print(_os, s->getType(), getIndent());
     _os << "; " << std::endl;
   }
 
@@ -155,8 +125,6 @@ public:
     indent();
     _os << "variable ";
     Util::print(_os, s->getName(), getIndent());
-    _os << " : ";
-    Util::print(_os, s->getType(), getIndent());
     _os << "; " << std::endl;
   }
 
@@ -173,15 +141,13 @@ public:
   void visitFuncdefStm(FuncdefStm *s) {
     indent();
     _os << "function ";
-    Util::print(_os, s->getType(), getIndent());
-    _os << " ";
     Util::print(_os, s->getName(), getIndent());
 
     _os << "(";
     std::list<Exp *> *params = s->getParams();
     std::list<Exp *>::iterator iter;
     for (iter = params->begin(); iter != params->end(); ) {
-      ParamExp *param = static_cast<ParamExp *>(*iter);
+      Exp *param = static_cast<Exp *>(*iter);
       Util::print(_os, param, 0); 
       ++iter;
       if (iter != params->end()) {
@@ -305,37 +271,6 @@ public:
   void visitBreakStm(BreakStm *s) {
   }
 
-  void visitSelectStm(SelectStm *s) {
-    _os << "select ";
-    std::vector<Exp *> *selectors = s->getSelectors();
-    std::vector<Exp *>::iterator viter;
-    for (viter = selectors->begin(); viter != selectors->end(); ++viter) {
-      Exp *selector = *viter;
-      Util::print(_os, selector);
-      if (viter + 1 == selectors->end())
-        _os << std::endl;
-      else
-        _os << " ";
-    }
-
-    _os << "from ";
-    std::vector<Exp *> *streams = s->getStreams();
-    for (viter = streams->begin(); viter != streams->end(); ++viter) {
-      Exp *stream = *viter;
-      Util::print(_os, stream);
-      if (viter + 1 == streams->end())
-        _os << std::endl;
-      else
-        _os << " ";
-    }
-
-    if (s->getWhere()) {
-      _os << "where ";
-      Util::print(_os, s->getWhere());
-    }
-    _os << std::endl;
-  }
-
   void visitDefineStm(DefineStm *s) {
     _os << "define ";
     Util::print(_os, s->getName());
@@ -351,61 +286,6 @@ public:
     default:
       return true;
     }
-  }
-
-private:
-  std::ostream& _os;
-};
-
-/*
- * DatatypePrinter
- */
-class DatatypePrinter : public DatatypeVisitor, public Indenter {
-public:
-  DatatypePrinter(std::ostream& os, size_t indent)
-    : Indenter(os, indent, INDENT_SIZE), _os(os) { }
-  ~DatatypePrinter() { }
-
-  void visitVoidDatatype(VoidDatatype *t) {
-    _os << "void";
-  }
-
-  void visitScalarDatatype(ScalarDatatype *t) {
-    switch (t->getTag()) {
-    case TT_BOOL: _os << "bool"; break;
-    case TT_CHAR: _os << "char"; break;
-    case TT_SHORT: _os << "short"; break;
-    case TT_INT: _os << "integer"; break;
-    case TT_LONG: _os << "long"; break;
-    case TT_FLOAT: _os << "float"; break;
-    case TT_DOUBLE: _os << "double"; break;
-    case TT_STRING: _os << "string"; break;
-    default: assert(0 && "Invalid scalar datatype tag");
-    }
-  }
-
-  void visitArrayDatatype(ArrayDatatype *t) {
-    _os << "array [" << t->getSize() << "] of ";
-    Util::print(_os, t->getBaseDatatype());
-  }
-
-  void visitStructDatatype(StructDatatype *t) {
-    _os << "struct {" << std::endl;
-    size_t nfields = t->getSize();
-    incIndent();
-    for (size_t i = 0; i < nfields; ++i) {
-      indent();
-      _os << t->getField(i) << " : ";
-      Util::print(_os, t->getType(i));
-      _os << ";" << std::endl;
-    }
-    decIndent();
-    indent();
-    _os << "}";
-  }
-
-  void visitNamedDatatype(NamedDatatype *t) {
-    Util::print(_os, t->getName());
   }
 
 private:
@@ -431,14 +311,6 @@ void Util::print(std::ostream& os, Stm *stm, size_t indent)
   stm->accept(p);
 }
 
-void Util::print(std::ostream& os, Datatype *type, size_t indent)
-{
-  if (!type) return;
-
-  DatatypePrinter p(os, indent);
-  type->accept(p);
-}
-
 void Util::print(std::ostream& os, Module *mod)
 {
   os << "module ";
@@ -455,4 +327,4 @@ void Util::print(std::ostream& os, Module *mod)
   os << "};" << std::endl;
 }
 
-}} /* mv::epl */
+} /* mvc */

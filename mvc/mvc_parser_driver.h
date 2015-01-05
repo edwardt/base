@@ -1,7 +1,7 @@
 /**
  * @file mvc_parser_driver.h
  *
- * @brief Driver class for the EPL parser and the EPL scanner. Based
+ * @brief Driver class for the MVC parser and the MVC scanner. Based
  * on the example in Chapter 10 of the Bison manual.
  */
 #ifndef MVC_PARSER_DRIVER_H

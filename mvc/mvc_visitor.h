@@ -52,7 +52,6 @@ class BreakStm;
 class DefineStm;
 class StmVisitor {
 public:
-  virtual void visitTypedefStm(TypedefStm *s) = 0;
   virtual void visitEventdefStm(EventdefStm *s) = 0;
   virtual void visitVardefStm(VardefStm *s) = 0;
   virtual void visitProcdefStm(ProcdefStm *s) = 0;

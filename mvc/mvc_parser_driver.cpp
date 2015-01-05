@@ -40,8 +40,8 @@ Module *ParserDriver::parse(SourceTag source, const std::string& file)
   case SCT_STDIN:
     yyin = stdin;
     break;
-  case SCT_STR:
-    printf("STR: %s\n", _file.c_str());
+  case SCT_STRING:
+    fprintf(stdout, "STRING: %s\n", _file.c_str());
     yy_strbuf = yy_scan_string(_file.c_str());
     yy_switch_to_buffer(yy_strbuf);
     break;
@@ -66,7 +66,7 @@ Module *ParserDriver::parse(SourceTag source, const std::string& file)
     break;
   case SCT_STDIN:
     break;
-  case SCT_STR:
+  case SCT_STRING:
     yy_delete_buffer(yy_strbuf);
     break;
   default:

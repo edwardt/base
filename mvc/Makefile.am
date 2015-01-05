@@ -1,6 +1,6 @@
 BUILT_SOURCES = mvc_parse.h
 
-AM_YFLAGS = -d --debug -v
+AM_YFLAGS = -d
 
 AM_LFLAGS = --header-file=mvc_scan.hh
 
@@ -12,7 +12,9 @@ mvc_SOURCES = \
 	mvc_exp.cpp \
 	mvc_stm.cpp \
 	mvc_module.cpp \
+	mvc_print.cpp \
 	mvc_parser_driver.cpp \
+	mvc_parser.cpp \
 	mvc_main.cpp
 
 STRICT_CHECK_C = \
@@ -39,4 +41,4 @@ greptest.sh:
 	echo './mvc | grep "hello"' > greptest.sh
 	chmod +x greptest.sh
 
-CLEANFILES = greptest.sh
+CLEANFILES = greptest.sh mvc_scan.hh mvc_scan.cc mvc_parse.hh mvc_parse.cc

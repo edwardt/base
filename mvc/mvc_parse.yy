@@ -188,7 +188,7 @@ one_or_more_stmdefs:
  * define statements
  */
 stmdef:
-  | stm_eventdef 
+    stm_eventdef 
     {
       $<stmval>$ = $<stmval>1;
     }
