@@ -1,9 +1,9 @@
 bin_PROGRAMS = server
 server_SOURCES = \
-	svr_device.cpp \
-	svr_message.cpp \
-	svr_processor.cpp \
-	svr_main.cpp
+	svr_device.cc \
+	svr_message.cc \
+	svr_processor.cc \
+	svr_main.cc
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \

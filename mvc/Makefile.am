@@ -1,4 +1,4 @@
-BUILT_SOURCES = mvc_parse.h
+BUILT_SOURCES = mvc_parse.hh
 
 AM_YFLAGS = -d
 
@@ -9,13 +9,13 @@ bin_PROGRAMS = mvc
 mvc_SOURCES = \
 	mvc_parse.yy \
 	mvc_scan.ll \
-	mvc_exp.cpp \
-	mvc_stm.cpp \
-	mvc_module.cpp \
-	mvc_print.cpp \
-	mvc_parser_driver.cpp \
-	mvc_parser.cpp \
-	mvc_main.cpp
+	mvc_exp.cc \
+	mvc_stm.cc \
+	mvc_module.cc \
+	mvc_print.cc \
+	mvc_parser_driver.cc \
+	mvc_parser.cc \
+	mvc_main.cc
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \
@@ -41,4 +41,5 @@ greptest.sh:
 	echo './mvc | grep "hello"' > greptest.sh
 	chmod +x greptest.sh
 
-CLEANFILES = greptest.sh mvc_scan.hh mvc_scan.cc mvc_parse.hh mvc_parse.cc
+CLEANFILES = greptest.sh  mvc_parse.hh mvc_parse.cc mvc_scan.cc mvc_scan.hh \
+	position.hh stack.hh location.hh *.output

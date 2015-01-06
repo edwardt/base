@@ -1,5 +1,5 @@
 /**
- * @file svr_device.h
+ * @file svr_device.hh
  *
  * @brief Interface to device objects which abstracts devices and their
  *        capabilities. Also, includes a cache which stores device objects
@@ -9,8 +9,8 @@
  * @note  Should we just use redis, or would manually-built server better 
  *        serve our purpose? Or mixture of two?
  */
-#ifndef MV_SVR_DEVICE_H
-#define MV_SVR_DEVICE_H
+#ifndef MV_SVR_DEVICE_HH
+#define MV_SVR_DEVICE_HH
 
 #include <string>
 #include <set>
@@ -105,5 +105,5 @@ protected:
 }} /* mv::server */
 
 
-#endif /* MV_SVR_DEVICE_H */
+#endif /* MV_SVR_DEVICE_HH */
 

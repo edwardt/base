@@ -1,5 +1,5 @@
 /**
- * @file main.c
+ * @file main.cc
  *
  * @brief Proxy for pub-sub network
  */
@@ -14,7 +14,7 @@
 #include <signal.h>           /* sigaction */
 #include <zmq.h>              /* 0MQ */
 #include <mq/mqueue.h>        /* mv_mqueue_t */
-#include "svr_processor.h"
+#include "svr_processor.hh"
 
 using namespace mv::server;
 

@@ -1,9 +1,9 @@
 /**
- * @file svr_device.cpp
+ * @file svr_device.cc
  */
 #include <iostream>
 #include <map>
-#include "svr_device.h"
+#include "svr_device.hh"
 
 namespace mv { namespace server {
 

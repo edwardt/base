@@ -1,7 +1,7 @@
 /**
- * @file svr_message.cpp
+ * @file svr_message.cc
  */
-#include "svr_message.h"
+#include "svr_message.hh"
 
 #include <string>      /* std::string */
 #include <iostream>    /* std::cout */

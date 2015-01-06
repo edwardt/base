@@ -1,11 +1,11 @@
 /**
- * @file svr_processor.cpp
+ * @file svr_processor.cc
  */
-#include <cstdio>           /* perror */
-#include <cassert>          /* assert */
-#include <pthread.h>        /* pthread_t */
-#include "svr_device.h"     /* DeviceManager */
-#include "svr_processor.h"
+#include <cstdio>            /* perror */
+#include <cassert>           /* assert */
+#include <pthread.h>         /* pthread_t */
+#include "svr_device.hh"     /* DeviceManager */
+#include "svr_processor.hh"
 
 namespace mv { namespace server {
 

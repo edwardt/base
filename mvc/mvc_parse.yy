@@ -16,16 +16,16 @@
 %code top {
 }
 
-/* code required for YYSTYPE and YYLTYPE; will be included in the
-   bison-generated file epl_parse.hpp */
+/* Code required for YYSTYPE and YYLTYPE -- will be included in the
+   bison-generated file mvc_parse.hh. */
 %code requires {
   #include <string>
   #include <list>
   #include <vector>
-  #include "mvc_exp.h"
-  #include "mvc_stm.h"
-  #include "mvc_module.h"
-  #include "mvc_util.h"
+  #include "mvc_exp.hh"
+  #include "mvc_stm.hh"
+  #include "mvc_module.hh"
+  #include "mvc_util.hh"
 
   namespace mvc {
     class ParserDriver;
@@ -38,12 +38,12 @@
 
 /* code to be included in the bison-generated file mvc_parse.cc */
 %code {
-  #include "mvc_parser_driver.h"
+  #include "mvc_parser_driver.hh"
 }
 
 %locations
 %initial-action {
-  // initialize the initial location.
+  /* initialize the initial location. */
   @$.begin.filename = @$.end.filename = &driver.getFile();
 };
 

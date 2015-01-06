@@ -1,9 +1,9 @@
 /**
- * @file svr_message.h
+ * @file svr_message.hh
  *
  */
-#ifndef MV_SVR_MESSAGE_H
-#define MV_SVR_MESSAGE_H
+#ifndef MV_SVR_MESSAGE_HH
+#define MV_SVR_MESSAGE_HH
 
 #include <string>         /* string */
 #include <vector>         /* vector */
@@ -60,4 +60,4 @@ public:
 
 }} /* mv::server */
 
-#endif /* MV_SVR_MESSAGE_H */
+#endif /* MV_SVR_MESSAGE_HH */
