@@ -12,16 +12,18 @@
 #include <sys/wait.h>        /* waitpid */
 #include <sys/stat.h>        /* waitpid */
 #include <signal.h>          /* sigaction */
+
 #include <mq/mqueue.h>       /* mv_mqueue_t */
 #include <mv/device.h>       /* mv_device_self */
-#include <support/daemon.h>  /* daemon_init */
 
-#include "mdecoder.h"
-#include "rtsched.h"
-#include "rtevent.h"
-#include "rtprop.h"
-#include "rtfunc.h"
-#include "reactor.h"
+#include "mdecoder.h"        /* mvrt_mdecoder_new */
+#include "rtsched.h"         /* mvrt_sched_new */
+#include "rtevent.h"         /* mvrt_event_module_init */
+#include "rtprop.h"          /* mvrt_prop_module_init */
+#include "rtfunc.h"          /* mvrt_func_module_init */
+#include "reactor.h"         /* mvrt_reactor_module_init */
+#include "rtutil.h"          /* daemon_init */
+
 
 extern void sched();
 

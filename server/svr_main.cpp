@@ -14,7 +14,6 @@
 #include <signal.h>           /* sigaction */
 #include <zmq.h>              /* 0MQ */
 #include <mq/mqueue.h>        /* mv_mqueue_t */
-#include <support/daemon.h>   /* daemon_init */
 #include "svr_processor.h"
 
 using namespace mv::server;
