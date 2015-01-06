@@ -3,7 +3,5 @@ Makefile.in
 *.a
 *.o
 *.swp
-*.hh
-*.cc
 *.output
 mvc
