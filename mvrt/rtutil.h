@@ -1,12 +1,15 @@
 /**
- * @file daemon.h
- * @brief Utility function for making a program into a daemon.
+ * @file rtutil.h
  *
- * @author cjeong
+ * @brief Utility function.
  */
-#ifndef MV_DAEMON_H
-#define MV_DAEMON_H
+#ifndef MVRT_UTIL_H
+#define MVRT_UTIL_H
 
+
+/*
+ * For making a program into a daemon.
+ */
 /* bitmask values for <flags> argument of daemon_init() */
 #define BD_NO_CHDIR              0x01  /* don't chdir("/") */
 #define BD_NO_CLOSE_FILES        0x02  /* don't close all open files */
@@ -20,13 +23,18 @@
 extern "C" {
 #endif
 
-/* makes the program which calls this function a daemon; takes a bitmask
+
+/* Makes the program which calls this function a daemon. Takes a bitmask
    argument, flags, which inhibit some of the steps; returns 0 on success, 
-   -1 on error */
-int daemon_init(int flags);
+   -1 on error. */
+extern int daemon_init(int flags);
+
+/* Registers signal handler. */
+extern void register_signal_handler(int signo, void (*fptr)(int)) ;
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MV_DAEMON_H */
+#endif /* MVRT_UTIL_H */

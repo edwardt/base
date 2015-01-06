@@ -1,6 +1,5 @@
 SUBDIRS = libmv \
 	libmq \
-	libsup \
 	mvrt \
 	mvsh \
 	mvc \

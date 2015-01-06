@@ -11,6 +11,9 @@ mvrt_SOURCES = \
 	reactor.c \
 	eval.c \
 	rtsched.c \
+	rterror.c \
+	rtlogger.c \
+	rtutil.c \
 	main.c
 
 STRICT_CHECK_C = \

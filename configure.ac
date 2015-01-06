@@ -28,7 +28,6 @@ AC_CHECK_HEADERS([stdlib.h])
 AC_CONFIG_FILES([Makefile
                  libmv/Makefile
                  libmq/Makefile
-                 libsup/Makefile
                  mvrt/Makefile
                  mvsh/Makefile
                  mvc/Makefile

@@ -49,8 +49,7 @@ int main(int argc, char *argv[])
 {
   /* initialization for daemon */
   /*
-     daemon_init(0);
-     register_signal_handler(SIGCHLD, sig_child);
+    daemon_init(0);
   */
 
   if (argc < 2) {

@@ -95,7 +95,9 @@ am_mvrt_OBJECTS = mvrt-rtevent.$(OBJEXT) mvrt-rtprop.$(OBJEXT) \
 	mvrt-context.$(OBJEXT) mvrt-code.$(OBJEXT) \
 	mvrt-evqueue.$(OBJEXT) mvrt-mdecoder.$(OBJEXT) \
 	mvrt-reactor.$(OBJEXT) mvrt-eval.$(OBJEXT) \
-	mvrt-rtsched.$(OBJEXT) mvrt-main.$(OBJEXT)
+	mvrt-rtsched.$(OBJEXT) mvrt-rterror.$(OBJEXT) \
+	mvrt-rtlogger.$(OBJEXT) mvrt-rtutil.$(OBJEXT) \
+	mvrt-main.$(OBJEXT)
 mvrt_OBJECTS = $(am_mvrt_OBJECTS)
 mvrt_DEPENDENCIES = ../libmq/libmq.a ../libmv/libmv.a
 mvrt_LINK = $(CCLD) $(mvrt_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
@@ -472,6 +474,9 @@ mvrt_SOURCES = \
 	reactor.c \
 	eval.c \
 	rtsched.c \
+	rterror.c \
+	rtlogger.c \
+	rtutil.c \
 	main.c
 
 STRICT_CHECK_C = \
@@ -585,10 +590,13 @@ include ./$(DEPDIR)/mvrt-main.Po
 include ./$(DEPDIR)/mvrt-mdecoder.Po
 include ./$(DEPDIR)/mvrt-operator.Po
 include ./$(DEPDIR)/mvrt-reactor.Po
+include ./$(DEPDIR)/mvrt-rterror.Po
 include ./$(DEPDIR)/mvrt-rtevent.Po
 include ./$(DEPDIR)/mvrt-rtfunc.Po
+include ./$(DEPDIR)/mvrt-rtlogger.Po
 include ./$(DEPDIR)/mvrt-rtprop.Po
 include ./$(DEPDIR)/mvrt-rtsched.Po
+include ./$(DEPDIR)/mvrt-rtutil.Po
 
 .c.o:
 	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -757,6 +765,48 @@ mvrt-rtsched.obj: rtsched.c
 #	$(AM_V_CC)source='rtsched.c' object='mvrt-rtsched.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtsched.obj `if test -f 'rtsched.c'; then $(CYGPATH_W) 'rtsched.c'; else $(CYGPATH_W) '$(srcdir)/rtsched.c'; fi`
+
+mvrt-rterror.o: rterror.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rterror.o -MD -MP -MF $(DEPDIR)/mvrt-rterror.Tpo -c -o mvrt-rterror.o `test -f 'rterror.c' || echo '$(srcdir)/'`rterror.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mvrt-rterror.Tpo $(DEPDIR)/mvrt-rterror.Po
+#	$(AM_V_CC)source='rterror.c' object='mvrt-rterror.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rterror.o `test -f 'rterror.c' || echo '$(srcdir)/'`rterror.c
+
+mvrt-rterror.obj: rterror.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rterror.obj -MD -MP -MF $(DEPDIR)/mvrt-rterror.Tpo -c -o mvrt-rterror.obj `if test -f 'rterror.c'; then $(CYGPATH_W) 'rterror.c'; else $(CYGPATH_W) '$(srcdir)/rterror.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mvrt-rterror.Tpo $(DEPDIR)/mvrt-rterror.Po
+#	$(AM_V_CC)source='rterror.c' object='mvrt-rterror.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rterror.obj `if test -f 'rterror.c'; then $(CYGPATH_W) 'rterror.c'; else $(CYGPATH_W) '$(srcdir)/rterror.c'; fi`
+
+mvrt-rtlogger.o: rtlogger.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rtlogger.o -MD -MP -MF $(DEPDIR)/mvrt-rtlogger.Tpo -c -o mvrt-rtlogger.o `test -f 'rtlogger.c' || echo '$(srcdir)/'`rtlogger.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mvrt-rtlogger.Tpo $(DEPDIR)/mvrt-rtlogger.Po
+#	$(AM_V_CC)source='rtlogger.c' object='mvrt-rtlogger.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtlogger.o `test -f 'rtlogger.c' || echo '$(srcdir)/'`rtlogger.c
+
+mvrt-rtlogger.obj: rtlogger.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rtlogger.obj -MD -MP -MF $(DEPDIR)/mvrt-rtlogger.Tpo -c -o mvrt-rtlogger.obj `if test -f 'rtlogger.c'; then $(CYGPATH_W) 'rtlogger.c'; else $(CYGPATH_W) '$(srcdir)/rtlogger.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mvrt-rtlogger.Tpo $(DEPDIR)/mvrt-rtlogger.Po
+#	$(AM_V_CC)source='rtlogger.c' object='mvrt-rtlogger.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtlogger.obj `if test -f 'rtlogger.c'; then $(CYGPATH_W) 'rtlogger.c'; else $(CYGPATH_W) '$(srcdir)/rtlogger.c'; fi`
+
+mvrt-rtutil.o: rtutil.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rtutil.o -MD -MP -MF $(DEPDIR)/mvrt-rtutil.Tpo -c -o mvrt-rtutil.o `test -f 'rtutil.c' || echo '$(srcdir)/'`rtutil.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mvrt-rtutil.Tpo $(DEPDIR)/mvrt-rtutil.Po
+#	$(AM_V_CC)source='rtutil.c' object='mvrt-rtutil.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtutil.o `test -f 'rtutil.c' || echo '$(srcdir)/'`rtutil.c
+
+mvrt-rtutil.obj: rtutil.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-rtutil.obj -MD -MP -MF $(DEPDIR)/mvrt-rtutil.Tpo -c -o mvrt-rtutil.obj `if test -f 'rtutil.c'; then $(CYGPATH_W) 'rtutil.c'; else $(CYGPATH_W) '$(srcdir)/rtutil.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/mvrt-rtutil.Tpo $(DEPDIR)/mvrt-rtutil.Po
+#	$(AM_V_CC)source='rtutil.c' object='mvrt-rtutil.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -c -o mvrt-rtutil.obj `if test -f 'rtutil.c'; then $(CYGPATH_W) 'rtutil.c'; else $(CYGPATH_W) '$(srcdir)/rtutil.c'; fi`
 
 mvrt-main.o: main.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mvrt_CPPFLAGS) $(CPPFLAGS) $(mvrt_CFLAGS) $(CFLAGS) -MT mvrt-main.o -MD -MP -MF $(DEPDIR)/mvrt-main.Tpo -c -o mvrt-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c

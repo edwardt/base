@@ -1,10 +1,10 @@
 /**
- * @file error.c
+ * @file rterror.c
  *
  * @author cjeong
  */
 #include <assert.h>
-#include "support/error.h"
+#include "rterror.h"
 
 #define MAX_TRACED_STACK_FRAMES 16
 

@@ -1,5 +1,5 @@
 /**
- * @file daemon.c
+ * @file rtutil.c
  */
 #include <stdio.h>            /* printf */
 #include <unistd.h>           /* sysconf, sleep */
@@ -9,8 +9,12 @@
 #include <sys/wait.h>         /* waitpid */
 #include <sys/stat.h>
 #include <signal.h>           /* sigaction */
-#include "support/daemon.h"
-static void sig_child(int signo)
+#include "rtutil.h"
+
+static void _sig_child(int signo);
+static int _daemon_init(int flags);
+
+static void _sig_child(int signo)
 {
   pid_t pid;
   int status;
@@ -24,20 +28,20 @@ static void sig_child(int signo)
   return;
 }
 
-int daemon_init(int flags) 
+static int _daemon_init(int flags)
 {
-  // see TLPI for details
+  /* see TLPI for details */
   int maxfd, fd;
   if (!(flags & BD_NO_CLOSE_FILES)) {
     if ((maxfd = sysconf(_SC_OPEN_MAX)) == -1) {
-      // if limit is indeterminate, guess it
+      /* if limit is indeterminate, guess it */
       maxfd = BD_MAX_CLOSE; 
     }
     for (fd = 0; fd < maxfd; fd++)
       close(fd);
   }
 
-  // redirect standard fd's to /dev/null
+  /* redirect standard fd's to /dev/null */
   if (!(flags & BD_NO_REDIRECT_STD_FDS)) {
     close(STDIN_FILENO);
     fd = open("/dev/null", O_RDWR);
@@ -52,7 +56,13 @@ int daemon_init(int flags)
   return 0;
 }
 
-static void register_signal_handler(int signo, void (*fptr)(int)) 
+int daemon_init(int flags) 
+{
+  _daemon_init(flags);
+  register_signal_handler(SIGCHLD, _sig_child);
+}
+
+void register_signal_handler(int signo, void (*fptr)(int)) 
 {
   struct sigaction act, oldact;
   act.sa_handler = fptr;

@@ -1,10 +1,10 @@
 /**
- * @file error.h
+ * @file rterror.h
  * 
  * @brief Interface to the error reporting module.
  */
-#ifndef MV_ERROR_H
-#define MV_ERROR_H
+#ifndef MVRT_ERROR_H
+#define MVRT_ERROR_H
 
 #include <unistd.h>
 #include <stdio.h>
@@ -50,4 +50,4 @@ void mv_init_signal_handler();
 }
 #endif /*__cplusplus */
 
-#endif /* MV_ERROR_H */
+#endif /* MVRT_ERROR_H */
