@@ -8,7 +8,7 @@
 #include <mv/device.h>   /* mv_device_self */
 #include "rtprop.h"
 #include "rtfunc.h"
-#include "reactor.h"
+#include "rtreactor.h"
 
 
 #define MAX_REACTORS 1024

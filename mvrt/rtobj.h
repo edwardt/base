@@ -7,6 +7,12 @@
 #ifndef MVRT_OBJ_H
 #define MVRT_OBJ_H
 
+#include <common/defs.h>
+#include "rtprop.h"
+#include "rtfunc.h"
+#include "rtevent.h"
+#include "rtreactor.h"
+
 /* An MV runtime object is a property, an event, a function, or a reactor. */
 #define MVRT_OBJ_EVENT     0x0
 #define MVRT_OBJ_FUNC      0x1
@@ -19,22 +25,21 @@
 #define MVRT_OBJ_EXTERN    0x1
 
 typedef struct mvrt_obj {
-  char *dev;                /* device which contains the obj */
-  char *name;               /* name of the obj */
+  char *dev;                 /* device which contains this object */
+  char *name;                /* name of the object */
+  mv_uint32_t hash;          /* hash computed from dev and name */
+
+  mv_uint32_t tag   : 2;     /* MVRT_OBJ_EVENT, etc. */
+  mv_uint32_t loc   : 1;     /* MVRT_OBJ_LOCAL, etc */
+  mv_uint32_t used  : 1;     /* need to be saved */
+  mv_uint32_t pad   : 28;    /* pad */
 
   union {
-    mvrt_prop_t prop;       /* prop */
-    mvrt_func_t func;       /* func */
-    mvrt_event_t event;     /* event */
-    mvrt_reactor_t reactor; /* reactor */
+    mvrt_prop_t prop;        /* prop */
+    mvrt_func_t func;        /* func */
+    mvrt_event_t event;      /* event */
+    mvrt_reactor_t reactor;  /* reactor */
   } u;
-
-  mvrt_obj_t *next;         /* for chain in hash table */
-
-  unsigned tag : 2;         /* MVRT_OBJ_EVENT, etc. */
-  unsigned loc : 1;         /* MVRT_OBJ_LOCAL, etc */
-  unsigned pad : 29;        /* pad */
-
 } mvrt_obj_t;
 
 

@@ -1,5 +1,5 @@
 /**
- * @file reactor.h
+ * @file rtreactor.h
  *
  * @brief Interface to reactors.
  */

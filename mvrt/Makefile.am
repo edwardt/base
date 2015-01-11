@@ -3,12 +3,12 @@ mvrt_SOURCES = \
 	rtevent.c \
 	rtprop.c \
 	rtfunc.c \
+	rtreactor.c \
 	operator.c \
 	context.c \
 	code.c \
 	evqueue.c \
 	mdecoder.c \
-	reactor.c \
 	eval.c \
 	rtsched.c \
 	rterror.c \

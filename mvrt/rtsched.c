@@ -9,8 +9,8 @@
 #include <signal.h>      /* sigemptyset */
 #include <time.h>        /* nanosleep */
 #include "rtevent.h"     /* mvrt_event_t */
+#include "rtreactor.h"   /* mvrt_reactor_t */
 #include "evqueue.h"     /* mvrt_evqueue_t */
-#include "reactor.h"     /* mvrt_reactor_t */
 #include "operator.h"    /* mvrt_operator_t */
 #include "rtsched.h"
 

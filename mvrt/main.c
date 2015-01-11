@@ -21,7 +21,7 @@
 #include "rtevent.h"         /* mvrt_event_module_init */
 #include "rtprop.h"          /* mvrt_prop_module_init */
 #include "rtfunc.h"          /* mvrt_func_module_init */
-#include "reactor.h"         /* mvrt_reactor_module_init */
+#include "rtreactor.h"       /* mvrt_reactor_module_init */
 #include "rtutil.h"          /* daemon_init */
 
 
