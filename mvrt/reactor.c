@@ -86,7 +86,7 @@ int _reactor_loadfile(const char *file)
   FILE *fp = fopen(file, "r");
   if (!fp) {
     fprintf(stdout, "Failed to open -- %s\n", file);
-    return;
+    return -1;
   }
   
   /* read reactor file of the following format:

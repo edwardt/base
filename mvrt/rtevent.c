@@ -405,3 +405,35 @@ int mvrt_eventinst_delete(mvrt_eventinst_t *evinst)
   free(evinst);
   return 0;}
 
+
+
+mvrt_event_t mvrt_event_parse(FILE *fp, char *line)
+{
+  /* event dev0:ev0
+     event dev1:ev1
+     timer :timer0 1 1000
+     timer :timer1 0 1000000
+  */
+  char *type;
+  char *name;
+  char *arg0;
+  char *arg1;
+  mvrt_event_t event = (mvrt_event_t) 0;
+
+  if (_rtevent_tokenize(line, &type, &name, &arg0, &arg1) == -1) {
+    fprintf(stderr, "Line not recognized: %s\n", line);
+    return (mvrt_event_t) 0;
+  }
+    
+  if (type == NULL) 
+    return event;
+  /*else if (!strcmp(type, "event"))
+    event = mvrt_event_new(self, name, tag);
+  else if (!strcmp(type, "timer"))
+    event = mvrt_timer_new(name, atoi(arg0), atoi(arg1));
+  */
+  else
+    return event;
+
+  return event;
+}
