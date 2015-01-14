@@ -1,0 +1,92 @@
+# system properties
+prop _P_device null
+
+# system events
+event _E_prop_get
+event _E_prop_set
+event _E_func_call
+event _E_func_call_ret
+event _E_reply
+
+# system reactors
+reactor _R_func_call 
+{
+  getarg              # put event arg to stack top
+  pushs "funarg"      # get "funarg" value of "arg map"
+  getf
+  getarg              # put event arg again to stack top
+  pushs "name"        # get "name" value of "arg map"
+  getf
+  call_func           # call the function
+}
+
+reactor _R_func_call_ret 
+{
+  getarg
+  pushs "funarg"
+  getf
+  getarg
+  pushs "name"
+  getf
+  call_func
+  getarg
+  pushs "retid"
+  getf
+  getarg
+  pushs "retaddr"
+  getf
+  call_return         # initiate return sequence (REPLY)
+}
+
+reactor _R_prop_get 
+{
+  getarg
+  pushs "name"
+  getf
+  prop_get
+  getarg
+  pushs "retaddr"
+  getf
+  getarg
+  pushs "retid"
+  getf
+  call_return        # initial return sequence (REPLY)
+}
+
+reactor _R_prop_set 
+{
+  getarg
+  pushs "value"
+  getf
+  getarg
+  pushs "name"
+  getf
+  prop_set
+}
+
+reactor _R_reply 
+{
+  getarg
+  pushs "retval"
+  getf
+  getarg
+  pushs "retid"
+  getf
+  call_continue
+}
+
+#reactor func_ret_reactor 
+#{
+# getarg
+# getf "retval" 
+# getarg
+# getf "retid" 
+# call_continue retid
+#}
+
+# system event-reactor associations
+assoc _E_func_call      _R_func_call
+assoc _E_func_call_ret  _R_func_call_ret
+assoc _E_prop_get       _R_prop_get
+assoc _E_prop_set       _R_prop_set
+assoc _E_reply          _R_reply
