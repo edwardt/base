@@ -45,7 +45,7 @@ typedef struct _map {
   mv_value_t bindings;  /* cons */
 } _map_t;
 
-static int _value_print(mv_value_t v, char *buf, int bufptr, int maxbuf);
+static int _value_print(mv_value_t v, char *buf, mv_ptr_t bufptr, int maxbuf);
 static int _value_print_intlen(int n);
 static char *_value_to_str(mv_value_t v);
 
@@ -76,7 +76,7 @@ int _value_print_intlen(int n) {
   return len;
 }
 
-int _value_print(mv_value_t v, char *buf, int bufptr, int maxbuf)
+int _value_print(mv_value_t v, char *buf, mv_ptr_t bufptr, int maxbuf)
 {
   _prim_t *prim;       /* prim */
   _map_t *map;         /* map */

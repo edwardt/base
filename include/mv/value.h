@@ -54,6 +54,11 @@ extern float mv_value_float_get();
 extern mv_value_t mv_value_string(const char *v);
 extern char *mv_value_string_get();
 
+/* pair */
+extern mv_value_t mv_value_pair(mv_value_t first, mv_value_t second);
+extern mv_value_t mv_value_pair_first(mv_value_t pv);
+extern mv_value_t mv_value_pair_second(mv_value_t pv);
+
 /* cons cells */
 extern mv_value_t mv_value_cons();
 extern mv_value_t mv_value_cons_car(mv_value_t cons);
