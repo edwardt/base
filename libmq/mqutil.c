@@ -105,10 +105,13 @@ void mqutil_init()
 
 void *mqutil_getsock(const char *addr)
 {
-  _mqsock_t *mqsock = _mqsock_lookup(addr);
-  if (mqsock) {
+  _mqsock_t *mqsock = NULL;
+  /*
+    mqsock = _mqsock_lookup(addr);
+    if (mqsock) {
     return mqsock->sock;
-  }
+    }
+  */
 
   mqsock = _mqsock_get_free();
 
