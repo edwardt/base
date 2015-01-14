@@ -592,7 +592,7 @@ char *_eval_getname(char *s)
 {
   char *charp = strstr(s, ":");
   if (charp)
-    return s + 1;
+    return charp + 1;
   
   return s;
 }
