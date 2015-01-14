@@ -124,13 +124,9 @@ int main(int argc, char *argv[])
   */
   mvrt_timer_module_init();
 
-  /*
-    mvrt_prop_loadfile((char *) "prop.dat", MVRT_PROP_LOCAL);
-    mvrt_func_loadfile((char *) "native.dat", MVRT_FUNC_NATIVE);
-    mvrt_event_loadfile((char *) "timer.dat", MVRT_PROP_LOCAL);
-    mvrt_reactor_loadfile((char *) "reactor.dat");
-    mvrt_reactor_assoc_loadfile((char *) "assoc.dat");
-  */
+  mvrt_obj_loadfile(datafile);
+
+  fprintf(stdout, "Runtime initialization finished...\n");
 
   /*
    * main thread perform infinite loop - Is there a better way which would

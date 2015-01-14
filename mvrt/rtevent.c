@@ -81,7 +81,8 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
   int i;
   timer_t *tid;
   _rtimer_t *rtimer;
-
+  
+  printf("rtimer_handler\n");
   struct timespec ts; /* 1ms */
   ts.tv_sec = 0;
   ts.tv_nsec = 1000; 
@@ -208,6 +209,7 @@ mvrt_event_t *mvrt_timer_new(const char *name, size_t sec, size_t nsec)
   }
 
   obj->data = (void *) rtimer;
+  rtimer->rtev = (mvrt_event_t *) obj;
 
   return (mvrt_event_t *) obj;
 }
@@ -228,8 +230,10 @@ mvrt_event_t *mvrt_event_load_str(char *line)
   obj = mvrt_obj_new(name, NULL);
   obj->tag = MVRT_OBJ_EVENT;
 
-  if (rtimer)
+  if (rtimer) {
     obj->data = (void *) rtimer;
+    rtimer->rtev = (mvrt_event_t *) obj;
+  }
 
   return (mvrt_event_t *) obj;
 }
@@ -289,8 +293,6 @@ mvrt_event_t *mvrt_event_lookup(const char *name, const char *dev)
 
   return (mvrt_event_t *) obj;
 }
-
-
 
 
 int mvrt_timer_module_init()

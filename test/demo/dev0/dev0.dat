@@ -100,7 +100,7 @@ reactor r4
 
 # event-reactor associations
 # <eventname> <reactorname>
-timer0 r1
-timer1 r2
-timer2 r3
-timer2 r4
+assoc timer0 r1
+assoc timer1 r2
+assoc timer2 r3
+assoc timer2 r4

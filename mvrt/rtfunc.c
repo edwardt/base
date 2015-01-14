@@ -101,7 +101,7 @@ _rtfunc_t *_rtfunc_parse(char *line, FILE *fp, char **name)
 
   _rtfunc_t *func = NULL;
   if (!strcmp(type, "native")) {
-    _rtfunc_t *func = _rtfunc_new();
+    func = _rtfunc_new();
     func->tag = _RTFUNC_NATIVE;
     func->u.native = malloc(sizeof(mvrt_native_t));
     func->u.native->lib = strdup(lib);
@@ -111,7 +111,7 @@ _rtfunc_t *_rtfunc_parse(char *line, FILE *fp, char **name)
     mvrt_code_t *code = mvrt_code_load_file(fp);
     if (!code)
       return NULL;
-    _rtfunc_t *func = _rtfunc_new();
+    func = _rtfunc_new();
     func->tag = _RTFUNC_MV;
     func->u.code = code;
   }
