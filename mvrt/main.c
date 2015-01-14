@@ -54,26 +54,29 @@ int main(int argc, char *argv[])
     daemon_init(0);
   */
 
-  if (argc < 2) {
-    fprintf(stdout, "Usage: %s [device name]\n", argv[0]);
+  if (argc < 3) {
+    fprintf(stdout, "Usage: %s [name] [datafile]\n", argv[0]);
+    fprintf(stdout, "  - [name]:     globally unqiue name of this device\n");
+    fprintf(stdout, "  - [datafile]: file which contains device data such as "
+            " properties.\n");
     exit(1);
   }
+
   char *self = strdup(argv[1]);
+  char *datafile = strdup(argv[2]);
 
   /* initialize device service */
   mv_device_service_init(self, "etc/device.dat");
   
-  /* initialize service modules */
-  mvrt_prop_module_init();
-  mvrt_func_module_init();
-  mvrt_event_module_init();
-  mvrt_reactor_module_init();
-
   /* load system properties, reactors, etc. */
-  mvrt_prop_loadfile((char *) "etc/sysprop.dat", MVRT_PROP_SYSTEM);
-  mvrt_event_loadfile((char *) "etc/sysevent.dat", MVRT_EVENT_SYSTEM);
-  mvrt_reactor_loadfile((char *) "etc/sysreact.dat");
-  mvrt_reactor_assoc_loadfile((char *) "etc/sysassoc.dat");
+  mvrt_obj_loadfile("etc/syslib.dat");
+
+  /*
+    mvrt_prop_loadfile((char *) "etc/sysprop.dat", MVRT_PROP_SYSTEM);
+    mvrt_event_loadfile((char *) "etc/sysevent.dat", MVRT_EVENT_SYSTEM);
+    mvrt_reactor_loadfile((char *) "etc/sysreact.dat");
+    mvrt_reactor_assoc_loadfile((char *) "etc/sysassoc.dat");
+  */
 
   /* 
    * initialize message queue handler 
@@ -121,11 +124,13 @@ int main(int argc, char *argv[])
   */
   mvrt_timer_module_init();
 
-  mvrt_prop_loadfile((char *) "prop.dat", MVRT_PROP_LOCAL);
-  mvrt_func_loadfile((char *) "native.dat", MVRT_FUNC_NATIVE);
-  mvrt_event_loadfile((char *) "timer.dat", MVRT_PROP_LOCAL);
-  mvrt_reactor_loadfile((char *) "reactor.dat");
-  mvrt_reactor_assoc_loadfile((char *) "assoc.dat");
+  /*
+    mvrt_prop_loadfile((char *) "prop.dat", MVRT_PROP_LOCAL);
+    mvrt_func_loadfile((char *) "native.dat", MVRT_FUNC_NATIVE);
+    mvrt_event_loadfile((char *) "timer.dat", MVRT_PROP_LOCAL);
+    mvrt_reactor_loadfile((char *) "reactor.dat");
+    mvrt_reactor_assoc_loadfile((char *) "assoc.dat");
+  */
 
   /*
    * main thread perform infinite loop - Is there a better way which would

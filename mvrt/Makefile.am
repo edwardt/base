@@ -4,6 +4,7 @@ mvrt_SOURCES = \
 	rtprop.c \
 	rtfunc.c \
 	rtreactor.c \
+	rtobj.c \
 	operator.c \
 	context.c \
 	code.c \

@@ -1,9 +1,7 @@
 /**
  * @file rtprop.h
  *
- * @brief Interface to runtime properites. Note that mv/prop.h is for 
- * global properties, while rtprop is a more general property which also
- * includes local and system properties.
+ * @brief Interface to local properties. 
  */
 #ifndef MVRT_PROP_H
 #define MVRT_PROP_H
@@ -11,34 +9,34 @@
 #include <common/defs.h>   /* mv_ptr_t */
 #include <mv/value.h>      /* mv_value_t */
 
+typedef void mvrt_prop_t;
 
-/* Opaque handle for the property structure. */
-typedef mv_ptr_t mvrt_prop_t;
+/* Creates a new property struct. The value field will be initialized
+   to MV_VALUE_INVALID. */
+extern mvrt_prop_t *mvrt_prop_new(const char *name);
 
-typedef enum {
-  MVRT_PROP_SYSTEM  = 0x1,
-  MVRT_PROP_LOCAL   = 0x2,
-  MVRT_PROP_GLOBAL  = 0x4,
-  MVRT_PROP_NTAGS
-} mvrt_proptag_t;
+/* Parse a string into a property. The argument string must contain exactly
+   one definition of a property. */
+extern mvrt_prop_t *mvrt_prop_load_str(char *line);
 
-/* Initializes the property module. Be sure to call at time 0. */
-extern int mvrt_prop_module_init();
+/* Prints a property into a string which can be saved to a file. */
+extern char *mvrt_prop_save_str(mvrt_prop_t *p);
 
-/* Load or save properties using the given file. */
-extern int mvrt_prop_loadfile(const char *file, mvrt_proptag_t tag);
-extern int mvrt_prop_savefile(const char *file, mvrt_proptag_t tag);
+/* Deletes a local property. */
+extern int mvrt_prop_delete(mvrt_prop_t *p);
+extern int mvrt_prop_delete_by_name(const char *name);
 
-extern mvrt_prop_t mvrt_prop_new(const char *dev, const char *name, int tag);
-extern int mvrt_prop_delete(mvrt_prop_t prop);
+/* Looks up a local property.*/
+extern mvrt_prop_t *mvrt_prop_lookup(const char *name);
 
-extern mvrt_prop_t mvrt_prop_lookup(const char *dev, const char *name);
+extern int mvrt_prop_is_local(mvrt_prop_t *p);
 
-extern const char *mvrt_prop_dev(mvrt_prop_t prop);
-extern const char *mvrt_prop_name(mvrt_prop_t prop);
-extern mvrt_proptag_t mvrt_prop_tag(mvrt_prop_t prop);
+/* Returns the value of a property. */
+extern mv_value_t mvrt_prop_getvalue(mvrt_prop_t *p);
+extern mv_value_t mvrt_prop_getvalue_by_name(const char *name);
 
-extern mv_value_t mvrt_prop_getvalue(mvrt_prop_t prop);
-extern int mvrt_prop_setvalue(mvrt_prop_t prop, mv_value_t value);
+/* Sets the value of a property. */
+extern int mvrt_prop_setvalue(mvrt_prop_t *p, mv_value_t v);
+extern int mvrt_prop_setvalue_by_name(const char *name, mv_value_t v);
 
 #endif /* MVRT_PROP_H */

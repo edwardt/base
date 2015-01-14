@@ -24,11 +24,11 @@ static int _eval_push(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_cons(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_stackop(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx);
-static int _eval_call_native(mv_value_t f, mv_value_t a, mvrt_context_t *c);
+static int _eval_call_native(mvrt_func_t *f, mv_value_t a, mvrt_context_t *c);
 static int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx);
-static mvrt_func_t _eval_get_func(const char *func_s);
-static mvrt_prop_t _eval_get_prop(const char *prop_s);
+static char *_eval_getdev(char *s);
+static char *_eval_getname(char *s);
 
 extern mv_mqueue_t *mq;
 extern char *dest;
@@ -336,22 +336,21 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mv_value_t prop_v = mvrt_stack_pop(stack);
   char *prop_s = mv_value_string_get(prop_v);
 
-  mvrt_prop_t mvprop = _eval_get_prop(prop_s);
-  assert(mvprop && "No such property exists.");
+  char *dev_s = _eval_getdev(prop_s);
+  char *name_s = _eval_getname(prop_s);
 
-  if (mvrt_prop_tag(mvprop) != MVRT_PROP_GLOBAL) {
+  mvrt_prop_t *mvprop = mvrt_prop_lookup(name_s);
+  if (mvprop) {
     mv_value_t value_v = mvrt_prop_getvalue(mvprop);
     mvrt_stack_push(stack, value_v);
 
+    free(dev_s);
     return ip + 1;
   }
 
   static char msg[4096];
 
-  const char *dev = mvrt_prop_dev(mvprop);
-  const char *name = mvrt_prop_name(mvprop);
-  const char *destaddr = mv_device_addr(dev);
-
+  const char *destaddr = mv_device_addr(dev_s);
   int retid = mvrt_continuation_new(ctx);
   sprintf(msg, 
           "%s {"
@@ -359,10 +358,11 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
           " \"src\":\"%s\", "
           " \"arg\":"
           "{ \"name\": \"%s\" \"retid\" : %d, \"retaddr\": \"%s\" } }",
-          destaddr, mv_mqueue_addr(mq), name, retid, mv_mqueue_addr(mq));
+          destaddr, mv_mqueue_addr(mq), name_s, retid, mv_mqueue_addr(mq));
   fprintf(stdout, "MQSEND: %s\n", msg);
   mv_mqueue_put(mq, msg);
 
+  free(dev_s);
   return _EVAL_SUSPEND;
 }
 
@@ -374,7 +374,7 @@ int _eval_prop_set(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mv_value_t prop_v = mvrt_stack_pop(stack);
   mv_value_t value_v = mvrt_stack_pop(stack);
   char *prop = mv_value_string_get(prop_v);
-  mvrt_prop_t mvprop = mvrt_prop_lookup(mv_device_self(), prop);
+  mvrt_prop_t *mvprop = mvrt_prop_lookup(prop);
   assert(prop && "No such property exists.");
   
   if (mvrt_prop_setvalue(mvprop, value_v) == -1) {
@@ -395,58 +395,6 @@ int _eval_call_local(mvrt_instr_t *instr, mvrt_context_t *ctx)
   return _EVAL_FAILURE;
 }
 
-mvrt_func_t _eval_get_func(const char *func_s)
-{
-  mvrt_func_t func;
-  char *charp;
-
-  if (((charp = strstr(func_s, ":")) == NULL) || charp == func_s) {
-    /* "foo" or ":foo" - local function */
-    if (charp == func_s)
-      func = mvrt_func_lookup(mv_device_self(), func_s+1);
-    else
-      func = mvrt_func_lookup(mv_device_self(), func_s);
-  }
-  else {
-    /* "dev:foo" - remote function */
-    char *name = strdup(charp + 1);
-    char save = *charp;
-    *charp = '\0';
-    func = mvrt_func_lookup(func_s, name);
-    if (func == 0)
-      func = mvrt_func_new(func_s, name, MVRT_FUNC_GLOBAL);
-    *charp = save;
-  }
-
-  return func;
-}
-
-mvrt_prop_t _eval_get_prop(const char *prop_s)
-{
-  mvrt_prop_t prop;
-  char *charp;
-
-  if (((charp = strstr(prop_s, ":")) == NULL) || charp == prop_s) {
-    /* "foo" or ":foo" - local prop */
-    if (charp == prop_s)
-      prop = mvrt_prop_lookup(mv_device_self(), prop_s+1);
-    else
-      prop = mvrt_prop_lookup(mv_device_self(), prop_s);
-  }
-  else {
-    /* "dev:foo" - remote proption */
-    char *name = strdup(charp + 1);
-    char save = *charp;
-    *charp = '\0';
-    prop = mvrt_prop_lookup(prop_s, name);
-    if (prop == 0)
-      prop = mvrt_prop_new(prop_s, name, MVRT_PROP_GLOBAL);
-    *charp = save;
-  }
-
-  return prop;
-}
-
 int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
 {
   mvrt_stack_t *stack = ctx->stack;
@@ -462,68 +410,73 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
   mv_value_t farg_v = mvrt_stack_pop(stack);
 
   char *func_s = (char *) mv_value_string_get(fnam_v);
-  mvrt_func_t func = _eval_get_func(func_s);
-  if (mvrt_func_tag(func) == MVRT_FUNC_NATIVE)
-    return _eval_call_native(func, farg_v, ctx);
 
-  const char *dev = mvrt_func_dev(func);
-  const char *name = mvrt_func_name(func);
-  const char *destaddr = mv_device_addr(dev);
+  char *dev_s = _eval_getdev(func_s);
+  char *name_s = _eval_getname(func_s);
+
+  mvrt_func_t *mvfunc = mvrt_func_lookup(name_s);
+  if (mvfunc) {
+    /* local function */
+
+    if (mvrt_func_isnative(mvfunc)) {
+      free(dev_s);
+      return _eval_call_native(mvfunc, farg_v, ctx);
+    }
+    else {
+      free(dev_s);
+      assert(0 && "MV func not implemented yet");
+      return ip + 1;
+    }
+  }
+
+  const char *destaddr = mv_device_addr(dev_s);
   mvrt_native_t *native = NULL;
 
   static char msg[4096];
   int retid;
 
-  switch (mvrt_func_tag(func)) {
-  case MVRT_FUNC_LOCAL:
-    assert(0 && "Not implemented yet.");
+  switch (instr->opcode) {
+  case MVRT_OP_CALL_FUNC:
+    sprintf(msg, 
+            "%s {"
+            " \"tag\":\"FUNC_CALL\", "
+            " \"src\":\"%s\", "
+            " \"arg\":"
+            "{ \"name\": \"%s\", \"funarg\" : %s } }",
+            destaddr, mv_mqueue_addr(mq), name_s, mv_value_to_str(farg_v));
+    fprintf(stdout, "MQSEND: %s\n", msg);
+    mv_mqueue_put(mq, msg);
     break;
-  case MVRT_FUNC_GLOBAL:
-    switch (instr->opcode) {
-    case MVRT_OP_CALL_FUNC:
-      sprintf(msg, 
-              "%s {"
-              " \"tag\":\"FUNC_CALL\", "
-              " \"src\":\"%s\", "
-              " \"arg\":"
-              "{ \"name\": \"%s\", \"funarg\" : %s } }",
-              destaddr, mv_mqueue_addr(mq), name, mv_value_to_str(farg_v));
-      fprintf(stdout, "MQSEND: %s\n", msg);
-      mv_mqueue_put(mq, msg);
-      break;
-    case MVRT_OP_CALL_FUNC_RET:
-      retid = mvrt_continuation_new(ctx);
-      sprintf(msg, 
-              "%s {"
-              " \"tag\":\"FUNC_CALL_RET\", "
-              " \"src\":\"%s\", "
-              " \"arg\":"
-              "{ \"name\": \"%s\", \"funarg\" : %s, \"retid\" : %d, "
-              "  \"retaddr\": \"%s\" } }",
-              destaddr, mv_mqueue_addr(mq), name, mv_value_to_str(farg_v), 
-              retid, mv_mqueue_addr(mq));
-      fprintf(stdout, "MQSEND: %s\n", msg);
-      mv_mqueue_put(mq, msg);
-      return _EVAL_SUSPEND;
-    case MVRT_FUNC_NATIVE:
-      assert(0 && "Native function should not reach here.");
-    default:
-      break;
-    }
+  case MVRT_OP_CALL_FUNC_RET:
+    retid = mvrt_continuation_new(ctx);
+    sprintf(msg, 
+            "%s {"
+            " \"tag\":\"FUNC_CALL_RET\", "
+            " \"src\":\"%s\", "
+            " \"arg\":"
+            "{ \"name\": \"%s\", \"funarg\" : %s, \"retid\" : %d, "
+            "  \"retaddr\": \"%s\" } }",
+            destaddr, mv_mqueue_addr(mq), name_s, mv_value_to_str(farg_v), 
+            retid, mv_mqueue_addr(mq));
+    fprintf(stdout, "MQSEND: %s\n", msg);
+    mv_mqueue_put(mq, msg);
+    free(dev_s);
+    return _EVAL_SUSPEND;
   default:
+    assert(0 && "Must not reach here");
     break;
   }
 
+  free(dev_s);
   return ip + 1;
 }
 
-int _eval_call_native(mvrt_func_t func, mv_value_t farg_v, 
-                      mvrt_context_t *ctx)
+int _eval_call_native(mvrt_func_t *f, mv_value_t farg_v,  mvrt_context_t *ctx)
 {
   mvrt_stack_t *stack = ctx->stack;
   int ip = ctx->iptr;
 
-  mvrt_native_t *native = mvrt_func_native(func);
+  mvrt_native_t *native = mvrt_func_getnative(f);
 
   /* get function */
   if (!native->func1) {
@@ -618,13 +571,39 @@ int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx)
   return ip + 1;
 }
 
+/* Returns the first part of "dev:name". Caller is responsible to deallocate
+   the returned string. */
+char *_eval_getdev(char *s)
+{
+  char *charp = strstr(s, ":");
+  if (!charp)
+    return NULL;
+
+  char save = *charp;
+  *charp = '\0';
+  char *retstr = strdup(s);
+  *charp = save;
+  
+  return retstr;
+}
+
+/* Returns the second part of "dev:name". */
+char *_eval_getname(char *s)
+{
+  char *charp = strstr(s, ":");
+  if (charp)
+    return s + 1;
+  
+  return s;
+}
+
 
 /*
  * Functions for the eval interface.
  */
 int mvrt_eval_reactor(mvrt_reactor_t *reactor, mvrt_eventinst_t *evinst)
 {
-  mvrt_event_t evtype = evinst->type;
+  mvrt_event_t *evtype = evinst->type;
   mv_value_t evdata = evinst->data;
 
   /* Create a new context
@@ -632,7 +611,7 @@ int mvrt_eval_reactor(mvrt_reactor_t *reactor, mvrt_eventinst_t *evinst)
      . iptr = 0
      . stack is newly created with the evdata as its only element
   */
-  mvrt_context_t *ctx = mvrt_context_new(reactor->code);
+  mvrt_context_t *ctx = mvrt_context_new(mvrt_reactor_getcode(reactor));
   ctx->iptr = 0;
   ctx->stack = mvrt_stack_new();
   ctx->arg = evdata;
@@ -645,3 +624,4 @@ int mvrt_eval_reactor(mvrt_reactor_t *reactor, mvrt_eventinst_t *evinst)
   
   return retval;
 }
+

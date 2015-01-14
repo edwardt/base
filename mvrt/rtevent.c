@@ -11,190 +11,36 @@
 #include <mv/value.h>     /* mv_value_t */
 #include "evqueue.h"      /* mvrt_evqueue_instance */
 #include "rtevent.h"
+#include "rtobj.h"
+
 
 #define MAX_RTIMER_TABLE 16
 typedef struct _rtimer {
-  timer_t timerid;          /* timer */
-  size_t sec;               /* interval sec */
-  size_t nsec;              /* interval nsec */
-  mvrt_event_t rtev;        /* back pointer to _rtevent_t */
-  unsigned stopped : 1;     /* timer is stopped */
-  unsigned pad     : 31;    /* pad */
+  timer_t timerid;        /* timer */
+  size_t sec;             /* interval sec */
+  size_t nsec;            /* interval nsec */
+  mvrt_event_t *rtev;     /* back pointer to mvrt_event_t */
+  unsigned stopped : 1;   /* timer is stopped */
+  unsigned used    : 1;   /* used */
+  unsigned pad     : 30;  /* pad */
 } _rtimer_t;
 static _rtimer_t _rtimer_table[MAX_RTIMER_TABLE];
 
-#define MAX_RTEVENT_TABLE 4096
-typedef struct _rtevent {
-  char *dev;
-  char *name;
-  union {
-    mv_value_t subs;        /* LOCAL: list of subscribers */
-    _rtimer_t *timer;       /* TIMER */
-  } u;
-  size_t noccurs;           /* number of occurrences */
-
-  unsigned tag      : 3;    /* tag */
-
-  unsigned free     : 1;    /* free or not */
-  unsigned free_idx : 12;   /* index to free list */
-  unsigned free_nxt : 12;   /* index of next free entry */
-  unsigned pad      : 4;
-} _rtevent_t;
-static _rtevent_t _rtevent_table[MAX_RTEVENT_TABLE];
-static _rtevent_t *_free_rtevent;
-
-static int _rtevent_table_init();
-static _rtevent_t *_rtevent_get_free();
-static int _rtevent_delete(_rtevent_t *rtev);
-static _rtevent_t *_rtevent_lookup(const char *dev, const char *name);
-static int _rtevent_loadfile(const char *file, mvrt_eventag_t tag);
-static int _rtevent_savefile(const char *file, mvrt_eventag_t tag);
-static int _rtevent_tokenize(char *line, char **ty, char **n, char **s, char **t);
-static _rtimer_t *_rtimer_create(const char *name, size_t sec, size_t nsec);
+static _rtimer_t *_rtimer_new(size_t sec, size_t nsec);
+static int _rtimer_delete(_rtimer_t *timer);
 static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc);
 
-int _rtevent_table_init()
-{
-  int i;
-  _rtevent_t *ev;
-  for (i = 0; i < MAX_RTEVENT_TABLE; i++) {
-    ev = _rtevent_table + i;
-    ev->dev = NULL;
-    ev->name = NULL;
-
-    ev->free = 1;
-    ev->free_idx = i;
-    ev->free_nxt = i + 1;
-  }
-  /* the last element */
-  ev->free_idx = i;
-  ev->free_nxt = 0;
-
-  _free_rtevent = _rtevent_table + 1;
-  _rtevent_table[0].free = 0;
-}
-
-_rtevent_t *_rtevent_get_free()
-{
-  if (_free_rtevent == _rtevent_table)
-    return NULL;
-
-  _rtevent_t *rtev = _free_rtevent;
-  _free_rtevent = _rtevent_table + rtev->free_nxt;
-  rtev->free = 0;
-
-  return rtev;
-}
-
-int _rtevent_delete(_rtevent_t *rtev)
-{
-  rtev->free = 1;
-  rtev->free_nxt = _free_rtevent->free_idx;
-  _free_rtevent = rtev;
-
-  return 0;
-}
-
-_rtevent_t *_rtevent_lookup(const char *dev, const char *name)
-{
-  int i;
-  _rtevent_t *rtev;
-  for (i = 1; i < MAX_RTEVENT_TABLE; i++) {
-    rtev = _rtevent_table + i;
-    if (!rtev->free && !strcmp(rtev->dev, dev) && !strcmp(rtev->name, name))
-      return rtev;
-  }
-
-  return NULL;
-}
-
-int _rtevent_loadfile(const char *file, mvrt_eventag_t tag)
-{
-  FILE *fp;
-  if ((fp = fopen(file, "r")) == NULL) {
-    fprintf(stderr, "Failed to open %s\n", file);
-    return -1;
-  }
-
-  /* Property table contains one property per line:
-
-     event ev0
-     event ev1
-     timer timer0 1 1000
-     timer timer1 0 1000000
-     ...
-  */
-
-  char line[1024];
-  char *type;
-  char *name;
-  char *sec;
-  char *nsec;
-  mvrt_event_t event;
-  const char *self = mv_device_self();
-  while (fgets(line, 1024, fp)) {
-    char *charp = strstr(line, "\n");
-    if (charp)
-      *charp = '\0';
-
-    if (line[0] == '#')
-      continue;
-
-    if (_rtevent_tokenize(line, &type, &name, &sec, &nsec) == -1) {
-      fprintf(stderr, "Line not recognized: %s\n", line);
-      continue;
-    }
-      
-    if (!strcmp(type, "event")) {
-      event = mvrt_event_new(self, name, tag);
-    }
-    else if (!strcmp(type, "timer")) {
-      event = mvrt_timer_new(name, atoi(sec), atoi(nsec));
-    }
-    else {
-      fprintf(stderr, "Invalid line: %s\n", line);
-      continue;
-    }
-  }
-
-  fprintf(stdout, "Event file loaded: %s...\n", file);
-}
-
-int _rtevent_savefile(const char *file, mvrt_eventag_t tag)
-{
-  return 0;
-}
-
-int _rtevent_tokenize(char *line, char **type, char **name, char **s, char **ns)
-{
-  char *token;
-  if ((token = strtok(line, " \t")) == NULL)
-    return -1;
-  *type = token;
-  if ((token = strtok(NULL, " \t")) == NULL)
-    return -1;
-  *name = token;
-
-  if (!strcmp(*type, "timer")) {
-    if ((token = strtok(NULL, " \t")) == NULL)
-      return -1;
-    *s = token;
-
-    if ((token = strtok(NULL, " \t")) == NULL)
-      return -1;
-    *ns = token;
-  }
-
-  return 0;
-}
+static int __rtevent_tokenize(char *line, char **, char **, char **, char **);
+static _rtimer_t *_rtevent_parse(char *line, char **type, char **name);
 
 
 static size_t _rtimerid = 0;
-_rtimer_t *_rtimer_create(const char *name, size_t sec, size_t nsec)
+_rtimer_t *_rtimer_new(size_t sec, size_t nsec)
 {
   struct sigevent sev;
   struct itimerspec its;
 
+  /* TODO: reused empty spot in the table */
   if (_rtimerid == MAX_RTIMER_TABLE) {
     fprintf(stderr, "Cannot create more timers.\n");
     return NULL;
@@ -214,7 +60,19 @@ _rtimer_t *_rtimer_create(const char *name, size_t sec, size_t nsec)
 
   timer_settime(rtimer->timerid, 0, &its, NULL);
 
+  rtimer->sec = sec;
+  rtimer->nsec = nsec;
+  rtimer->stopped = 0;
+  rtimer->used = 1;
+
   return rtimer;
+}
+
+int _rtimer_delete(_rtimer_t *rtimer)
+{
+  /* TODO: do real deletion */
+  rtimer->stopped = 1;
+  rtimer->used = 0;
 }
 
 extern mvrt_evqueue_t *mvrt_evqueue_getcurrent();
@@ -233,7 +91,7 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
   for (i = 0; i < _rtimerid; i++) {
     rtimer = _rtimer_table + i;
     if (*tid == rtimer->timerid) {
-      mvrt_event_t rtev = rtimer->rtev;
+      mvrt_event_t *rtev = rtimer->rtev;
       if (rtimer->stopped)
         continue;
 
@@ -248,88 +106,193 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
   }
 }
 
-
-/*
- * Functions for events.
- */
-int mvrt_event_module_init()
+int _rtevent_tokenize(char *line, char **type, char **name, char **s, char **ns)
 {
-  _rtevent_table_init();
-}
+  char *token;
 
-mvrt_event_t mvrt_event_new(const char *dev, const char *name, int tag)
-{
-  _rtevent_t *rtev;
-  if ((rtev = _rtevent_get_free()) == NULL) {
-    fprintf(stderr, "mvrt_event_new: MAX table reached.\n");
-    return (mvrt_event_t) 0;
+  /* get type: "event" or "timer" */
+  if ((token = strtok(line, " \t")) == NULL)
+    return -1;
+  *type = token;
+
+  /* get "name" */
+  if ((token = strtok(NULL, " \t")) == NULL)
+    return -1;
+  *name = token;
+
+  /* get "sec nsec" for timers */
+  if (!strcmp(*type, "timer")) {
+    if ((token = strtok(NULL, " \t")) == NULL)
+      return -1;
+    *s = token;
+
+    if ((token = strtok(NULL, " \t")) == NULL)
+      return -1;
+    *ns = token;
   }
-  if (rtev->dev) free(rtev->dev);
-  if (rtev->name) free(rtev->name);
-  rtev->dev = strdup(dev);
-  rtev->name = strdup(name);
-  rtev->tag = tag;
-  rtev->noccurs = 0;
-
-  switch (tag) {
-  case MVRT_EVENT_GLOBAL:
-  case MVRT_EVENT_SYSTEM:
-  case MVRT_EVENT_LOCAL:
-  case MVRT_EVENT_TIMER:
-    return (mvrt_event_t) rtev;
-  default:
-    assert(0 && "mvrt_event_new: Invalid tag");
+  else {
+    if (strcmp(*type, "event")) 
+      return -1;
   }
 
-  return (mvrt_event_t) 0;
-}
-
-int mvrt_event_delete(mvrt_event_t ev)
-{
   return 0;
 }
 
-int mvrt_event_loadfile(const char *file, mvrt_eventag_t tag)
+/* In case the line specifies a timer, it returns a valid rtimer struct
+   on success -- otherwise, returns NULL. In case the line specifies an
+   event, the type points to string "event" -- otherwise, sets type to NULL. */
+_rtimer_t *_rtevent_parse(char *line, char **type, char **name)
 {
-  return _rtevent_loadfile(file, tag);
+  /* event ev0
+     event ev1
+     timer timer0 1 1000
+     timer timer1 0 1000000
+  */
+
+  char *arg0;
+  char *arg1;
+  if (_rtevent_tokenize(line, type, name, &arg0, &arg1) == -1) {
+    fprintf(stderr, "Line not recognized: %s\n", line);
+    *type = NULL;
+    return NULL;
+  }
+
+  _rtimer_t *rtimer = NULL;
+  if (!strcmp(*type, "timer"))
+    rtimer = _rtimer_new(atoi(arg0), atoi(arg1));
+
+  return rtimer;
 }
 
-int mvrt_event_savefile(const char *file, mvrt_eventag_t tag)
-{
-  return _rtevent_savefile(file, tag);
-}
-
-mvrt_event_t mvrt_event_lookup(const char *dev, const char *name)
-{
-  int i;
-  _rtevent_t *rtev;
-  if ((rtev = _rtevent_lookup(dev, name)) == NULL)
-    return (mvrt_event_t) 0;
-
-  return (mvrt_event_t) rtev;
-}
-
-const char *mvrt_event_dev(mvrt_event_t event)
-{
-  _rtevent_t *rtev = (_rtevent_t *) event;
-  return rtev->dev;
-}
-
-const char *mvrt_event_name(mvrt_event_t event)
-{
-  _rtevent_t *rtev = (_rtevent_t *) event;
-  return rtev->name;
-}
-
-mvrt_eventag_t mvrt_event_tag(mvrt_event_t event)
-{
-  _rtevent_t *rtev = (_rtevent_t *) event;
-  return rtev->tag;
-}
 
 /*
- * Functions for timers.
+ * Functions for rtevent API.
  */
+mvrt_event_t *mvrt_event_new(const char *name, const char *dev)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, dev);
+  if (obj) {
+    if (!dev) {
+      fprintf(stderr, "An event already exists with name: %s.\n", name);
+      return NULL;
+    }
+    else
+      return (mvrt_event_t *) obj;
+  }
+  
+  obj = mvrt_obj_new(name, dev);
+  obj->tag = MVRT_OBJ_EVENT;
+
+  /* Regular events do not need data. The existence of "event object" itself 
+     suffices. */
+  obj->data = NULL;
+
+  return (mvrt_event_t *) obj;
+}
+
+mvrt_event_t *mvrt_timer_new(const char *name, size_t sec, size_t nsec)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (obj) {
+    fprintf(stderr, "A timer already exists with name: %s.\n", name);
+    return NULL;
+  }
+  
+  obj = mvrt_obj_new(name, NULL);
+  obj->tag = MVRT_OBJ_EVENT;
+
+  _rtimer_t *rtimer = NULL;
+  if ((rtimer = _rtimer_new(sec, nsec)) == NULL) {
+    mvrt_obj_delete(obj);
+    return NULL;
+  }
+
+  obj->data = (void *) rtimer;
+
+  return (mvrt_event_t *) obj;
+}
+
+mvrt_event_t *mvrt_event_load_str(char *line)
+{
+  _rtimer_t *rtimer;
+  char *type = NULL;
+  char *name = NULL;
+  if ((rtimer = _rtevent_parse(line, &type, &name)) == NULL && type == NULL)
+    return NULL;
+
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (obj) {
+    fprintf(stderr, "A runtime object already exists with name: %s.\n", name);
+    return NULL;
+  }
+  obj = mvrt_obj_new(name, NULL);
+  obj->tag = MVRT_OBJ_EVENT;
+
+  if (rtimer)
+    obj->data = (void *) rtimer;
+
+  return (mvrt_event_t *) obj;
+}
+
+int mvrt_event_delete(mvrt_event_t *ev)
+{
+  mvrt_obj_t *obj = (mvrt_obj_t *) ev;
+
+  _rtimer_t *timer = (_rtimer_t *) obj->data;
+  if (timer && _rtimer_delete(timer) == -1)
+    return -1;
+
+  return mvrt_obj_delete(obj);
+}
+
+char *mvrt_event_save_str(mvrt_event_t *ev)
+{
+  static char str[4096];
+
+  mvrt_obj_t *obj = (mvrt_obj_t *) ev;
+  if (!obj)
+    return NULL;
+
+  _rtimer_t *timer = (_rtimer_t *) obj->data;
+  if (timer) {
+    int sec = timer->sec;
+    int nsec = timer->nsec;
+    if (snprintf(str, 4096, "timer %s %d %d", obj->name, sec, nsec) > 4095) {
+      fprintf(stderr, "Buffer overflow.\n");
+      return NULL;
+    }
+  }
+  else {
+    if (snprintf(str, 4096, "event %s", obj->name) > 4095) {
+      fprintf(stderr, "Buffer overflow.\n");
+      return NULL;
+    }
+  }
+
+  return &str[0];
+}
+
+int mvrt_event_delete_by_name(const char *name)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+
+  return mvrt_event_delete((mvrt_event_t *) obj);
+}
+
+mvrt_event_t *mvrt_event_lookup(const char *name, const char *dev)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, dev);
+  if (!obj)
+    return NULL;
+
+  assert(obj->tag == MVRT_OBJ_EVENT);
+
+  return (mvrt_event_t *) obj;
+}
+
+
+
+
 int mvrt_timer_module_init()
 {
   struct sigaction sa;
@@ -355,39 +318,33 @@ int mvrt_timer_module_init()
   return 0;
 }
 
-mvrt_event_t mvrt_timer_new(const char *name, size_t sec, size_t nsec)
+int mvrt_timer_start(mvrt_event_t *ev)
 {
-  fprintf(stdout, "Create timer: %s (%d sec %d nsec)\n", name, sec, nsec);
-  const char *dev = mv_device_self();
-  _rtevent_t *rtev = (_rtevent_t *) mvrt_event_new(dev, name, MVRT_EVENT_TIMER);
-  rtev->u.timer = _rtimer_create(name, sec, nsec);
-  rtev->u.timer->sec = sec;
-  rtev->u.timer->nsec = nsec;
-  rtev->u.timer->rtev = (mvrt_event_t) rtev;
-  rtev->u.timer->stopped = 0;
+  mvrt_obj_t *obj = (mvrt_obj_t *) ev;
+  assert(obj->tag == MVRT_OBJ_EVENT && obj->data);
 
-  return (mvrt_event_t) rtev;
+  _rtimer_t *timer = obj->data;
+  timer->stopped = 0;
+
+  return 0;
 }
 
-int mvrt_timer_start(mvrt_event_t event)
+int mvrt_timer_stop(mvrt_event_t* ev)
 {
-  _rtevent_t *rtev = (_rtevent_t *) event;
-  assert(rtev->tag == MVRT_EVENT_TIMER);
-  rtev->u.timer->stopped = 0;
-}
+  mvrt_obj_t *obj = (mvrt_obj_t *) ev;
+  assert(obj->tag == MVRT_OBJ_EVENT && obj->data);
 
-int mvrt_timer_stop(mvrt_event_t event)
-{
-  _rtevent_t *rtev = (_rtevent_t *) event;
-  assert(rtev->tag == MVRT_EVENT_TIMER);
-  rtev->u.timer->stopped = 1;
+  _rtimer_t *timer = obj->data;
+  timer->stopped = 1;
+
+  return 0;
 }
 
 
 /*
  * Functions for event instances.
  */
-mvrt_eventinst_t *mvrt_eventinst_new(mvrt_event_t ev, mv_value_t data)
+mvrt_eventinst_t *mvrt_eventinst_new(mvrt_event_t *ev, mv_value_t data)
 {
   /* TODO: rather than directly doing malloc, we can maintain an instance
      pool to reuse preallocated instance object, keep track of memory
@@ -403,37 +360,6 @@ mvrt_eventinst_t *mvrt_eventinst_new(mvrt_event_t ev, mv_value_t data)
 int mvrt_eventinst_delete(mvrt_eventinst_t *evinst)
 {
   free(evinst);
-  return 0;}
+  return 0;
 
-
-
-mvrt_event_t mvrt_event_parse(FILE *fp, char *line)
-{
-  /* event dev0:ev0
-     event dev1:ev1
-     timer :timer0 1 1000
-     timer :timer1 0 1000000
-  */
-  char *type;
-  char *name;
-  char *arg0;
-  char *arg1;
-  mvrt_event_t event = (mvrt_event_t) 0;
-
-  if (_rtevent_tokenize(line, &type, &name, &arg0, &arg1) == -1) {
-    fprintf(stderr, "Line not recognized: %s\n", line);
-    return (mvrt_event_t) 0;
-  }
-    
-  if (type == NULL) 
-    return event;
-  /*else if (!strcmp(type, "event"))
-    event = mvrt_event_new(self, name, tag);
-  else if (!strcmp(type, "timer"))
-    event = mvrt_timer_new(name, atoi(arg0), atoi(arg1));
-  */
-  else
-    return event;
-
-  return event;
 }

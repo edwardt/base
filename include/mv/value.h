@@ -12,13 +12,14 @@
 typedef mv_ptr_t mv_value_t;
 
 typedef enum {
-  MV_VALUE_NULL    = 0x0,  /* null */
-  MV_VALUE_INT     = 0x1,  /* signed integer */
-  MV_VALUE_FLOAT   = 0x2,  /* floating number */
-  MV_VALUE_STRING  = 0x3,  /* string */
-  MV_VALUE_PAIR    = 0x4,  /* pair */
-  MV_VALUE_CONS    = 0x5,  /* cons */
-  MV_VALUE_MAP     = 0x6,  /* map of (name, value) pairs */
+  MV_VALUE_INVALID = 0x0,  /* invalid value */
+  MV_VALUE_NULL    = 0x1,  /* null */
+  MV_VALUE_INT     = 0x2,  /* signed integer */
+  MV_VALUE_FLOAT   = 0x3,  /* floating number */
+  MV_VALUE_STRING  = 0x4,  /* string */
+  MV_VALUE_PAIR    = 0x5,  /* pair */
+  MV_VALUE_CONS    = 0x6,  /* cons */
+  MV_VALUE_MAP     = 0x7,  /* map of (name, value) pairs */
   MV_VALUE_NTAGS
 } mv_valuetag_t;
 
@@ -33,6 +34,9 @@ int mv_value_print(mv_value_t v);
    the caller is responsible for freeing the returned string. */
 char *mv_value_to_str(mv_value_t v);
 mv_value_t mv_value_from_str(const char *s);
+
+/* initial, invalid value */
+extern mv_value_t mv_value_init();
 
 /* null */
 extern mv_value_t mv_value_null();

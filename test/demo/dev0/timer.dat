@@ -1,4 +1,0 @@
-# timer timername sec nanosec
-timer timer0 1 0
-timer timer1 2 0
-timer timer2 10 0

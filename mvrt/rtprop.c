@@ -5,276 +5,218 @@
 #include <stdlib.h>      /* free, exit */
 #include <string.h>      /* strdup */
 #include <assert.h>      /* assert */
-#include <mv/device.h>   /* mv_device_self */
 #include "rtprop.h"
+#include "rtobj.h"
 
-
-#define MAX_RTPROP_TABLE 4096
 typedef struct _rtprop {
-  char *dev;
-  char *name;
-  mv_value_t value;         /* value */
-
-  unsigned tag :      3;    /* tag */
-  unsigned free     : 1;    /* free or not */
-  unsigned free_idx : 12;   /* index to free list */
-  unsigned free_nxt : 12;   /* index of next free entry */
-  unsigned pad      : 4;
+  mv_value_t value;       /* value */
 } _rtprop_t;
-static _rtprop_t _rtprop_table[MAX_RTPROP_TABLE];
-static _rtprop_t *_free_rtprop;
 
-static int _rtprop_table_init();
-static _rtprop_t *_rtprop_get_free();
-static int _rtprop_delete(_rtprop_t *prop);
-static _rtprop_t *_rtprop_lookup(const char *dev, const char *name);
-static int _rtprop_loadfile(const char *file, mvrt_proptag_t tag);
-static int _rtprop_savefile(const char *file, mvrt_proptag_t tag);
+
+static _rtprop_t *_rtprop_new();
+static int _rtprop_delete(_rtprop_t *p);
 static int _rtprop_tokenize(char *line, char **name, char **value);
+static _rtprop_t *_rtprop_parse(char *line, char **name);
 
-
-int _rtprop_table_init()
+_rtprop_t *_rtprop_new() 
 {
-  int i;
-  _rtprop_t *p;
-  for (i = 0; i < MAX_RTPROP_TABLE; i++) {
-    p = _rtprop_table + i;
-    p->dev = NULL;
-    p->name = NULL;
-    p->value = mv_value_null();
-
-    p->free = 1;
-    p->free_idx = i;
-    p->free_nxt = i + 1;
-  }
-  /* the last element */
-  p->free_idx = i;
-  p->free_nxt = 0;
-
-  _free_rtprop = _rtprop_table + 1;
-  _rtprop_table[0].free = 0;
+  /* later we could change this to property pool-based scheme
+     for faster allocation, if needed */
+  _rtprop_t *p = malloc(sizeof(_rtprop_t));
+  p->value = mv_value_invalid();
+  return p;
 }
 
-_rtprop_t *_rtprop_get_free()
+int _rtprop_delete(_rtprop_t *p)
 {
-  if (_free_rtprop == _rtprop_table)
-    return NULL;
-
-  _rtprop_t *prop = _free_rtprop;
-  _free_rtprop = _rtprop_table + prop->free_nxt;
-  prop->free = 0;
-
-  return prop;
-}
-
-int _rtprop_delete(_rtprop_t *rtprop)
-{
-  rtprop->free = 1;
-  rtprop->free_nxt = _free_rtprop->free_idx;
-  _free_rtprop = rtprop;
+  free(p);
 
   return 0;
-}
-
-_rtprop_t *_rtprop_lookup(const char *dev, const char *name)
-{
-  int i;
-  _rtprop_t *p;
-  for (i = 1; i < MAX_RTPROP_TABLE; i++) {
-    p = _rtprop_table + i;
-    if (!p->free && !strcmp(p->dev, dev) && !strcmp(p->name, name))
-      return p;
-  }
-
-  return NULL;
 }
 
 int _rtprop_tokenize(char *line, char **name, char **value)
 {
   char *token;
+
+  /* skip 'property' */
   if ((token = strtok(line, " \t")) == NULL)
     return -1;
+
+  /* get name */
+  if ((token = strtok(NULL, " \t")) == NULL)
+    return -1;
   *name = token;
+
+  /* get value */
   if ((token = strtok(NULL, " \t")) == NULL)
     return -1;
   *value = token;
+
   return 0;
 }
 
-int _rtprop_loadfile(const char *file, mvrt_proptag_t tag)
+_rtprop_t *_rtprop_parse(char *line, char **name)
 {
-  FILE *fp;
-  if ((fp = fopen(file, "r")) == NULL) {
-    fprintf(stderr, "Failed to open %s\n", file);
-    return -1;
-  }
-
   /* Property table contains one property per line:
 
-     prop0 [value in JSON format]
-     prop1 [value in JSON format]
+     P prop0 [value in JSON format]
+     P prop1 [value in JSON format]
      ...
   */
-  const char *self = mv_device_self();
-
-  char line[1024];
-  char *name;
+  _rtprop_t *prop;
   char *value_s;
-  mvrt_prop_t prop;
-  while (fgets(line, 1024, fp)) {
-    char *charp = strstr(line, "\n");
-    if (charp)
-      *charp = '\0';
 
-    if (line[0] == '#')
-      continue;
-
-    if (_rtprop_tokenize(line, &name, &value_s) == -1) {
-      fprintf(stderr, "Line not recognized: %s\n", line);
-      continue;
-    }
-
-    prop = mvrt_prop_new(self, name, tag);
-    if (!prop)
-      continue;
-
-    mv_value_t value_v = mv_value_from_str(value_s);
-    mvrt_prop_setvalue(prop, value_v);
+  if (_rtprop_tokenize(line, name, &value_s) == -1) {
+    fprintf(stderr, "Line not recognized: %s\n", line);
+    return NULL;
   }
 
-  fprintf(stdout, "Property file loaded: %s...\n", file);
+  if ((prop = _rtprop_new()) == NULL)
+    return NULL;
+
+  mv_value_t value_v = mv_value_from_str(value_s);
+
+  /* TODO: increase refcount of value_v */
+  prop->value = value_v;
+
+  return prop;
 }
 
-int _rtprop_savefile(const char *file, mvrt_proptag_t tag)
-{
-  return 0;
-}
 
 /*
  * Functions for the rtprop API.
  */
-int mvrt_prop_module_init()
+mvrt_prop_t *mvrt_prop_new(const char *name)
 {
-  _rtprop_table_init();
-  fprintf(stdout, "Property module initialized...\n");
-
-  return 0;
-}
-
-mvrt_prop_t mvrt_prop_new(const char *dev, const char *name, int tag)
-{
-  if (mvrt_prop_lookup(dev, name) != (mvrt_prop_t) 0) {
-    fprintf(stderr, "Duplicate property: %s:%s\n", dev, name);
-    return (mvrt_prop_t) 0;
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (obj) {
+    fprintf(stderr, "A runtime object already exists with name: %s.\n", name);
+    return NULL;
   }
 
-  _rtprop_t *rtprop;
-  if ((rtprop = _rtprop_get_free()) == NULL) {
-    fprintf(stderr, "Max number of prop reached - %s.\n", name);
-    return (mvrt_prop_t) 0;
+  obj = mvrt_obj_new(name, NULL);
+  obj->tag = MVRT_OBJ_PROP;
+  obj->data = (void *) _rtprop_new();
+
+  return (mvrt_prop_t *) obj;
+}
+
+
+mvrt_prop_t *mvrt_prop_load_str(char *line)
+{
+  mvrt_prop_t *rtprop;
+
+  char *name;
+  if ((rtprop = _rtprop_parse(line, &name)) == NULL)
+    return NULL;
+
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (obj) {
+    fprintf(stderr, "A runtime object already exists with name: %s.\n", name);
+    return NULL;
   }
-  if (rtprop->dev) free(rtprop->dev);
-  if (rtprop->name) free(rtprop->name);
-  rtprop->dev = strdup(dev);
-  rtprop->name = strdup(name);
-  rtprop->tag = tag;
 
-  switch (tag) {
-  case MVRT_PROP_GLOBAL:
-  case MVRT_PROP_SYSTEM:
-  case MVRT_PROP_LOCAL:
-    rtprop->value = mv_value_null();
-    return (mvrt_prop_t) rtprop;
-  default:
-    assert(0 && "mvrt_prop_new: Invalid tag");
+  obj = mvrt_obj_new(name, NULL);
+  obj->tag = MVRT_OBJ_PROP;
+  obj->data = (void *) rtprop;
+
+  return (mvrt_prop_t *) obj;
+}
+
+char *mvrt_prop_save_str(mvrt_prop_t *p)
+{
+  static char str[4096];
+
+  mvrt_obj_t *obj = (mvrt_obj_t *) p;
+  if (!obj)
+    return NULL;
+
+  _rtprop_t *prop = (_rtprop_t *) obj->data;
+  char *prop_s = mv_value_to_str(prop->value);
+  if (snprintf(str, 4096, "P %s %s", obj->name, prop_s) > 4095) {
+    fprintf(stderr, "Buffer overflow.\n");
+    return NULL;
   }
 
-  return (mvrt_prop_t) 0;
+  return &str[0];
 }
 
-int mvrt_prop_loadfile(const char *file, mvrt_proptag_t tag)
+int mvrt_prop_delete(mvrt_prop_t *p)
 {
-  return _rtprop_loadfile(file, tag);
-}
+  mvrt_obj_t *obj = (mvrt_obj_t *) p;
 
-int mvrt_prop_savefile(const char *file, mvrt_proptag_t tag)
-{
-  return _rtprop_savefile(file, tag);
-}
-
-int mvrt_prop_delete(mvrt_prop_t prop)
-{
-  _rtprop_t *rtprop = (_rtprop_t *) prop;
-  return _rtprop_delete(rtprop);
-}
-
-mvrt_prop_t mvrt_prop_lookup(const char *dev, const char *name)
-{
-  _rtprop_t *rtprop;
-  if ((rtprop = _rtprop_lookup(dev, name)) == NULL)
-    return (mvrt_prop_t) 0;
-
-  return (mvrt_prop_t) rtprop;
-}
-
-int mvrt_prop_setvalue(mvrt_prop_t prop, mv_value_t value)
-{
-  _rtprop_t *rtprop = (_rtprop_t *) prop;
-  if (!rtprop)
+  _rtprop_t *prop = obj->data;
+  if (_rtprop_delete(prop) == -1)
     return -1;
+
+  return mvrt_obj_delete(obj);
+}
+
+int mvrt_prop_delete_by_name(const char *name)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+
+  return mvrt_prop_delete((mvrt_prop_t *) obj);
+}
+
+mvrt_prop_t *mvrt_prop_lookup(const char *name)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (!obj)
+    return NULL;
   
-  switch (rtprop->tag) {
-  case MVRT_PROP_GLOBAL:
-    assert(0 && "Value of a remote property cannot be set directly.");
+  assert(obj->tag == MVRT_OBJ_PROP);
+
+  return (mvrt_prop_t *) obj;
+}
+
+int mvrt_prop_getvalue(mvrt_prop_t *p)
+{
+  mvrt_obj_t *obj = (mvrt_obj_t *) p;
+  if (!obj || obj->tag != MVRT_OBJ_PROP) {
+    fprintf(stderr, "Invalid property.\n");
     return -1;
-  case MVRT_PROP_SYSTEM:
-  case MVRT_PROP_LOCAL:
-    mv_value_delete(rtprop->value);
-    rtprop->value = value;
-    break;
-  default:
-    assert(0 && "mvrt_prop_setvalue: Invalid tag");
-    break;
   }
+
+  _rtprop_t *prop = (_rtprop_t *) p;
+
+  /* TODO: for garbage collection, increase the refcount of prop->value */
+  return prop->value;
+}
+
+int mvrt_prop_getvalue_by_name(const char *name)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+
+  return mvrt_prop_getvalue((mvrt_prop_t *) obj);
+}
+
+int mvrt_prop_setvalue(mvrt_prop_t *p, mv_value_t v)
+{
+  mvrt_obj_t *obj = (mvrt_obj_t *) p;
+  if (!obj || obj->tag != MVRT_OBJ_PROP) {
+    fprintf(stderr, "Invalid property.\n");
+    return -1;
+  }
+  
+  if (mv_value_is_invalid(v)) {
+    fprintf(stderr, "Invalid value.\n");
+    return -1;
+  }
+
+  _rtprop_t *prop = (_rtprop_t *) p;
+
+  /* TODO: for garbage collection, increase the refcount of v, and
+     decrease the refcount of old prop->value */
+  prop->value = v;
 
   return 0;
 }
 
-const char *mvrt_prop_dev(mvrt_prop_t prop)
+int mvrt_prop_setvalue_by_name(const char *name, mv_value_t v)
 {
-  _rtprop_t *rtprop = (_rtprop_t *) prop;
-  return rtprop->dev;
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+
+  return mvrt_prop_setvalue((mvrt_prop_t *) obj, v);
 }
 
-const char *mvrt_prop_name(mvrt_prop_t prop)
-{
-  _rtprop_t *rtprop = (_rtprop_t *) prop;
-  return rtprop->name;
-}
-
-mvrt_proptag_t mvrt_prop_tag(mvrt_prop_t prop)
-{
-  _rtprop_t *rtprop = (_rtprop_t *) prop;
-  return rtprop->tag;
-}
-
-mv_value_t mvrt_prop_getvalue(mvrt_prop_t prop)
-{
-  _rtprop_t *rtprop = (_rtprop_t *) prop;
-  if (!rtprop)
-    return mv_value_null();
-
-  switch (rtprop->tag) {
-  case MVRT_PROP_GLOBAL:
-    assert(0 && "Remote property cannot be obtained using this function.");
-    break;
-  case MVRT_PROP_SYSTEM:
-  case MVRT_PROP_LOCAL:
-    return rtprop->value;
-  default:
-    assert(0 && "mvrt_prop_setvalue: Invalid tag");
-    break;
-  }
-
-  return mv_value_null();
-}

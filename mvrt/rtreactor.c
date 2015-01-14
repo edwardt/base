@@ -3,394 +3,265 @@
  */
 #include <stdio.h>       /* fprintf */
 #include <stdlib.h>      /* malloc */
-#include <string.h>      /* strdup */
+#include <string.h>      /* strstr, strdup */
 #include <assert.h>      /* assert */
-#include <mv/device.h>   /* mv_device_self */
-#include "rtprop.h"
-#include "rtfunc.h"
+#include "code.h"        /* mvrt_code_t */
+#include "rtevent.h"     /* mvrt_event_lookup */
 #include "rtreactor.h"
+#include "rtobj.h"
 
 
-#define MAX_REACTORS 1024
-static mvrt_reactor_t *_reactors[MAX_REACTORS];
+typedef struct _rtreactor {
+  mvrt_code_t *code;     /* code */
+} _rtreactor_t;
 
-static mvrt_reactor_t *_reactor_new();
-static void _reactor_delete(mvrt_reactor_t *reactor);
 
-static int _reactor_loadfile(const char *file);
-static int _reactor_parse_nargs(int operatg);
-static int _reactor_token_tag(const char *token);
-static int _reactor_assoc_loadfile(const char *file);
+static _rtreactor_t *_rtreactor_new();
+static int _rtreactor_delete(_rtreactor_t *p);
+static int _rtreactor_token_tag(const char *token);
+static int _rtreactor_parse_nargs(int op);
+static int _rtreactor_tokenize(char *line, char **name);
+static _rtreactor_t *_rtreactor_parse(char *line, FILE *fp, char **name);
+static int _reactor_assoc_tokenize(char *line, char **name, char **reactor);
 
-mvrt_reactor_t *_reactor_new()
+_rtreactor_t *_rtreactor_new()
 {
-  mvrt_reactor_t *reactor = malloc(sizeof(mvrt_reactor_t));
-  reactor->id = 0;
-  reactor->name = NULL;
+  _rtreactor_t *reactor = malloc(sizeof(_rtreactor_t));
+  if (!reactor)
+    return NULL;
+
   reactor->code = NULL;
 
   return reactor;
 }
 
-void _reactor_delete(mvrt_reactor_t *reactor)
+int _rtreactor_delete(_rtreactor_t *reactor)
 {
+  if (reactor->code)
+    mvrt_code_delete(reactor->code);
+  
   free(reactor);
+  
+  return 0;
 }
 
-enum {
-  _TOKEN_INVALID = 0,
-  _TOKEN_REACTOR = 1,
-  _TOKEN_LPAREN  = 2,
-  _TOKEN_RPAREN  = 3,
-  _TOKEN_ID      = 4,
-  _TOKEN_COMMENT = 5,
-  _TOKEN_NTAGS   = 6
-};
-
-enum {
-  _STATE_EXPECT_REACTOR        = 0,
-  _STATE_EXPECT_NAME           = 1,
-  _STATE_EXPECT_LPAREN         = 2,
-  _STATE_EXPECT_OPER_OR_RPAREN = 3,
-  _STATE_EXPECT_ARG            = 4,
-  _STATE_NTAGS                 = 5
-};
-
-int _reactor_token_tag(const char *token)
+int _rtreactor_tokenize(char *line, char **name)
 {
-  int len = strlen(token);
-  if (len == 1) {
-    if (token[0] == '#')
-      return _TOKEN_COMMENT;
-    else if (token[0] == '{') 
-      return _TOKEN_LPAREN;
-    else if (token[0] == '}')
-      return _TOKEN_RPAREN;
-  }
-  else if (len > 0) {
-    if (token[0] == '#')
-      return _TOKEN_COMMENT;
-    else if (!strcmp(token, "reactor"))
-      return _TOKEN_REACTOR;
-    else
-      return _TOKEN_ID;
-  }
+  char *token;
 
-  return _TOKEN_INVALID;
+  /* skip "reactor" */
+  if ((token = strtok(line, " \t")) == NULL)
+    return -1;
+
+  if(strcmp(token, "reactor"))
+    return -1;
+
+  /* get name */
+  if ((token = strtok(NULL, " \t")) == NULL)
+    return -1;
+  *name = token;
+
+  return 0;
 }
 
 #define MAX_REACTOR_LINE 256
-int _reactor_loadfile(const char *file)
+_rtreactor_t *_rtreactor_parse(char *line, FILE *fp, char **name)
 {
 
-  FILE *fp = fopen(file, "r");
-  if (!fp) {
-    fprintf(stdout, "Failed to open -- %s\n", file);
-    return -1;
-  }
-  
-  /* read reactor file of the following format:
-
-       # comment starts with # on 0th column
-       reactor r0 {
-         pushi 1
-         pushi 2
-         add
-       }
+  /* reactor r0 
+     {
+       pushi 1
+       pushi 2
+       add
+     } 
   */
-  
-  char line[MAX_REACTOR_LINE];
   char *token;
-  char *charp;
-  int state = _STATE_EXPECT_REACTOR;
-  int token_tag;
-  int oper_tag;
-  int nopers = 0;
-  mvrt_reactor_t *reactor = NULL;
-  while (fgets(line, MAX_REACTOR_LINE, fp)) {
-    if ((charp = strchr(line, '\n')) != NULL)
-      *charp = '\0';
-
-    if (strlen(line) == MAX_REACTOR_LINE) {
-      fprintf(stderr, "A line in function file, \"%s\", is too long. "
-              "Limit line size to < %d.\n", file, MAX_REACTOR_LINE);
-      exit(1);
-    }
-
-    if (line[0] == '#')
-      continue;
-    
-    if ((token = strtok(line, " \t")) == NULL)
-      continue;
-
-    while (token) {
-      token_tag = _reactor_token_tag(token);
-
-      if (token_tag == _TOKEN_COMMENT)
-        break;
-      
-      switch (state) {
-      case _STATE_EXPECT_REACTOR:
-        if (token_tag == _TOKEN_REACTOR) {
-          state = _STATE_EXPECT_NAME;
-        }
-        else {
-          fprintf(stderr, "S%d: Parse error at token \"%s\".\n", state, token);
-          exit(1);
-        }
-        break;
-      case _STATE_EXPECT_NAME:
-        if (token_tag == _TOKEN_ID) {
-          reactor = mvrt_reactor(token);
-          reactor->code = mvrt_code_new();
-          nopers = 0;
-          fprintf(stdout, "REACTOR %s:\n", token);
-          state = _STATE_EXPECT_LPAREN;
-        }
-        else {
-          fprintf(stderr, "S%d: Parse error at token \"%s\".\n", state, token);
-          exit(1);
-        }
-        break;
-      case _STATE_EXPECT_LPAREN:
-        if (token_tag == _TOKEN_LPAREN) {
-          state = _STATE_EXPECT_OPER_OR_RPAREN;
-        }
-        else {
-          fprintf(stderr, "S%d: Parse error at token \"%s\".\n", state, token);
-          exit(1);
-        }
-        break;
-      case _STATE_EXPECT_ARG:
-        switch (oper_tag) {
-        case MVRT_OP_PUSHS:
-          {
-            char *arg = strdup(token+1);
-            arg[strlen(arg)-1] = '\0';
-            fprintf(stdout, "\treactor[%d]: %s \"%s\"\n", nopers,  
-                    mvrt_opcode_str(reactor->code->instrs[nopers].opcode), arg);
-            reactor->code->instrs[nopers].ptr = (mv_ptr_t) arg;
-            nopers++;
-          }
-          break;
-        case MVRT_OP_PUSHI:
-        case MVRT_OP_BEQ:
-          {
-            int arg = atoi(token);
-            fprintf(stdout, "\treactor[%d]: %s %d\n", nopers,  
-                    mvrt_opcode_str(reactor->code->instrs[nopers].opcode), arg);
-            reactor->code->instrs[nopers].ptr = (mv_ptr_t) arg;
-            nopers++;
-          }
-          break;
-        default:
-          break;
-        }
-        state = _STATE_EXPECT_OPER_OR_RPAREN;
-        break;
-      case _STATE_EXPECT_OPER_OR_RPAREN:
-        if (token_tag == _TOKEN_ID) {
-          if ((oper_tag = mvrt_opcode_tag(token)) == -1) {
-            fprintf(stderr, "Invalid operator -- \"%s\"", token);
-            exit(1);
-          }
-          else
-            reactor->code->instrs[nopers].opcode = oper_tag;
-
-          if (_reactor_parse_nargs(oper_tag) > 0) {
-            state = _STATE_EXPECT_ARG;
-          }
-          else {
-            state = _STATE_EXPECT_OPER_OR_RPAREN;
-            fprintf(stdout, "\treactor[%d]: %s\n", nopers,  
-                    mvrt_opcode_str(reactor->code->instrs[nopers].opcode));
-            nopers++;
-          }
-        }
-        else if (token_tag == _TOKEN_RPAREN) {
-          reactor->code->size = nopers;
-          state = _STATE_EXPECT_REACTOR;
-        }
-        else {
-          fprintf(stderr, "S%d: Parse error at token \"%s\".\n", state, token);
-          exit(1);
-        }
-        break;
-      default:
-        assert(0);
-        break;
-      }
-      token = strtok(NULL, " \t");
-    }
+  char *type = NULL;
+  if (_rtreactor_tokenize(line, name) == -1) {
+    fprintf(stderr, "Line not recognized: %s\n", line);
+    return NULL;
   }
 
-  fprintf(stdout, "Reactor file loaded: %s...\n", file);
-}
-
-int _reactor_parse_nargs(int opertag)
-{
-  switch (opertag) {
-  case MVRT_OP_PUSHS:
-  case MVRT_OP_PUSHI:
-  case MVRT_OP_BEQ:
-    return 1;
-  default:
-    break;
-  }
-
-  return 0;
-}
-
-int _reactor_assoc_tokenize(char *line, char **event, char **reactor)
-{
-  char *token;
-  if ((token = strtok(line, " \t")) == NULL)
-    return -1;
-  *event = token;
-  if ((token = strtok(NULL, " \t")) == NULL)
-    return -1;
-  *reactor = token;
-  return 0;
-}
-
-
-int _reactor_assoc_loadfile(const char *file)
-{
-  FILE *fp;
-  if ((fp = fopen(file, "r")) == NULL) {
-    fprintf(stderr, "Failed to open %s\n", file);
-    return -1;
-  }
-
-  /* Event-reactor assoc table:
-
-     ev0 reactor0
-     ev0 reactor1
-     ev1 reactor2
-     ev2 reactor0
-     ...
-  */
-  const char *self = mv_device_self();
-
-  char line[1024];
-  char *event_s;
-  char *reactor_s;
-  mvrt_event_t event;
-  mvrt_reactor_t *reactor;
-  while (fgets(line, 1024, fp)) {
-    char *charp = strstr(line, "\n");
-    if (charp)
-      *charp = '\0';
-
-    if (line[0] == '#')
-      continue;
-
-    if (_reactor_assoc_tokenize(line, &event_s, &reactor_s) == -1) {
-      fprintf(stderr, "Line not recognized: %s\n", line);
-      continue;
-    }
-
-    if ((event = mvrt_event_lookup(self, event_s)) == 0) {
-      fprintf(stderr, "Event not found: %s\n", event_s);
-      continue;
-    }
-
-    if ((reactor = mvrt_reactor_lookup(reactor_s)) == 0) {
-      fprintf(stderr, "Reactor not found: %s\n", reactor_s);
-      continue;
-    }
-
-    mvrt_add_reactor_to_event(event, reactor);
-  }
-  fprintf(stdout, "Event-reactor assoc file loaded: %s...\n", file);
-}
-
-
-/*
- * Functions for the reactor API.
- */
-static mvrt_reactorid_t _reactorid;
-
-int mvrt_reactor_module_init()
-{
-  _reactorid = 0;
-
-  fprintf(stdout, "Reactor module initialized...\n"); 
-
-  return 0;
-}
-
-int mvrt_reactor_loadfile(const char *file)
-{
-  return _reactor_loadfile(file);
-}
-
-int mvrt_reactor_assoc_loadfile(const char *file)
-{
-  return _reactor_assoc_loadfile(file);
-}
-
-
-mvrt_reactor_t *mvrt_reactor(const char *name)
-{
-  mvrt_reactor_t *reactor = _reactor_new();
-  reactor->id = _reactorid;
-  _reactors[_reactorid++] = reactor;
-
-  if (_reactorid >= MAX_REACTORS) {
-    fprintf(stderr, "Too many reactors created.\n");
-    exit(1);
-  }
-
-  if (name)
-    reactor->name = strdup(name);
+  mvrt_code_t *code = mvrt_code_load_file(fp);
+  if (!code)
+    return NULL;
+  _rtreactor_t *reactor = _rtreactor_new();
+  reactor->code = code;
 
   return reactor;
 }
 
-int mvrt_reactor_delete(mvrt_reactor_t *reactor)
+int _reactor_assoc_tokenize(char *line, char **name, char **reactor)
 {
-  _reactor_delete(reactor);
+  char *token;
+
+  /* skip "assoc" */
+  if ((token = strtok(line, " \t")) == NULL)
+    return -1;
+
+  /* get "event" */
+  if ((token = strtok(NULL, " \t")) == NULL)
+    return -1;
+  *name = token;
+
+  /* get "reactor" */
+  if ((token = strtok(NULL, " \t")) == NULL)
+    return -1;
+  *reactor = token;
+
+  return 0;
+}
+
+/* 
+ * Functions for rtreactor API.
+ */
+mvrt_reactor_t *mvrt_reactor_new(const char *name)
+{
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (obj) {
+    fprintf(stderr, "A reactor already exists with name: %s.\n", name);
+    return NULL;
+  }
+
+  obj = mvrt_obj_new(name, NULL);
+  obj->tag = MVRT_OBJ_REACTOR;
+  obj->data = (void *) _rtreactor_new();
+
+  return (mvrt_reactor_t *) obj;
+}
+
+mvrt_reactor_t *mvrt_reactor_load_str(char *line, FILE *fp)
+{
+  _rtreactor_t *rtreactor;
+
+  char *name = NULL;
+  if ((rtreactor = _rtreactor_parse(line, fp, &name)) == NULL)
+    return NULL;
+
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (obj) {
+    fprintf(stderr, "A reactor already exists with name: %s.\n", name);
+    _rtreactor_delete(rtreactor);
+    return NULL;
+  }
+
+  obj = mvrt_obj_new(name, NULL);
+  obj->tag = MVRT_OBJ_REACTOR;
+  obj->data = (void *) rtreactor;
+
+  return (mvrt_reactor_t *) obj;
+}
+
+char *mvrt_reactor_save_str(mvrt_reactor_t *reactor)
+{
+  
+  return NULL;
 }
 
 mvrt_reactor_t *mvrt_reactor_lookup(const char *name)
 {
-  int i;
-  for (i = 0; i < _reactorid; i++) {
-    mvrt_reactor_t *reactor = _reactors[i];
-    if (!strcmp(name, reactor->name))
-      return reactor;
-  }
+  mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
+  if (!obj)
+    return NULL;
 
-  return NULL;
+  assert(obj->tag == MVRT_OBJ_REACTOR);
+
+  return (mvrt_reactor_t *) obj;
 }
 
+mvrt_code_t *mvrt_reactor_getcode(mvrt_reactor_t *reactor)
+{
+  mvrt_obj_t *obj = (mvrt_obj_t *) reactor;
+  if (!obj)
+    return NULL;
+
+  assert(obj->tag == MVRT_OBJ_REACTOR);
+  _rtreactor_t *rtreactor = (_rtreactor_t *) obj->data;
+  
+  return rtreactor->code;
+}
 
 /*
  * Functions for event-reactor table.
  */
+mvrt_reactor_t *mvrt_reactor_assoc_load_str(char *line)
+{
+  /* Event-reactor assoc table:
+
+     assoc ev0 reactor0
+     assoc ev0 reactor1
+     assoc dev:ev1 reactor0
+  */
+  char *name_s = NULL;
+  char *reactor_s = NULL;
+  if (_reactor_assoc_tokenize(line, &name_s, &reactor_s) == -1) {
+    fprintf(stderr, "Line not recognized: %s\n", line);
+    return NULL;
+  }
+
+  char *charp;
+  mvrt_event_t *ev;
+  if (((charp = strstr(name_s, ":")) == NULL) || charp == name_s) {
+    /* "foo" or ":foo" - local event */
+    if (charp == name_s)
+      ev = mvrt_event_lookup(name_s+1, NULL);
+    else
+      ev = mvrt_event_lookup(name_s, NULL);
+  }
+  else {
+    /* "dev:foo" - remote event */
+    char *name_cpy = strdup(charp + 1);
+    char save = *charp;
+    *charp = '\0';
+    ev = mvrt_event_lookup(name_cpy, name_s);
+    if (ev == NULL) {
+      /* External event is not inside the runtime. Add one. */
+      ev = mvrt_event_new(name_cpy, name_s);
+    }
+    *charp = save;
+    free(name_cpy);
+  }
+  
+  if (!ev) {
+    fprintf(stderr, "Event not found: %s\n", name_s);
+    return NULL;
+  }
+
+  mvrt_reactor_t *reactor;
+  if ((reactor = mvrt_reactor_lookup(reactor_s)) == NULL) {
+    fprintf(stderr, "Reactor not found: %s\n", reactor_s);
+    return NULL;
+  }
+  
+  if (mvrt_add_reactor_to_event(ev, reactor) != -1)
+    return reactor;
+  else
+    return NULL;
+}
+
+
 #define MAX_EVENT_REACTOR_TABLE 1001
 typedef struct _event_reactor_assoc {
-  mvrt_event_t event;                 /* event */
+  mvrt_event_t *event;                /* event */
   mvrt_reactor_list_t *head;          /* head of reactor list */
   mvrt_reactor_list_t *tail;          /* tail of reactor list */
   struct _event_reactor_assoc *next;  /* assoc chain, in case of collision */
 } _event_reactor_assoc_t;
 static _event_reactor_assoc_t *_event_reactor_table[MAX_EVENT_REACTOR_TABLE];
 
-static _event_reactor_assoc_t  *_event_reactor_assoc_new(mvrt_event_t event)
+static _event_reactor_assoc_t  *_event_reactor_assoc_new(mvrt_event_t *ev)
 {
   _event_reactor_assoc_t *assoc = malloc(sizeof(_event_reactor_assoc_t));
-  assoc->event = event;
+  assoc->event = ev;
   assoc->head = NULL;
   assoc->tail = NULL;
   assoc->next = NULL;
   return assoc;
 }
 
-static int _event_reactor_table_hash(mvrt_event_t ev)
+static int _event_reactor_table_hash(mvrt_event_t *ev)
 {
-  return (ev % MAX_EVENT_REACTOR_TABLE);
+  return (((mv_ptr_t) ev) % MAX_EVENT_REACTOR_TABLE);
 }
 
 static mvrt_reactor_list_t *_reactor_list_new()
@@ -402,7 +273,7 @@ static mvrt_reactor_list_t *_reactor_list_new()
   return reactor_list;
 }
 
-int mvrt_add_reactor_to_event(mvrt_event_t ev, mvrt_reactor_t *react)
+int mvrt_add_reactor_to_event(mvrt_event_t *ev, mvrt_reactor_t *react)
 {
   int hash = _event_reactor_table_hash(ev);
   _event_reactor_assoc_t *assoc = _event_reactor_table[hash];
@@ -449,12 +320,12 @@ int mvrt_add_reactor_to_event(mvrt_event_t ev, mvrt_reactor_t *react)
   return 0;
 }
 
-int mvrt_remove_reactor_from_event(mvrt_event_t ev, mvrt_reactor_t *react)
+int mvrt_remove_reactor_from_event(mvrt_event_t *ev, mvrt_reactor_t *react)
 {
   return 0;
 }
 
-mvrt_reactor_list_t *mvrt_get_reactors_for_event(mvrt_event_t ev)
+mvrt_reactor_list_t *mvrt_get_reactors_for_event(mvrt_event_t *ev)
 {
   int hash = _event_reactor_table_hash(ev);
   _event_reactor_assoc_t *assoc = _event_reactor_table[hash];

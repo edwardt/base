@@ -417,6 +417,22 @@ mv_value_t mv_value_from_str(const char *s)
   return _value_from_str(s);
 }
 
+
+static void *_invalid = NULL;
+mv_value_t mv_value_invalid()
+{
+  if (!_invalid)
+    _invalid = malloc(sizeof(mv_ptr_t));
+
+  return _VALUE_TAGPTR(_invalid, MV_VALUE_INVALID);
+}
+
+mv_value_t mv_value_is_invalid(mv_value_t v)
+{
+  void *ptr = (void *) _VALUE_PTR(v);
+  return (ptr == _invalid) ? 1 : 0;
+}
+
 static void *_null = NULL;
 mv_value_t mv_value_null()
 {

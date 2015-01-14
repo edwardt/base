@@ -2,33 +2,34 @@
  * @file rtobj.c
  */
 #include <stdio.h>     /* FILE */
+#include <stdlib.h>    /* exit */
 #include <string.h>    /* memset */
 #include <assert.h>    /* assert */
+#include "rtprop.h"    /* mvrt_prop_load_str */
+#include "rtfunc.h"    /* mvrt_func_load_str */
+#include "rtevent.h"   /* mvrt_event_load_str */
+#include "rtreactor.h" /* mvrt_reactor_load_str */
 #include "rtobj.h"
 
 # define MAX_RTABLE_SIZE  4096
 static mvrt_obj_t _rtable[MAX_RTABLE_SIZE];
 
-static mv_uint32_t _objhash(const char *str, mv_uint32_t seed);
-static mv_uint32_t _objhash(const char *dev, const char *name);
+static mv_uint32_t _objhash(const char *str, const char *dev);
 
-mv_uint32_t _strhash(const char *str, unsigned seed)
+mv_uint32_t _objhash(const char *str, const char *dev)
 {
-  size_t hash = seed;
-  while (str)
+
+  /* TODO: For now, only str is used for computing hash. */
+  size_t hash = 0;
+  while (*str)
     hash = hash * 101 + *str++;
 
   return hash % MAX_RTABLE_SIZE;
 }
 
-mv_uint32_t _objhash(const char *dev, const char *name)
+int _match(mvrt_obj_t *obj, const char *name, const char *dev)
 {
-  return _strhash(dev, _strhash(name, 0));
-}
-
-int _match(mvrt_obj_t *obj, const char *dev, const char *name)
-{
-  return (obj && !strcmp(obj->dev, dev) && !strcmp(obj->name, name));
+  return (obj && !strcmp(obj->name, name) && (!dev || !strcmp(obj->dev, dev)));
 }
 
 
@@ -41,14 +42,14 @@ int mvrt_obj_module_init()
   size_t mvrt_obj_sz = sizeof(mvrt_obj_t);
   memset(&_rtable[0], 0x0, mvrt_obj_sz * MAX_RTABLE_SIZE);
   
-  _rtable_end = _rable + (MAX_RTABLE_SIZE - 1);
+  _rtable_end = _rtable + (MAX_RTABLE_SIZE - 1);
 }
 
-mvrt_obj_t *mvrt_obj_new(const char *dev, const char *name)
+mvrt_obj_t *mvrt_obj_new(const char *name, const char *dev)
 {
-  size_t hash = _objhash(dev, name);
+  size_t hash = _objhash(name, dev);
   mvrt_obj_t *p = _rtable + hash;
-  mvrt_obj_t *end = (p != _rtable) ? (p - 1) ? _rtable_end;
+  mvrt_obj_t *end = (p != _rtable) ? (p - 1) : _rtable_end;
 
   while (p->used && p != end) {
     p = (p == _rtable_end) ? _rtable : (p + 1);
@@ -59,58 +60,46 @@ mvrt_obj_t *mvrt_obj_new(const char *dev, const char *name)
     exit(1);
   }
 
-  p->dev = strdup(dev);
+  p->dev = dev ? strdup(name) : NULL;
   p->name = strdup(name);
   p->used = 1;
+
+  fprintf(stdout, "Runtime object created: %s\n", p->name);
 
   return p;
 }
 
-int mvrt_obj_delete(const char *dev, const char *name)
+int mvrt_obj_delete(mvrt_obj_t *p)
 {
-  mvrt_obj_t *p = mvrt_obj_lookup(dev, name);
   if (!p)
     return -1;
 
   p->used = 0;
-  free(p->dev);
+  if (p->dev) 
+    free(p->dev);
   free(p->name);
 
-  switch (p->tag) {
-  case MVRT_OBJ_PROP:
-    mvrt_prop_delete(p->u.prop);
-    break;
-  case MVRT_OBJ_FUNC:
-    mvrt_func_delete(p->u.func);
-    break;
-  case MVRT_OBJ_EVENT:
-    mvrt_event_delete(p->u.event);
-    break;
-  case MVRT_OBJ_REACTOR:
-    mvrt_reactor_delete(p->u.reactor);
-    break;
-  default:
-    assert(0 && "Invalid tag");
-  }
+  return 0;
 }
 
-mvrt_obj_t *mvrt_obj_lookup(const char *dev, const char *name)
+mvrt_obj_t *mvrt_obj_lookup(const char *name, const char *dev)
 {
-  size_t hash = _objhash(dev, name, 0);
+  size_t hash = _objhash(name, dev);
   mvrt_obj_t *p = _rtable + hash;
-  mvrt_obj_t *end = (p != _rtable) ? (p - 1) ? _rtable_end;
+  mvrt_obj_t *end = (p != _rtable) ? (p - 1) : _rtable_end;
 
-  while (!_match(p, dev, name) && p != end)
+  int matched = 0;
+  while (p->used && !(matched = _match(p, name, dev)) && p != end)
     p = (p == _rtable_end) ? _rtable : (p + 1);
 
-  if (!_match(p, dev, name))
+  if (!matched)
     return NULL;
 
   return p;
 }
 
 #define MAX_FILE_LINE  4096
-int mvrt_table_loadfile(const char *file)
+int mvrt_obj_loadfile(const char *file)
 {
   FILE *fp;
   if ((fp = fopen(file, "r")) == NULL) {
@@ -119,6 +108,8 @@ int mvrt_table_loadfile(const char *file)
   }
 
   char line[MAX_FILE_LINE];
+  char *charp;
+  mvrt_obj_t *obj;
   while (fgets(line, MAX_FILE_LINE, fp)) {
     if ((charp = strchr(line, '\n')) != NULL)
       *charp = '\0';
@@ -129,37 +120,44 @@ int mvrt_table_loadfile(const char *file)
       exit(1);
     }
 
-    if (line[0] == '#')
+    /* the fist character must be an alphabet except the body
+       of reactor or function */
+    if (!line[0] || line[0] == '#' || line[0] == ' ')
       continue;
 
+    mvrt_obj_t *obj = NULL;
     switch (line[0]) {
-    case 'p': /* prop dev:name */
-      mvrt_obj_t obj = mvrt_prop_parse(fp, line);
+    case 'p': /* prop name */
+      obj = (mvrt_obj_t *) mvrt_prop_load_str(line);
       break;
     case 'e': /* event dev:name */
-    case 't': /* timer dev:name t0 t1 */
-      mvrt_obj_t obj = mvrt_event_parse(fp, line);
+    case 't': /* timer name t0 t1 */
+      obj = (mvrt_obj_t *) mvrt_event_load_str(line);
       break;
-    case 'f': /* function dev:name { code } */
-      mvrt_obj_t obj = mvrt_func_parse(fp, line);
+    case 'f': /* function name { code } */
+    case 'n': /* native name lib.so */
+      obj = (mvrt_obj_t *) mvrt_func_load_str(line, fp);
       break;
     case 'r': /* reactor dev:name { code } */
-      mvrt_obj_t obj = mvrt_dev_parse(fp, line);
+      obj = (mvrt_obj_t *) mvrt_reactor_load_str(line, fp);
+      break;
+    case 'a':
+      obj = (mvrt_obj_t *) mvrt_reactor_assoc_load_str(line);
       break;
     default:
-      fprintf("Failed to parse line: %s\n", line);
-      continue;
-    }
-    if (obj == (mvrt_obj_t) 0) {
-      fprintf("Failed to parse line: %s\n", line);
-      continue;
+      break;
     }
 
-
-    
+    if (!obj) {
+      fprintf(stderr, "Failed to parse line: %s\n", line);
+      continue;
+    }
   }
+
+  return 0;
 }
 
-int mvrt_table_savefile(const char *file)
+int mvrt_obj_savefile(const char *file)
 {
+  return 0;
 }

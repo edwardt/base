@@ -9,7 +9,6 @@
 #include <signal.h>       /* sigemptyset */
 #include <time.h>         /* nanosleep */
 #include <assert.h>       /* aasert */
-#include <mv/device.h>    /* mv_device_self */
 #include <mv/value.h>     /* mv_value_t */
 #include <mv/message.h>   /* mv_message_t */
 #include "rtprop.h"       /* mvrt_prop_t */
@@ -108,8 +107,8 @@ mvrt_eventinst_t *_mdecoder_decode(mv_message_t *mvmsg)
   mv_value_t name_v;            /* name */
   mv_value_t dev_v;             /* dev */
 
-  mvrt_event_t event;           /* event type */
-  mvrt_prop_t prop;             /* property */
+  mvrt_event_t *event;          /* event type */
+  mvrt_prop_t *prop;            /* property */
   mv_value_t pair_v;            /* pair value */
   mv_value_t null_v;            /* null value */
 
@@ -147,7 +146,7 @@ mvrt_eventinst_t *_mdecoder_decode(mv_message_t *mvmsg)
     arg_v = mvmsg->arg;
     name_v = mv_value_map_lookup(arg_v, _values[_V_STRING_NAME]);
     name_s = mv_value_string_get(name_v);
-    prop = mvrt_prop_new(mv_device_self(), name_s, MVRT_PROP_LOCAL);
+    prop = mvrt_prop_new(name_s);
     if (!prop) {
       fprintf(stderr, "ERROR: Failed to create property: %s.\n", name_s);
       return NULL;
@@ -155,22 +154,22 @@ mvrt_eventinst_t *_mdecoder_decode(mv_message_t *mvmsg)
     break;
   case MV_MESSAGE_PROP_SET:
     arg_v = mvmsg->arg;
-    event = mvrt_event_lookup(mv_device_self(), "_E_prop_set");
+    event = mvrt_event_lookup("_E_prop_set", NULL);
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
   case MV_MESSAGE_PROP_GET:
     arg_v = mvmsg->arg;
-    event = mvrt_event_lookup(mv_device_self(), "_E_prop_get");
+    event = mvrt_event_lookup("_E_prop_get", NULL);
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
   case MV_MESSAGE_FUNC_CALL:
     arg_v = mvmsg->arg;
-    event = mvrt_event_lookup(mv_device_self(), "_E_func_call");
+    event = mvrt_event_lookup("_E_func_call", NULL);
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
   case MV_MESSAGE_REPLY:
     arg_v = mvmsg->arg;
-    event = mvrt_event_lookup(mv_device_self(), "_E_reply");
+    event = mvrt_event_lookup("_E_reply", NULL);
     evinst = mvrt_eventinst_new(event, arg_v);
     return evinst;
   default:

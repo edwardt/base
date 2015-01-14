@@ -51,7 +51,7 @@ void *_sched_thread(void *arg)
   struct timespec ts;                  /* time for nanosleep */
 
   mvrt_eventinst_t *evinst;
-  mvrt_event_t ev;
+  mvrt_event_t *ev;
 
   mvrt_reactor_list_t *rptr;
   mvrt_reactor_t *reactor;

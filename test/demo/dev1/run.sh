@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./mvrt dev1
+./mvrt dev1 dev1.dat
