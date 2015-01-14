@@ -106,6 +106,8 @@ _rtfunc_t *_rtfunc_parse(char *line, FILE *fp, char **name)
     func->u.native = malloc(sizeof(mvrt_native_t));
     func->u.native->lib = strdup(lib);
     func->u.native->name = strdup(*name);
+    func->u.native->func1 = (mvrt_native_func1_t) 0;
+    func->u.native->func2 = (mvrt_native_func2_t) 0;
   }
   else if (!strcmp(type, "func")) {
     mvrt_code_t *code = mvrt_code_load_file(fp);

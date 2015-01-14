@@ -170,21 +170,21 @@ mvrt_prop_t *mvrt_prop_lookup(const char *name)
   return (mvrt_prop_t *) obj;
 }
 
-int mvrt_prop_getvalue(mvrt_prop_t *p)
+mv_value_t mvrt_prop_getvalue(mvrt_prop_t *p)
 {
   mvrt_obj_t *obj = (mvrt_obj_t *) p;
   if (!obj || obj->tag != MVRT_OBJ_PROP) {
     fprintf(stderr, "Invalid property.\n");
-    return -1;
+    return mv_value_invalid();
   }
 
-  _rtprop_t *prop = (_rtprop_t *) p;
+  _rtprop_t *prop = (_rtprop_t *) obj->data;
 
   /* TODO: for garbage collection, increase the refcount of prop->value */
   return prop->value;
 }
 
-int mvrt_prop_getvalue_by_name(const char *name)
+mv_value_t mvrt_prop_getvalue_by_name(const char *name)
 {
   mvrt_obj_t *obj = mvrt_obj_lookup(name, NULL);
 
@@ -204,7 +204,7 @@ int mvrt_prop_setvalue(mvrt_prop_t *p, mv_value_t v)
     return -1;
   }
 
-  _rtprop_t *prop = (_rtprop_t *) p;
+  _rtprop_t *prop = (_rtprop_t *) obj->data;
 
   /* TODO: for garbage collection, increase the refcount of v, and
      decrease the refcount of old prop->value */
