@@ -309,8 +309,12 @@ mv_value_t _value_parse_token_object(_parsedata_t *data)
 
   map = mv_value_map();
 
+  int min = data->ctok->start;
+  int max = data->ctok->end;
+
   data->ctok++;
-  while (data->ctok && (data->ctok->start < data->ctok->end)) {
+  while (data->ctok && (data->ctok->start < data->ctok->end) && 
+         data->ctok->end <= max) {
     if ((key = _value_parse_token(data)) == 0)
       return map;
 
