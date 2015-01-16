@@ -33,7 +33,6 @@ typedef mvc::yy::Parser::token token;
 %option noyywrap 
 %option nounput 
 %option batch 
-%option debug 
 /* %option c++ */
 
 /* definitions */
@@ -42,6 +41,7 @@ alnum   [A-Za-z0-9]
 digit   [0-9]
 quote   [\"]
 id      {alpha}{alnum}*
+mvname  {id}(\:{id})?
 number  {digit}*("."{digit}*)?
 strchar [^\"\n\\]
 escape  "\\."
@@ -74,10 +74,10 @@ newline [\n]
 "create"                  { return token::MVC_TOK_CREATE; }
 
 "module"                  { return token::MVC_TOK_MODULE; }
-"process"                 { return token::MVC_TOK_PROCESS; }
+"reactor"                 { return token::MVC_TOK_REACTOR; }
 "function"                { return token::MVC_TOK_FUNCTION; }
 "event"                   { return token::MVC_TOK_EVENT; }
-"var"                     { return token::MVC_TOK_VAR; }
+"prop"                    { return token::MVC_TOK_PROP; }
 "if"                      { return token::MVC_TOK_IF; }
 "else"                    { return token::MVC_TOK_ELSE; }
 "while"                   { return token::MVC_TOK_WHILE; }

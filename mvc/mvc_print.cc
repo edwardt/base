@@ -244,6 +244,13 @@ public:
     _os << std::endl;
   }
 
+  void visitFuncallStm(FuncallStm *s) {
+    indent();
+    Util::print(_os, s->getCall(), getIndent());
+    _os << ";";
+    _os << std::endl;
+  }
+
   void visitTriggerStm(TriggerStm *s) {
     indent();
     _os << "-> ";

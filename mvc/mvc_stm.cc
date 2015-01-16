@@ -91,6 +91,12 @@ AssignStm *StmFactory::createAssign(Exp *lhs, Exp *rhs)
   return assign;
 }
 
+FuncallStm *StmFactory::createFuncall(FuncallExp *call)
+{
+  FuncallStm *callstm = new FuncallStm(call);
+  return callstm;
+}
+
 TriggerStm *StmFactory::createTrigger()
 {
   TriggerStm *trigger = new TriggerStm();

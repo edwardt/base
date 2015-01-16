@@ -1,8 +1,8 @@
 BUILT_SOURCES = mvc_parse.hh
 
-AM_YFLAGS = -d
-
+# flags for flex and bison
 AM_LFLAGS = --header-file=mvc_scan.hh
+AM_YFLAGS =
 
 bin_PROGRAMS = mvc
 

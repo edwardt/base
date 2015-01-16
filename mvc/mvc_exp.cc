@@ -46,5 +46,12 @@ ArrayrefExp *ExpFactory::createArrayref(Exp *varref, Exp *index)
   return arrayref;
 }
 
+FuncallExp *ExpFactory::createFuncall(SymbolExp *name, std::list<Exp *> *args)
+{
+  FuncallExp *call = new FuncallExp(name, args);
+
+  return call;
+}
+
 
 } /* mvc */

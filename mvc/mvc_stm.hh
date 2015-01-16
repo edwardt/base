@@ -27,6 +27,7 @@ enum StmTag {
   ST_WHILE,      /* while (C) S */
   ST_FOR,        /* for (S1; C; S2) S3 */
   ST_ASSIGN,     /* lhs = rhs */
+  ST_FUNCALL,    /* foo(args) */
   ST_TRIGGER,    /* -> event(event_args) */
   ST_RETURN,     /* return E */
   ST_CONTINUE,   /* continue */
@@ -249,6 +250,22 @@ private:
 };
 
 /**
+ * @class FuncallStm
+ */
+class FuncallStm : public Stm {
+public:
+  FuncallStm(FuncallExp *call) : Stm(ST_FUNCALL), _call(call) { }
+  ~FuncallStm() { }
+
+  void accept(StmVisitor& v) { v.visitFuncallStm(this); }
+  
+  FuncallExp *getCall() { return _call; }
+
+private:
+  FuncallExp *_call;
+};
+
+/**
  * @class TriggerStm
  */
 class TriggerStm : public Stm {
@@ -342,6 +359,7 @@ public:
   WhileStm *createWhile(Exp *cond, Stm *body);
   ForStm *createFor(Stm *init, Exp *cond, Stm *step, Stm *body);
   AssignStm *createAssign(Exp *lhs, Exp *rhs);
+  FuncallStm *createFuncall(FuncallExp *fcall);
   TriggerStm *createTrigger();
   ReturnStm *createReturn(Exp *exp);
   ContinueStm *createContinue();

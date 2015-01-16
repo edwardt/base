@@ -1,8 +1,0 @@
-module test {
-  event e0;
-  event e1;
-
-  process p0 (e0 e1) {
-    a = b + c;
-  };
-};

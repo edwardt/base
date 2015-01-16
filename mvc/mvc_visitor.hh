@@ -45,6 +45,7 @@ class IfElseStm;
 class WhileStm;
 class ForStm;
 class AssignStm;
+class FuncallStm;
 class TriggerStm;
 class ReturnStm;
 class ContinueStm;
@@ -62,6 +63,7 @@ public:
   virtual void visitWhileStm(WhileStm *s) = 0;
   virtual void visitForStm(ForStm *s) = 0;
   virtual void visitAssignStm(AssignStm *s) = 0;
+  virtual void visitFuncallStm(FuncallStm *s) = 0;
   virtual void visitTriggerStm(TriggerStm *s) = 0;
   virtual void visitReturnStm(ReturnStm *s) = 0;
   virtual void visitContinueStm(ContinueStm *s) = 0;
