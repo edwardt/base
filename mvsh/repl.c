@@ -6,7 +6,6 @@
 #include <stdio.h>     /* fprintf */
 #include <string.h>    /* strchr */
 #include "command.h"   /* mvsh_command_process */
-#include "repl.h"      /* mvsh_repl */
 
 #define MVSH_PROMPT     "#"
 #define MVSH_MAX_LINE   4096
