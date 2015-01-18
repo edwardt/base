@@ -6,7 +6,8 @@
 #ifndef MVRT_SCHED_H
 #define MVRT_SCHED_H
 
-#include "evqueue.h"
+#include "rtevqueue.h"   /* mvrt_evqueue_t */
+
 
 typedef void mvrt_sched_t;
 

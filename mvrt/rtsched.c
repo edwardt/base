@@ -1,7 +1,5 @@
 /**
  * @file rtsched.c
- *
- * @author cjeong
  */
 #include <stdio.h>       /* printf */
 #include <stdlib.h>      /* malloc */
@@ -11,7 +9,7 @@
 #include "rtevent.h"     /* mvrt_event_t */
 #include "rtreactor.h"   /* mvrt_reactor_t */
 #include "rtoper.h"      /* mvrt_operator_t */
-#include "evqueue.h"     /* mvrt_evqueue_t */
+#include "rtevqueue.h"   /* mvrt_evqueue_t */
 #include "rtsched.h"
 
 

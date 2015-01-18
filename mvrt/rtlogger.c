@@ -1,10 +1,8 @@
 /**
  * @file rtlogger.c
- *
- * @author cjeong
  */
-#include <stdio.h>           /* vprintf */
-#include <stdarg.h>          /* va_start */
+#include <stdio.h>        /* vprintf */
+#include <stdarg.h>       /* va_start */
 #include "rtlogger.h"
 
 

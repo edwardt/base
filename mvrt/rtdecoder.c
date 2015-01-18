@@ -1,7 +1,5 @@
 /**
  * @File rtdecoder.c
- *
- * @author cjeong
  */
 #include <stdio.h>        /* printf */
 #include <stdlib.h>       /* malloc, free */

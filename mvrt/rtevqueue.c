@@ -1,7 +1,5 @@
 /**
  * @file rtevqueue.c
- *
- * @author cjeong
  */
 #include <stdio.h>       /* sprintf */
 #include <stdlib.h>      /* malloc */

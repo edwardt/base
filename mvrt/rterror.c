@@ -1,7 +1,5 @@
 /**
  * @file rterror.c
- *
- * @author cjeong
  */
 #include <assert.h>
 #include "rterror.h"

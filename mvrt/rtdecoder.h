@@ -7,7 +7,7 @@
 #define MVRT_DECODER_H
 
 #include <mq/mqueue.h>    /* mv_mqueue_t */
-#include "evqueue.h"
+#include "rtevqueue.h"
 
 typedef void mvrt_decoder_t;
 
