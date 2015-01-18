@@ -29,7 +29,6 @@ AC_CONFIG_FILES([Makefile
                  mvrt/Makefile
                  mvsh/Makefile
                  mvc/Makefile
-                 server/Makefile
                 ])
 
 AC_OUTPUT
