@@ -505,7 +505,8 @@ int mv_message_send(const char *adr, mv_mtag_t tag, char *arg_s)
   char *src_s = _mqinfo->srcstr;
   int sz = strlen(arg_s);
   char *m = malloc(sz + 1024);
-  sprintf(m, "%s {\"tag\":%s,\"arg\":%s,\"src\":%s}", adr, tag_s, arg_s, src_s);
+  sprintf(m, "%s {\"tag\":\"%s\",\"arg\":%s,\"src\":%s}", 
+          adr, tag_s, arg_s, src_s);
   
   while (_mq_enqueue(mqinfo->omq, m) != 0) ;
 

@@ -62,7 +62,7 @@ static int _command_prop_get(char *arg0)
   const char *destaddr = mv_device_addr(dev);
 
   char arg[4096];
-  sprintf(arg, "\"arg\":{\"name\":\"%s\", \"retid\":0, \"retaddr\": \"%s\"}",
+  sprintf(arg, "{\"name\":\"%s\", \"retid\":0, \"retaddr\": \"%s\"}",
           prop, mv_message_selfaddr());
   fprintf(stdout, "PROP_GET: %s\n", arg);
   mv_message_send(destaddr, MV_MESSAGE_PROP_GET, arg);
@@ -104,7 +104,7 @@ static int _command_prop_set(char *arg0, char *arg1)
   const char *destaddr = mv_device_addr(dev);
 
   char arg[4096];
-  sprintf(arg, " \"arg\": {\"name\":\"%s\", \"value\":%s}", prop, arg1);
+  sprintf(arg, "{\"name\":\"%s\", \"value\":%s}", prop, arg1);
   fprintf(stdout, "PROP_SET: %s\n", arg);
   mv_message_send(destaddr, MV_MESSAGE_PROP_SET, arg);
 
