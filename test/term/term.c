@@ -7,10 +7,16 @@
 #include <mv/value.h>
 
 
-extern int sysprint(int arg)
+extern int term_printint(mv_value_t v)
 {
-  fprintf(stdout, "SYSPRINT: %d\n", arg);
+  mv_value_print(v);
 }
 
-
 extern 
+
+
+/* Read a single line from a console and returns a string value. */
+extern mv_value_t term_readline()
+{
+  
+}
