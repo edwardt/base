@@ -3,6 +3,5 @@ SUBDIRS = libmv \
 	mvrt \
 	mvsh \
 	mvc \
-	server \
-	test
+	server 
 

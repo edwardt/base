@@ -1,11 +1,16 @@
+/**
+ * @file term.c
+ *
+ * @author Library for terminal I/O.
+ */
 #include <stdio.h>
+#include <mv/value.h>
 
-int foo(int arg)
-{
-  fprintf(stdout, "hello, world (ARG = %d)\n", arg);
-}
 
-int sysprint(int arg)
+extern int sysprint(int arg)
 {
   fprintf(stdout, "SYSPRINT: %d\n", arg);
 }
+
+
+extern 

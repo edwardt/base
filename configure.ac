@@ -32,7 +32,6 @@ AC_CONFIG_FILES([Makefile
                  mvsh/Makefile
                  mvc/Makefile
                  server/Makefile
-                 test/Makefile
                 ])
 
 AC_OUTPUT
