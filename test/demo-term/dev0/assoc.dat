@@ -1,0 +1,5 @@
+# event reactor
+timer0 r1
+timer1 r2
+timer2 r3
+timer2 r4

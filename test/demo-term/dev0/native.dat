@@ -1,0 +1,4 @@
+native ../../gpio/libgpio.so gpioGet
+native ../../gpio/libgpio.so gpioPut
+native ../../hello/libfunc.so foo
+native ../../hello/libfunc.so sysprint
