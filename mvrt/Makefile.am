@@ -5,17 +5,17 @@ mvrt_SOURCES = \
 	rtfunc.c \
 	rtreactor.c \
 	rtobj.c \
-	operator.c \
-	context.c \
-	code.c \
-	evqueue.c \
-	mdecoder.c \
-	eval.c \
+	rtoper.c \
+	rtcode.c \
+	rtcontext.c \
+	rteval.c \
+	rtdecoder.c \
+	rtevqueue.c \
 	rtsched.c \
 	rterror.c \
 	rtlogger.c \
 	rtutil.c \
-	main.c
+	rtmain.c
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \
