@@ -246,6 +246,7 @@ void *_mq_output_thread(void *arg)
       continue;
     }
 
+    printf("sendstr:%s\n", sendstr);
     const char *sendaddr = _mq_getaddr(sendstr);
     const char *senddata = _mq_getdata(sendstr);
 
@@ -311,7 +312,7 @@ const char *_mq_getaddr(const char *str)
   static char addr[1024];
   char *data = strstr(str, "{");
 
-  size_t len = (unsigned long) data - (unsigned long) str;
+  unsigned len = (unsigned long) data - (unsigned long) str;
   strncpy(addr, str, len);
   addr[len] = '\0';
 
@@ -382,13 +383,14 @@ int _mqinfo_run(_mqinfo_t *mqinfo)
 }
 
 #define ZMQ_DEFAULT_PORT 5557
+static unsigned _mqport = ZMQ_DEFAULT_PORT;
 static _mqinfo_t *_mqinfo = NULL;
 _mqinfo_t *_mqinfo_get()
 {
   if (!_mqinfo) {
     /* create an mqinfo and initialize the queues when this function
        is first called. */
-    if ((_mqinfo = _mqinfo_init(ZMQ_DEFAULT_PORT)) == NULL)
+    if ((_mqinfo = _mqinfo_init(_mqport)) == NULL)
       return NULL;
 
     if (_mqinfo_run(_mqinfo) == -1)
@@ -505,12 +507,10 @@ int mv_message_send(const char *adr, mv_mtag_t tag, char *arg_s)
   char *src_s = _mqinfo->srcstr;
   int sz = strlen(arg_s);
   char *m = malloc(sz + 1024);
-  sprintf(m, "%s {\"tag\":\"%s\",\"arg\":%s,\"src\":%s}", 
+  sprintf(m, "%s {\"tag\":\"%s\", \"arg\":%s, \"src\":%s}", 
           adr, tag_s, arg_s, src_s);
-  
-  while (_mq_enqueue(mqinfo->omq, m) != 0) ;
 
-  free(m);
+  while (_mq_enqueue(mqinfo->omq, m) != 0) ;
 
   return 0;
 }
@@ -533,8 +533,6 @@ int mv_message_send_value(const char *adr, mv_mtag_t tag, mv_value_t arg)
   
   while (_mq_enqueue(mqinfo->omq, m) != 0) ;
 
-  free(m);
-
   return 0;
 }
 
@@ -555,4 +553,10 @@ const char *mv_message_selfaddr()
   _mqinfo_t *mq = _mqinfo_get();
 
   return mq->addr;
+}
+
+int mv_message_setport(unsigned port)
+{
+  _mqport = port;
+  return 0;
 }

@@ -23,7 +23,7 @@ _rtprop_t *_rtprop_new()
   /* later we could change this to property pool-based scheme
      for faster allocation, if needed */
   _rtprop_t *p = malloc(sizeof(_rtprop_t));
-  p->value = mv_value_invalid();
+  p->value = 0;
   return p;
 }
 
@@ -175,7 +175,7 @@ mv_value_t mvrt_prop_getvalue(mvrt_prop_t *p)
   mvrt_obj_t *obj = (mvrt_obj_t *) p;
   if (!obj || obj->tag != MVRT_OBJ_PROP) {
     fprintf(stderr, "Invalid property.\n");
-    return mv_value_invalid();
+    return 0;
   }
 
   _rtprop_t *prop = (_rtprop_t *) obj->data;
@@ -199,7 +199,7 @@ int mvrt_prop_setvalue(mvrt_prop_t *p, mv_value_t v)
     return -1;
   }
   
-  if (mv_value_is_invalid(v)) {
+  if (v == 0) {
     fprintf(stderr, "Invalid value.\n");
     return -1;
   }

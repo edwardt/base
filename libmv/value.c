@@ -17,7 +17,7 @@
 typedef struct _value _value_t;
 
 typedef struct _prim {
-  unsigned ptag : 3;     /* mv_valuetag_t */
+  unsigned ptag : 3;     /* mv_vtag_t */
   unsigned pad  : 29;
   union {
     int ival;
@@ -313,8 +313,7 @@ mv_value_t _value_parse_token_object(_parsedata_t *data)
   int max = data->ctok->end;
 
   data->ctok++;
-  while (data->ctok && (data->ctok->start < data->ctok->end) && 
-         data->ctok->end <= max) {
+  while (data->ctok) {
     if ((key = _value_parse_token(data)) == 0)
       return map;
 
@@ -326,7 +325,12 @@ mv_value_t _value_parse_token_object(_parsedata_t *data)
       assert(0);
       return (mv_value_t) 0;
     }
+
     data->ctok++;
+    if (data->ctok->start >= data->ctok->end || data->ctok->end > max) {
+      data->ctok--;
+      break;
+    }
   } 
 
   return map;
@@ -364,15 +368,15 @@ mv_value_t _value_from_str(const char *s)
 /*
  * Functions for the value API.
  */
-mv_valuetag_t mv_value_tag(mv_value_t v)
+mv_vtag_t mv_value_tag(mv_value_t v)
 {
   return _VALUE_TAG(v);
 }
 
 int mv_value_eq(mv_value_t u, mv_value_t v)
 {
-  mv_valuetag_t utag = _VALUE_TAG(u);
-  mv_valuetag_t vtag = _VALUE_TAG(v);
+  mv_vtag_t utag = _VALUE_TAG(u);
+  mv_vtag_t vtag = _VALUE_TAG(v);
   if (utag != vtag)
     return 0;
 
@@ -419,22 +423,6 @@ char *mv_value_to_str(mv_value_t value)
 mv_value_t mv_value_from_str(const char *s)
 {
   return _value_from_str(s);
-}
-
-
-static void *_invalid = NULL;
-mv_value_t mv_value_invalid()
-{
-  if (!_invalid)
-    _invalid = malloc(sizeof(mv_ptr_t));
-
-  return _VALUE_TAGPTR(_invalid, MV_VALUE_INVALID);
-}
-
-mv_value_t mv_value_is_invalid(mv_value_t v)
-{
-  void *ptr = (void *) _VALUE_PTR(v);
-  return (ptr == _invalid) ? 1 : 0;
 }
 
 static void *_null = NULL;

@@ -86,24 +86,28 @@ int _message_gettag(char *tag_s)
 
 mv_message_t *_message_build(mv_value_t value, char *s)
 {
+  printf("VVV\n");
+  mv_value_print(value);
+  printf("VVV\n");
+
   mv_value_t tagkey = mv_value_string("tag");
   mv_value_t tagval = mv_value_map_lookup(value, tagkey);
   if (mv_value_is_null(tagval)) {
-    fprintf(stdout, "Message does contain \"tag\" field:\n%s\n", s);
+    fprintf(stdout, "Message does not contain \"tag\" field:\n%s\n", s);
     return NULL;
   }
 
   mv_value_t argkey = mv_value_string("arg");
   mv_value_t argval = mv_value_map_lookup(value, argkey);
   if (mv_value_is_null(argval)) {
-    fprintf(stdout, "Message does contain \"arg\" field:\n%s\n", s);
+    fprintf(stdout, "Message does not contain \"arg\" field:\n%s\n", s);
     return NULL;
   }
 
   mv_value_t srckey = mv_value_string("src");
   mv_value_t srcval = mv_value_map_lookup(value, srckey);
   if (mv_value_is_null(srcval)) {
-    fprintf(stdout, "Message does contain \"src\" field:\n%s\n", s);
+    fprintf(stdout, "Message does not contain \"src\" field:\n%s\n", s);
     return NULL;
   }
   

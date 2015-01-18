@@ -86,8 +86,8 @@ typedef struct {
  */
 
 /* Sends the given message the given device. The src field of the message 
-   will be automatically constructed by. Returns 0 on success and -1 on 
-   failure. */
+   will be automatically constructed by. The argument string or value will
+   be freed by the callee. Returns 0 on success and -1 on failure. */
 extern int mv_message_send_value(const char *addr, mv_mtag_t t, mv_value_t arg);
 extern int mv_message_send(const char *addr, mv_mtag_t t, char *arg);
 
@@ -114,6 +114,10 @@ extern void mv_message_delete(mv_message_t *m);
 
 /* Returns the address of the local device. */
 const char *mv_message_selfaddr();
+
+/* Sets the socket port. Call this before any mv_message_send or mv_message_recv
+   function calls. */
+int mv_message_setport(unsigned port);
 
 /* Returns the string for the given message tag. For example, for 
    MV_MESSAGE_FUNC_CALL, "FUNC_CALL" will be returned. Returns NULL on

@@ -349,7 +349,7 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
   static char arg[4096];
   const char *destaddr = mv_device_addr(dev_s);
   int retid = mvrt_continuation_new(ctx);
-  sprintf(arg, "\"arg\":{\"name\":\"%s\", \"retid\":%d, \"retaddr\":\"%s\"}",
+  sprintf(arg, "{\"name\":\"%s\", \"retid\":%d, \"retaddr\":\"%s\"}",
           name_s, retid, mv_message_selfaddr());
   fprintf(stdout, "MQSEND: %s\n", arg);
   mv_message_send(destaddr, MV_MESSAGE_PROP_GET, arg);
@@ -429,14 +429,14 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
 
   switch (instr->opcode) {
   case MVRT_OP_CALL_FUNC:
-    sprintf(arg, " \"arg\":{\"name\":\"%s\", \"funarg\":%s }",
+    sprintf(arg, " {\"name\":\"%s\", \"funarg\":%s }",
             name_s, mv_value_to_str(farg_v));
     fprintf(stdout, "MQSEND FUNC_CALL: %s\n", arg);
     mv_message_send(destaddr, MV_MESSAGE_FUNC_CALL, arg);
     break;
   case MVRT_OP_CALL_FUNC_RET:
     retid = mvrt_continuation_new(ctx);
-    sprintf(arg, "\"arg\":{\"name\":\"%s\", \"funarg\":%s, \"retid\":%d, "
+    sprintf(arg, "{\"name\":\"%s\", \"funarg\":%s, \"retid\":%d, "
             "  \"retaddr\": \"%s\" }",
             name_s, mv_value_to_str(farg_v), retid, mv_message_selfaddr());
     fprintf(stdout, "MQSEND: FUNC_CALL_RET %s\n", arg);
@@ -520,7 +520,7 @@ int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx)
   const char *retaddr = mv_value_string_get(retaddr_v);
 
   static char arg[4096];
-  sprintf(arg, "\"arg\":{\"retid\":%d, \"retval\":%s}",
+  sprintf(arg, "{\"retid\":%d, \"retval\":%s}",
           retid, mv_value_to_str(retval_v));
   fprintf(stdout, "REPLY: %s\n", arg);
   mv_message_send(retaddr, MV_MESSAGE_REPLY, arg);
