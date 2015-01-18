@@ -6,7 +6,7 @@
 #include <string.h>      /* strstr */
 #include <dlfcn.h>       /* dlopen */
 #include <assert.h>      /* assert */
-#include <mq/mqueue.h>   /* mv_mqueue_t */
+#include <mv/message.h>  /* mv_message_send */
 #include <mv/device.h>   /* mv_device_t */
 #include "rtprop.h"      /* mvrt_prop_t */
 #include "rtfunc.h"      /* mvrt_func_t */
@@ -28,7 +28,6 @@ static int _eval_call_continue(mvrt_instr_t *instr, mvrt_context_t *ctx);
 static char *_eval_getdev(char *s);
 static char *_eval_getname(char *s);
 
-extern mv_mqueue_t *mq;
 extern char *dest;
 
 typedef enum {
@@ -347,19 +346,13 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
     return ip + 1;
   }
 
-  static char msg[4096];
-
+  static char arg[4096];
   const char *destaddr = mv_device_addr(dev_s);
   int retid = mvrt_continuation_new(ctx);
-  sprintf(msg, 
-          "%s {"
-          " \"tag\":\"PROP_GET\", "
-          " \"src\":\"%s\", "
-          " \"arg\":"
-          "{ \"name\": \"%s\" \"retid\" : %d, \"retaddr\": \"%s\" } }",
-          destaddr, mv_mqueue_addr(mq), name_s, retid, mv_mqueue_addr(mq));
-  fprintf(stdout, "MQSEND: %s\n", msg);
-  mv_mqueue_put(mq, msg);
+  sprintf(arg, "\"arg\":{\"name\":\"%s\", \"retid\":%d, \"retaddr\":\"%s\"}",
+          name_s, retid, mv_message_selfaddr());
+  fprintf(stdout, "MQSEND: %s\n", arg);
+  mv_message_send(destaddr, MV_MESSAGE_PROP_GET, arg);
 
   free(dev_s);
   return _EVAL_SUSPEND;
@@ -431,34 +424,23 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
   const char *destaddr = mv_device_addr(dev_s);
   mvrt_native_t *native = NULL;
 
-  static char msg[4096];
+  static char arg[4096];
   int retid;
 
   switch (instr->opcode) {
   case MVRT_OP_CALL_FUNC:
-    sprintf(msg, 
-            "%s {"
-            " \"tag\":\"FUNC_CALL\", "
-            " \"src\":\"%s\", "
-            " \"arg\":"
-            "{ \"name\": \"%s\", \"funarg\" : %s } }",
-            destaddr, mv_mqueue_addr(mq), name_s, mv_value_to_str(farg_v));
-    fprintf(stdout, "MQSEND: %s\n", msg);
-    mv_mqueue_put(mq, msg);
+    sprintf(arg, " \"arg\":{\"name\":\"%s\", \"funarg\":%s }",
+            name_s, mv_value_to_str(farg_v));
+    fprintf(stdout, "MQSEND FUNC_CALL: %s\n", arg);
+    mv_message_send(destaddr, MV_MESSAGE_FUNC_CALL, arg);
     break;
   case MVRT_OP_CALL_FUNC_RET:
     retid = mvrt_continuation_new(ctx);
-    sprintf(msg, 
-            "%s {"
-            " \"tag\":\"FUNC_CALL_RET\", "
-            " \"src\":\"%s\", "
-            " \"arg\":"
-            "{ \"name\": \"%s\", \"funarg\" : %s, \"retid\" : %d, "
-            "  \"retaddr\": \"%s\" } }",
-            destaddr, mv_mqueue_addr(mq), name_s, mv_value_to_str(farg_v), 
-            retid, mv_mqueue_addr(mq));
-    fprintf(stdout, "MQSEND: %s\n", msg);
-    mv_mqueue_put(mq, msg);
+    sprintf(arg, "\"arg\":{\"name\":\"%s\", \"funarg\":%s, \"retid\":%d, "
+            "  \"retaddr\": \"%s\" }",
+            name_s, mv_value_to_str(farg_v), retid, mv_message_selfaddr());
+    fprintf(stdout, "MQSEND: FUNC_CALL_RET %s\n", arg);
+    mv_message_send(destaddr, MV_MESSAGE_FUNC_CALL_RET, arg);
     free(dev_s);
     return _EVAL_SUSPEND;
   default:
@@ -537,16 +519,11 @@ int _eval_call_return(mvrt_instr_t *instr, mvrt_context_t *ctx)
   int retid = mv_value_int_get(retid_v);
   const char *retaddr = mv_value_string_get(retaddr_v);
 
-  static char msg[4096];
-  sprintf(msg, 
-          "%s {"
-          " \"tag\":\"REPLY\", "
-          " \"src\":\"%s\", "
-          " \"arg\":"
-          "{ \"retid\": %d, \"retval\" : %s } }",
-          retaddr, mv_mqueue_addr(mq), retid, mv_value_to_str(retval_v));
-  fprintf(stdout, "REPLY: %s\n", msg);
-  mv_mqueue_put(mq, msg);
+  static char arg[4096];
+  sprintf(arg, "\"arg\":{\"retid\":%d, \"retval\":%s}",
+          retid, mv_value_to_str(retval_v));
+  fprintf(stdout, "REPLY: %s\n", arg);
+  mv_message_send(retaddr, MV_MESSAGE_REPLY, arg);
 
   return ip + 1;
 }

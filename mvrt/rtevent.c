@@ -10,7 +10,7 @@
 #include <mv/device.h>    /* mv_device_self */
 #include <mv/value.h>     /* mv_value_t */
 #include "rtevqueue.h"    /* mvrt_evqueue_instance */
-#include "rtevent.h"
+#include "rtevent.h"      /* mvrt_event_t */
 #include "rtobj.h"
 
 

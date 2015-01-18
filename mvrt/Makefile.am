@@ -29,8 +29,7 @@ mvrt_CPPFLAGS = -I$(top_srcdir)/include
 
 mvrt_CFLAGS = -rdynamic
 
-mvrt_LDADD =  ../libmq/libmq.a ../libmv/libmv.a -lpthread -lzmq -ljsmn \
-	-ldl -lrt
+mvrt_LDADD =  ../libmv/libmv.a -lpthread -lzmq -ljsmn -ldl -lrt
 
 
 

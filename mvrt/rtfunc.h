@@ -6,8 +6,8 @@
 #ifndef MVRT_FUNC_H
 #define MVRT_FUNC_H
 
-#include <common/defs.h>   /* mv_prt_t */
-#include "rtcode.h"        /* mvrt_code_t */
+#include <mv/defs.h>          /* mv_prt_t */
+#include "rtcode.h"           /* mvrt_code_t */
 
 
 typedef int (*mvrt_native_func1_t)(int);

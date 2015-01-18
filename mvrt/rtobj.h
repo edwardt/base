@@ -7,7 +7,8 @@
 #ifndef MVRT_OBJ_H
 #define MVRT_OBJ_H
 
-#include <common/defs.h>
+#include <mv/defs.h>         /* mv_uint32_t */
+
 
 /* An MV runtime object is a property, an event, a function, or a reactor. */
 #define MVRT_OBJ_PROP      0
@@ -17,16 +18,16 @@
 #define MVRT_OBJ_NTAGS     4
 
 typedef struct mvrt_obj {
-  char *dev;                  /* name of device: NULL for local objects */
-  char *name;                 /* name of the object */
-  mv_uint32_t hash;           /* hash computed from dev and name */
+  char *dev;                 /* name of device: NULL for local objects */
+  char *name;                /* name of the object */
+  mv_uint32_t hash;          /* hash computed from dev and name */
 
-  unsigned tag   : 3;         /* MVRT_OBJ_EVENT, etc. */
-  unsigned used  : 1;         /* need to be saved */
-  unsigned sys   : 1;         /* system object: NOT used for now */
-  unsigned pad   : 28;        /* pad */
+  unsigned tag   : 3;        /* MVRT_OBJ_EVENT, etc. */
+  unsigned used  : 1;        /* need to be saved */
+  unsigned sys   : 1;        /* system object: NOT used for now */
+  unsigned pad   : 28;       /* pad */
 
-  void *data;                 /* object-specific data */
+  void *data;                /* object-specific data */
 } mvrt_obj_t;
 
 

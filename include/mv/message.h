@@ -7,8 +7,8 @@
 #ifndef MV_MESSAGE_H
 #define MV_MESSAGE_H
 
-#include <common/defs.h>   /* mv_uint64_t */
-#include <mv/value.h>      /* mv_value_t */
+#include <mv/defs.h>     /* mv_uint64_t */
+#include <mv/value.h>    /* mv_value_t */
 
 /* A message transferred between devices is a JSON message. Such messages
    represent either service requests or replies to requests. An example 
@@ -21,7 +21,7 @@
         "funarg" : [ 10 12 ]
       },
       "src": {
-        "dev": "myiphone001",
+        "dev": "cj2005.ipone4s",
         "addr": "tcp://152.38.9.193:5555"
       }
     }
@@ -80,12 +80,40 @@ typedef struct {
 } mv_message_t;
 
 
-/* Creates a mv_message_t data by parsing the given JSON string. Upon 
-   faliure, NULL is returned. */
-extern mv_message_t *mv_message_parse(char *s);
+/* 
+ * Use following functions for sending or receiving a message. Depending 
+ * on the implementation, messages can be sent immediately or put on a queue.
+ */
+
+/* Sends the given message the given device. The src field of the message 
+   will be automatically constructed by. Returns 0 on success and -1 on 
+   failure. */
+extern int mv_message_send_value(const char *addr, mv_mtag_t t, mv_value_t arg);
+extern int mv_message_send(const char *addr, mv_mtag_t t, char *arg);
+
+/* Receives a string message. This is a blocking receive and will return
+   only when a message was received. The caller is responsible for 
+   freeing the returned string. Returns NULL on failure. */
+extern char *mv_message_recv();
+
+/* Creates a mv_message_t object by parsing the given JSON string. Upon 
+   faliure, NULL is returned. The caller is responsible for deleting
+   the message object by calling mv_message_delet.
+
+   TODO: Do we need this? Should the mv_message_recv directly return
+   mv_message_t object? */
+extern mv_message_t *mv_message_parse(char *m);
 
 /* Deletes the given message. */
 extern void mv_message_delete(mv_message_t *m);
+
+
+/*
+ * Utility functions mostly for debugging.
+ */
+
+/* Returns the address of the local device. */
+const char *mv_message_selfaddr();
 
 /* Returns the string for the given message tag. For example, for 
    MV_MESSAGE_FUNC_CALL, "FUNC_CALL" will be returned. Returns NULL on

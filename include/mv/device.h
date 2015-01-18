@@ -8,18 +8,17 @@
 #ifndef MV_DEVICE_H
 #define MV_DEVICE_H
 
-#include <common/defs.h>    /* mv_ptr_t */
+
+#include <mv/defs.h>     /* mv_ptr_t */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*
- * NOTE: For now, actual device (persistent) database exists in a central
- * server. So, this device DPI is used to access the database server to
- * lookup device information -- in particular, what is the current address
- * of the given device, if signed on.
- */
+/* NOTE: For now, actual device (persistent) database exists in a central
+   server. So, this device DPI is used to access the database server to
+   lookup device information -- in particular, what is the current address
+   of the given device, if signed on. */
 
 /* Initializes the device layer. Be sure to call at time 0. */
 extern int mv_device_service_init(const char *dev, const char *file);

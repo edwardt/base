@@ -7,7 +7,7 @@
 #define MVRT_EVENT_H
 
 #include <stdlib.h>       /* size_t */
-#include <common/defs.h>  /* mv_uint32_t */
+#include <mv/defs.h>      /* mv_uint32_t */
 #include <mv/value.h>     /* mv_value_t */
 
 
@@ -16,8 +16,8 @@ typedef void mvrt_event_t;
 
 /* Event instance. */
 typedef struct mvrt_eventinst {
-  mvrt_event_t *type;        /* event */
-  mv_value_t data;           /* event payload */
+  mvrt_event_t *type;     /* event */
+  mv_value_t data;        /* event payload */
 } mvrt_eventinst_t;
 
 

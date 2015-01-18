@@ -6,7 +6,8 @@
 #ifndef MVRT_EVQUEUE_H
 #define MVRT_EVQUEUE_H
 
-#include "rtevent.h"
+#include "rtevent.h"    /* mvrt_eventinst_t */
+
 
 typedef void mvrt_evqueue_t;
 

@@ -12,9 +12,8 @@
 #include <sys/wait.h>        /* waitpid */
 #include <sys/stat.h>        /* waitpid */
 #include <signal.h>          /* sigaction */
-
-#include <mq/mqueue.h>       /* mv_mqueue_t */
 #include <mv/device.h>       /* mv_device_self */
+#include <mv/message.h>      /* mv_message_selfaddr */
 
 #include "rtdecoder.h"       /* mvrt_decoder_new */
 #include "rtsched.h"         /* mvrt_sched_new */
@@ -40,9 +39,6 @@ static void sig_child(int signo)
   }
   return;
 }
-
-/* for now, global */
-mv_mqueue_t *mq = NULL;
 
 /* 
  * the main entry point
@@ -71,20 +67,10 @@ int main(int argc, char *argv[])
   /* load system properties, reactors, etc. */
   mvrt_obj_loadfile("etc/syslib.dat");
 
-  /* 
-   * initialize message queue handler 
-   */
-  mq = mv_mqueue_init(DEFAULT_PORT);
-  if (mv_mqueue_run(mq) == -1) {
-    fprintf(stderr, "mv_mqueue_run: failed.\n");
-    exit(1);
-  }
-  fprintf(stdout, "Message queue thread started...\n");
-
   /*
    * device sign using the MQ address
    */
-  mv_device_signon(self, mv_mqueue_addr(mq));
+  mv_device_signon(self, mv_message_selfaddr());
   fprintf(stdout, "Device %s signed on at %s.\n", self, mv_device_addr(self));
 
   /* 
@@ -96,7 +82,7 @@ int main(int argc, char *argv[])
   /*
    * initialize message decoder 
    */
-  mvrt_decoder_t *mf = mvrt_decoder(mq, evq);
+  mvrt_decoder_t *mf = mvrt_decoder(evq);
   if (mvrt_decoder_run(mf) == -1) {
     fprintf(stderr, "mvrt_deocoder_run: failed.\n");
     exit(1);

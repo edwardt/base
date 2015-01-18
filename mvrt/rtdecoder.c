@@ -15,7 +15,6 @@
 
 
 typedef struct {
-  mv_mqueue_t *mq;
   mvrt_evqueue_t *evq;
   pthread_t thr;
 } _decoder_t;
@@ -27,7 +26,6 @@ static mvrt_eventinst_t *_decoder_decode(mv_message_t *mvmsg);
 void *_decoder_thread(void *arg)
 {
   _decoder_t *mf = (_decoder_t *) arg;      /* decoder */
-  mv_mqueue_t *mq = mf->mq;                 /* message queue */
   mvrt_evqueue_t *evq = mf->evq;            /* event queue */
 
   char *str ;                               /* message string from mq */
@@ -43,7 +41,7 @@ void *_decoder_thread(void *arg)
 
   
   while (1) {
-    char *str = mv_mqueue_get(mq);
+    char *str = mv_message_recv();
     if (!str) {
       // sleep for 5ms
       nanosleep(&ts, NULL);
@@ -181,7 +179,7 @@ mvrt_eventinst_t *_decoder_decode(mv_message_t *mvmsg)
 /*
  * Functions for the decoder API.
  */
-mvrt_decoder_t *mvrt_decoder(mv_mqueue_t *mq, mvrt_evqueue_t *evq)
+mvrt_decoder_t *mvrt_decoder(mvrt_evqueue_t *evq)
 {
   _decoder_init();
 
@@ -189,7 +187,6 @@ mvrt_decoder_t *mvrt_decoder(mv_mqueue_t *mq, mvrt_evqueue_t *evq)
   if (!mf)
     return NULL;
 
-  mf->mq = mq;
   mf->evq = evq;
 
   return mf;

@@ -6,7 +6,7 @@
 #ifndef MVRT_PROP_H
 #define MVRT_PROP_H
 
-#include <common/defs.h>   /* mv_ptr_t */
+#include <mv/defs.h>       /* mv_ptr_t */
 #include <mv/value.h>      /* mv_value_t */
 
 typedef void mvrt_prop_t;

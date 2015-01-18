@@ -7,7 +7,7 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <common/defs.h>
+#include <mv/defs.h>
 #include "mvc_visitor.hh"
 
 namespace mvc {

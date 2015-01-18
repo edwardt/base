@@ -13,6 +13,7 @@ mvc_SOURCES = \
 	mvc_stm.cc \
 	mvc_module.cc \
 	mvc_print.cc \
+	mvc_iterator.cc \
 	mvc_parser_driver.cc \
 	mvc_parser.cc \
 	mvc_main.cc

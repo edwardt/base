@@ -6,7 +6,7 @@
 #ifndef MVRT_OPER_H
 #define MVRT_OPER_H
 
-#include <common/defs.h>   /* mv_ptr_t */
+#include <mv/defs.h>      /* mv_ptr_t */
 
 typedef enum {
   /* nop */

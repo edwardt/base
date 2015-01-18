@@ -7,7 +7,7 @@
 #define MVRT_REACTOR_H
 
 #include <stdio.h>          /* FILE */
-#include <common/defs.h>    /* mv_uint32_t */
+#include <mv/defs.h>        /* mv_uint32_t */
 #include "rtevent.h"        /* mvrt_event_t */
 #include "rtcode.h"         /* mvrt_code_t */
 

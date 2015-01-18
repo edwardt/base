@@ -6,7 +6,8 @@
 #ifndef MV_VALUE_H
 #define MV_VALUE_H
 
-#include <common/defs.h>  /* mv_ptr_t */
+#include <mv/defs.h>       /* mv_ptr_t */
+
 
 /* opaque pointer to value */
 typedef mv_ptr_t mv_value_t;
@@ -35,7 +36,7 @@ int mv_value_print(mv_value_t v);
 char *mv_value_to_str(mv_value_t v);
 mv_value_t mv_value_from_str(const char *s);
 
-/* initial, invalid value */
+/* initial (invalid) value */
 extern mv_value_t mv_value_init();
 
 /* null */
@@ -66,7 +67,7 @@ extern mv_value_t mv_value_cons_cdr(mv_value_t cons);
 extern mv_value_t mv_value_cons_setcar(mv_value_t cons, mv_value_t v);
 extern mv_value_t mv_value_cons_setcdr(mv_value_t cons, mv_value_t v);
 
-/* dictionaries */
+/* key-value map */
 extern mv_value_t mv_value_map();
 extern mv_value_t mv_value_map_lookup(mv_value_t m, mv_value_t k);
 extern mv_value_t mv_value_map_add(mv_value_t m, mv_value_t k, mv_value_t v);
