@@ -6,8 +6,6 @@
 #ifndef MVSH_COMMAND_H
 #define MVSH_COMMAND_H
 
-#include <mq/mqueue.h>    /* mv_mqueue_t */
-
 typedef enum {
   MVSH_CMD_PROP_GET,
   MVSH_CMD_PROP_SET,
@@ -19,7 +17,7 @@ typedef enum {
 
 
 /* Processes the given command. */
-extern int mvsh_command_process(char *line, mv_mqueue_t *mq);
+extern int mvsh_command_process(char *line);
 
 extern int mvsh_command_tag(const char *s);
 extern int mvsh_command_nargs(mvsh_cmdtag_t cmd);

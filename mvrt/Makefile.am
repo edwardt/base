@@ -32,7 +32,6 @@ mvrt_CFLAGS = -rdynamic
 mvrt_LDADD =  ../libmv/libmv.a -lpthread -lzmq -ljsmn -ldl -lrt
 
 
-
 check_SCRIPTS = greptest.sh
 TESTS = $(check_SCRIPTS)
 

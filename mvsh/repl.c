@@ -8,21 +8,21 @@
 #include "command.h"   /* mvsh_command_process */
 #include "repl.h"      /* mvsh_repl */
 
-#define MAX_LINE 4096
+#define MVSH_PROMPT     "#"
+#define MVSH_MAX_LINE   4096
 
-int mvsh_repl(mv_mqueue_t *mq)
+int mvsh_repl()
 {
-  char line[MAX_LINE];
+  char line[MVSH_MAX_LINE];
   char *charp;
   while (1) {
     fprintf(stdout, "%s ", MVSH_PROMPT);
-    
 
-    if (fgets(line, MAX_LINE, stdin)) {
+    if (fgets(line, MVSH_MAX_LINE, stdin)) {
       if ((charp = strchr(line, '\n')) != NULL)
         *charp = '\0';
 
-      mvsh_command_process(line, mq);
+      mvsh_command_process(line);
     }
   }
 

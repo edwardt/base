@@ -6,7 +6,7 @@
 #include <string.h>      /* strchr */
 #include <mv/device.h>   /* mv_device_addr */
 #include <mv/value.h>    /* mv_value_t */
-#include <mq/mqueue.h>   /* mv_mqueue_put */
+#include <mv/message.h>  /* mv_message_send */
 #include "command.h"
 
 struct {
@@ -25,7 +25,7 @@ struct {
 
 
 static int _command_tokenize(char *line, char **cmd, char **a0, char **a1);
-static int _command_prop_get(char *arg0, mv_mqueue_t *mq);
+static int _command_prop_get(char *arg0);
 static int _command_help();
 
 
@@ -45,7 +45,7 @@ int _command_tokenize(char *line, char **cmd, char **arg0, char **arg1)
   return 0;
 }
 
-static int _command_prop_get(char *arg0, mv_mqueue_t *mq)
+static int _command_prop_get(char *arg0)
 {
   char *charp;
   if (!arg0 || ((charp = strstr(arg0, ":")) == NULL) || charp == arg0) {
@@ -61,19 +61,14 @@ static int _command_prop_get(char *arg0, mv_mqueue_t *mq)
 
   const char *destaddr = mv_device_addr(dev);
 
-  char msg[4096];
-  sprintf(msg, 
-          "%s {"
-          " \"tag\":\"PROP_GET\", "
-          " \"src\":\"%s\", "
-          " \"arg\":"
-          "{ \"name\": \"%s\" \"retid\" : 0, \"retaddr\": \"%s\" } }",
-          destaddr, mv_mqueue_addr(mq), prop, mv_mqueue_addr(mq));
-  fprintf(stdout, "request: %s\n", msg);
-  while (mv_mqueue_put(mq, msg) != 0) ;
+  char arg[4096];
+  sprintf(arg, "\"arg\":{\"name\":\"%s\", \"retid\":0, \"retaddr\": \"%s\"}",
+          prop, mv_message_selfaddr());
+  fprintf(stdout, "PROP_GET: %s\n", arg);
+  mv_message_send(destaddr, MV_MESSAGE_PROP_GET, arg);
 
   char *reply = NULL;
-  while ((reply = mv_mqueue_get(mq)) == NULL) ;
+  while ((reply = mv_message_recv()) == NULL) ;
   fprintf(stdout, "reply: %s\n", reply);
 
   mv_value_t reply_v = mv_value_from_str(reply);
@@ -88,7 +83,7 @@ static int _command_prop_get(char *arg0, mv_mqueue_t *mq)
   return 0;
 }
 
-static int _command_prop_set(char *arg0, char *arg1, mv_mqueue_t *mq)
+static int _command_prop_set(char *arg0, char *arg1)
 {
   char *charp;
   if (!arg0 || ((charp = strstr(arg0, ":")) == NULL) || charp == arg0) {
@@ -108,20 +103,13 @@ static int _command_prop_set(char *arg0, char *arg1, mv_mqueue_t *mq)
 
   const char *destaddr = mv_device_addr(dev);
 
-  char msg[4096];
-  sprintf(msg, 
-          "%s {"
-          " \"tag\":\"PROP_SET\", "
-          " \"src\":\"%s\", "
-          " \"arg\":"
-          "{ \"name\": \"%s\" \"value\" : %s } }",
-          destaddr, mv_mqueue_addr(mq), prop, arg1);
-  fprintf(stdout, "request: %s\n", msg);
-  mv_mqueue_put(mq, msg);
+  char arg[4096];
+  sprintf(arg, " \"arg\": {\"name\":\"%s\", \"value\":%s}", prop, arg1);
+  fprintf(stdout, "PROP_SET: %s\n", arg);
+  mv_message_send(destaddr, MV_MESSAGE_PROP_SET, arg);
 
   return 0;
 }
-
 
 int _command_help()
 {
@@ -137,7 +125,7 @@ int _command_help()
 /*
  * Functions for command interface.
  */
-int mvsh_command_process(char *line, mv_mqueue_t *mq)
+int mvsh_command_process(char *line)
 {
   char *cmd = NULL;
   char *arg0 = NULL;
@@ -152,10 +140,10 @@ int mvsh_command_process(char *line, mv_mqueue_t *mq)
     
   switch (mvsh_command_tag(cmd)) {
   case MVSH_CMD_PROP_GET:
-    _command_prop_get(arg0, mq);
+    _command_prop_get(arg0);
     break;
   case MVSH_CMD_PROP_SET:
-    _command_prop_set(arg0, arg1, mq);
+    _command_prop_set(arg0, arg1);
     break;
   case MVSH_CMD_HELP:
     _command_help();
