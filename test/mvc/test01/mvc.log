@@ -1,0 +1,10 @@
+module test {
+  process r0()   {
+    a = (ev.val0 + ev.val1);
+  }
+;
+  variable p1; 
+  variable p0; 
+  event e1; 
+  event e0; 
+};
