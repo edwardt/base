@@ -1,7 +1,7 @@
 /**
- * @file evqueue.h
+ * @file rtevqueue.h
  *
- * @brief Interface to event queues.
+ * @brief Interface to runtime event queues.
  */
 #ifndef MVRT_EVQUEUE_H
 #define MVRT_EVQUEUE_H

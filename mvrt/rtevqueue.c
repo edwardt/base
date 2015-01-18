@@ -1,5 +1,5 @@
 /**
- * @file evqueue.c
+ * @file rtevqueue.c
  *
  * @author cjeong
  */
@@ -9,7 +9,7 @@
 #include <time.h>        /* nanosleep */
 #include <errno.h>       /* errno */
 #include <assert.h>      /* assert */
-#include "evqueue.h"
+#include "rtevqueue.h"
 
 
 #define MAX_EVENT_QUEUE 4096

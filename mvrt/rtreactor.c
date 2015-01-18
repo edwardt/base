@@ -5,7 +5,7 @@
 #include <stdlib.h>      /* malloc */
 #include <string.h>      /* strstr, strdup */
 #include <assert.h>      /* assert */
-#include "code.h"        /* mvrt_code_t */
+#include "rtcode.h"      /* mvrt_code_t */
 #include "rtevent.h"     /* mvrt_event_lookup */
 #include "rtreactor.h"
 #include "rtobj.h"

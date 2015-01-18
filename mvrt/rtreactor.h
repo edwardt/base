@@ -9,7 +9,7 @@
 #include <stdio.h>          /* FILE */
 #include <common/defs.h>    /* mv_uint32_t */
 #include "rtevent.h"        /* mvrt_event_t */
-#include "code.h"           /* mvrt_code_t */
+#include "rtcode.h"         /* mvrt_code_t */
 
 
 /* Opaque pointer to reactors. */
