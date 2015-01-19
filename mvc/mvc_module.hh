@@ -25,7 +25,7 @@ public:
   SymbolExp *getName() { return _name; }
   
   void addStm(Stm *stm) {
-    _stms.push_back(stm);
+    _stms.push_front(stm);
   }
   std::list<Stm *>& getStms() { return _stms; }
 

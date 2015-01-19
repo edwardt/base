@@ -93,6 +93,20 @@ public:
   }
 
   void visitFuncallExp(FuncallExp *e) {
+    Util::print(_os, e->getName(), 0); 
+
+    _os << "(";
+    std::list<Exp *> *args = e->getArgs();
+    std::list<Exp *>::iterator iter;
+    for (iter = args->begin(); iter != args->end(); ) {
+      Exp *arg = static_cast<Exp *>(*iter);
+      Util::print(_os, arg, 0); 
+      ++iter;
+      if (iter != args->end()) {
+        _os << ", ";
+      }
+    }
+    _os << ")";
   }
 
   void visitTimeExp(TimeExp *e) {
@@ -128,10 +142,21 @@ public:
 
   void visitProcdefStm(ProcdefStm *s) {
     indent();
-    _os << "process ";
+    _os << "reactor ";
     Util::print(_os, s->getName(), getIndent());
     _os << "(";
+    std::list<Exp *>& events = s->getEvents();
+    std::list<Exp *>::iterator iter;
+    for (iter = events.begin(); iter != events.end(); ) {
+      Exp *event = static_cast<Exp *>(*iter);
+      Util::print(_os, event, 0); 
+      ++iter;
+      if (iter != events.end()) {
+        _os << ", ";
+      }
+    }
     _os << ") ";
+
     Util::print(_os, s->getBody(), getIndent());
     _os << ";" << std::endl;
   }

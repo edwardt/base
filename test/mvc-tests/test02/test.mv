@@ -10,7 +10,8 @@ module test {
   };
 
   reactor r0 (ev) {
-    return ;
-    #set =  foo(ev.val0, ev.val1) + p0;
+    dev1:foo(1, 2, 3);
+
+    set =  foo(ev.val0, ev.val1) + p0;
   };
 };

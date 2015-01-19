@@ -41,7 +41,7 @@ alnum   [A-Za-z0-9]
 digit   [0-9]
 quote   [\"]
 id      {alpha}{alnum}*
-mvname  {id}(\:{id})?
+name    {id}(\:{id})?
 number  {digit}*("."{digit}*)?
 strchar [^\"\n\\]
 escape  "\\."
@@ -117,9 +117,9 @@ newline [\n]
                             return token::MVC_TOK_NUMBER; 
                           }
 
-{id}                      { 
+{name}                    { 
                             yylval->strval = new std::string(yytext);
-                            return token::MVC_TOK_ID; 
+                            return token::MVC_TOK_NAME; 
                           }
 
 {string}                  {  

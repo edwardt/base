@@ -93,7 +93,7 @@
 %token MVC_TOK_AND        "&&"
 %token MVC_TOK_OR         "||"
 
-%token MVC_TOK_ID
+%token MVC_TOK_NAME
 %token MVC_TOK_STRING
 %token MVC_TOK_NUMBER
 
@@ -151,7 +151,7 @@
 %start module;
 
 module:
-    MVC_TOK_MODULE identifier MVC_TOK_LBRACE one_or_more_stmdefs 
+    MVC_TOK_MODULE name MVC_TOK_LBRACE one_or_more_stmdefs 
     MVC_TOK_RBRACE MVC_TOK_SEMICOLON
     {
       Module *module = driver.getModule();
@@ -234,7 +234,7 @@ stm:
     {
       $<stmval>$ = $<stmval>1;
     }
-  | stm_funccall
+  | stm_funcall
     {
       $<stmval>$ = $<stmval>1;
     }
@@ -260,7 +260,7 @@ stm:
  * event definition
  */
 stm_eventdef:
-    MVC_TOK_EVENT identifier MVC_TOK_SEMICOLON
+    MVC_TOK_EVENT name MVC_TOK_SEMICOLON
     { 
       mvc::StmFactory *sf = StmFactory::getInstance();
       $<stmval>$ = sf->createEventdef(static_cast<SymbolExp *>($<expval>2));
@@ -271,7 +271,7 @@ stm_eventdef:
  * variable definition
  */
 stm_vardef:
-    MVC_TOK_PROP identifier MVC_TOK_SEMICOLON
+    MVC_TOK_PROP name MVC_TOK_SEMICOLON
     { 
       mvc::StmFactory *sf = StmFactory::getInstance();
       $<stmval>$ = sf->createVardef(static_cast<SymbolExp *>($<expval>2));
@@ -282,37 +282,14 @@ stm_vardef:
  * function definition
  */
 stm_fundef:
-    MVC_TOK_FUNCTION identifier MVC_TOK_LPAREN param_list MVC_TOK_RPAREN 
+    MVC_TOK_FUNCTION name MVC_TOK_LPAREN name_list MVC_TOK_RPAREN 
     stm_block MVC_TOK_SEMICOLON
     { 
       mvc::StmFactory *sf = StmFactory::getInstance();
       mvc::FundefStm *fundef = NULL;
       fundef = sf->createFundef(static_cast<SymbolExp *>($<expval>2),
-                                $<explval>4,static_cast<Stm *>($<stmval>6));
+                                $<explval>4, static_cast<Stm *>($<stmval>6));
       $<stmval>$ = fundef;
-    }
-  ;
-
-param_list:
-    one_or_more_identifiers
-    {
-      $<explval>$ = $<explval>1;
-    }
-  ;
-
-one_or_more_identifiers:
-    identifier
-    {
-      std::list<mvc::Exp *> *exps = new std::list<mvc::Exp *>;
-      SymbolExp *name = static_cast<SymbolExp *>($<expval>1);
-      exps->push_back(name);
-      $<explval>$ = exps;
-    }
-  | identifier MVC_TOK_COMMA one_or_more_identifiers
-    {
-      SymbolExp *name = static_cast<SymbolExp *>($<expval>1);
-      $<explval>3->push_back(name);
-      $<explval>$ = $<explval>3;
     }
   ;
 
@@ -320,36 +297,16 @@ one_or_more_identifiers:
  * reactor definition
  */
 stm_procdef:
-    MVC_TOK_REACTOR identifier event_list stm_block MVC_TOK_SEMICOLON
+    MVC_TOK_REACTOR name MVC_TOK_LPAREN name_list MVC_TOK_RPAREN
+    stm_block MVC_TOK_SEMICOLON
     { 
       mvc::StmFactory *sf = StmFactory::getInstance();
       mvc::ProcdefStm *procdef = NULL;
       procdef = sf->createProcdef(static_cast<SymbolExp *>($<expval>2),
-                                  $<explval>3,
-                                  static_cast<BlockStm *>($<stmval>4));
+                                  $<explval>4,
+                                  static_cast<BlockStm *>($<stmval>6));
       delete $<explval>3;
       $<stmval>$ = procdef;
-    }
-  ;
-
-event_list:
-    MVC_TOK_LPAREN one_or_more_events MVC_TOK_RPAREN
-    {
-      $<explval>$ = $<explval>2;
-    }
-  ;
-
-one_or_more_events:
-    identifier
-    {
-      std::list<mvc::Exp *> *exps = new std::list<mvc::Exp *>;
-      exps->push_back($<expval>1);
-      $<explval>$ = exps;
-    }
-  | identifier one_or_more_events
-    {
-      $<explval>2->push_back($<expval>1);
-      $<explval>$ = $<explval>2;
     }
   ;
 
@@ -470,7 +427,7 @@ assign:
 /*
  * function call statement
  */
-stm_funccall:
+stm_funcall:
    exp_funcall MVC_TOK_SEMICOLON
    {
       mvc::StmFactory *sf = StmFactory::getInstance();
@@ -569,11 +526,11 @@ exp_opt:
   ;
 
 exp_varref:
-    identifier
+    name
     {
       $<expval>$ = $<expval>1;
     }
-  | exp MVC_TOK_DOT identifier %prec MVC_TOK_DOT
+  | exp MVC_TOK_DOT name %prec MVC_TOK_DOT
     {
       mvc::ExpFactory *ef = ExpFactory::getInstance();
       SymbolExp *symbol = static_cast<SymbolExp *>($<expval>3);
@@ -652,40 +609,62 @@ exp_binary:
   ;
 
 exp_funcall:
-    identifier MVC_TOK_LPAREN arg_list MVC_TOK_RPAREN
+    name MVC_TOK_LPAREN exp_list MVC_TOK_RPAREN
     {
       mvc::ExpFactory *ef = ExpFactory::getInstance();
-      SymbolExp *symbol = static_cast<SymbolExp *>($<expval>3);
+      SymbolExp *symbol = static_cast<SymbolExp *>($<expval>1);
       $<expval>$ = ef->createFuncall(symbol, $<explval>3);
     }
   ; 
 
-arg_list:
-    one_or_more_mvnames
+exp_list:    
+    one_or_more_exps
     {
       $<explval>$ = $<explval>1;
     }
   ;
 
-one_or_more_mvnames:
-    identifier
+one_or_more_exps:
+    exp
     {
       std::list<mvc::Exp *> *exps = new std::list<mvc::Exp *>;
       SymbolExp *name = static_cast<SymbolExp *>($<expval>1);
       exps->push_back(name);
       $<explval>$ = exps;
     }
-  | identifier MVC_TOK_COMMA one_or_more_mvnames
+  | exp MVC_TOK_COMMA one_or_more_exps
     {
-      SymbolExp *name = static_cast<SymbolExp *>($<expval>3);
-      $<explval>3->push_back(name);
+      $<explval>3->push_front($<expval>1);
       $<explval>$ = $<explval>3;
     }
   ;
 
-  
-identifier:
-    MVC_TOK_ID
+
+name_list:
+    one_or_more_names
+    {
+      $<explval>$ = $<explval>1;
+    }
+  ;
+
+one_or_more_names:
+    name
+    {
+      std::list<mvc::Exp *> *exps = new std::list<mvc::Exp *>;
+      SymbolExp *name = static_cast<SymbolExp *>($<expval>1);
+      exps->push_back(name);
+      $<explval>$ = exps;
+    }
+  | name MVC_TOK_COMMA one_or_more_names
+    {
+      SymbolExp *name = static_cast<SymbolExp *>($<expval>1);
+      $<explval>3->push_front(name);
+      $<explval>$ = $<explval>3;
+    }
+  ;
+
+name:
+    MVC_TOK_NAME
     {
       mvc::ExpFactory *ef = ExpFactory::getInstance();
       SymbolExp *symbol = ef->createSymbol(*$<strval>1);

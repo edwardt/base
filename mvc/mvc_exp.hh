@@ -230,7 +230,8 @@ public:
     : Exp(ET_FUNCALL), _name(name), _args(args) { }
   ~FuncallExp() { }
 
-  SymbolExp *getName();
+  SymbolExp *getName() { return _name; }
+  std::list<Exp *> *getArgs() { return _args; }
   
   void accept(ExpVisitor& v) { v.visitFuncallExp(this); }
 
