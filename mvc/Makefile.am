@@ -4,7 +4,7 @@ BUILT_SOURCES =
 
 AM_LFLAGS = --header-file=mvc_scan.hh
 
-AM_YFLAGS =
+AM_YFLAGS = --debug --verbose
 
 bin_PROGRAMS = mvc
 

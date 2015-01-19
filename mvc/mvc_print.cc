@@ -136,7 +136,7 @@ public:
     _os << ";" << std::endl;
   }
 
-  void visitFuncdefStm(FuncdefStm *s) {
+  void visitFundefStm(FundefStm *s) {
     indent();
     _os << "function ";
     Util::print(_os, s->getName(), getIndent());

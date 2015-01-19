@@ -38,7 +38,7 @@ class TypedefStm;
 class EventdefStm;
 class VardefStm;
 class ProcdefStm;
-class FuncdefStm;
+class FundefStm;
 class BlockStm;
 class IfStm;
 class IfElseStm;
@@ -56,7 +56,7 @@ public:
   virtual void visitEventdefStm(EventdefStm *s) = 0;
   virtual void visitVardefStm(VardefStm *s) = 0;
   virtual void visitProcdefStm(ProcdefStm *s) = 0;
-  virtual void visitFuncdefStm(FuncdefStm *s) = 0;
+  virtual void visitFundefStm(FundefStm *s) = 0;
   virtual void visitBlockStm(BlockStm *s) = 0;
   virtual void visitIfStm(IfStm *s) = 0;
   virtual void visitIfElseStm(IfElseStm *s) = 0;

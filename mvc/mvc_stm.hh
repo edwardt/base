@@ -17,7 +17,7 @@ enum StmTag {
   ST_EVENTDEF,   /* event definition */
   ST_VARDEF,     /* variable definition */
   ST_PROCDEF,    /* process definition */
-  ST_FUNCDEF,    /* function definition */
+  ST_FUNDEF,     /* function definition */
   ST_DEFINE,     /* define statement */
 
   /* statements */
@@ -110,18 +110,18 @@ private:
 };
 
 /**
- * @class FuncdefStm
+ * @class FundefStm
  */
-class FuncdefStm : public Stm {
+class FundefStm : public Stm {
 public:
-  FuncdefStm(SymbolExp *name, std::list<Exp *> *params, Stm *body) 
+  FundefStm(SymbolExp *name, std::list<Exp *> *params, Stm *body) 
     : Stm(ST_PROCDEF), _name(name), _params(params), _body(body) {
   }
-  ~FuncdefStm() { 
+  ~FundefStm() { 
     delete _params;
   }
 
-  void accept(StmVisitor& v) { v.visitFuncdefStm(this); }
+  void accept(StmVisitor& v) { v.visitFundefStm(this); }
 
   SymbolExp *getName() { return _name; }
   std::list<Exp *> *getParams() { return _params; }
@@ -350,7 +350,7 @@ public:
   EventdefStm *createEventdef(SymbolExp *exp);
   VardefStm *createVardef(SymbolExp *exp);
   ProcdefStm *createProcdef(SymbolExp *s, std::list<Exp *> *events, Stm *stm);
-  FuncdefStm *createFuncdef(SymbolExp *s, std::list<Exp *> *params, Stm *stm);
+  FundefStm *createFundef(SymbolExp *s, std::list<Exp *> *params, Stm *stm);
 
   /* statements */
   BlockStm *createBlock();

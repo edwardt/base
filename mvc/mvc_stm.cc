@@ -47,11 +47,11 @@ ProcdefStm *StmFactory::createProcdef(SymbolExp *name,
   return proc;
 }
 
-FuncdefStm *StmFactory::createFuncdef(SymbolExp *name,
-                                          std::list<Exp *> *params, 
-                                          Stm *body)
+FundefStm *StmFactory::createFundef(SymbolExp *name,
+                                    std::list<Exp *> *params, 
+                                    Stm *body)
 {
-  FuncdefStm *proc = new FuncdefStm(name, params, body);
+  FundefStm *proc = new FundefStm(name, params, body);
   return proc;
 }
 

@@ -196,7 +196,7 @@ stmdef:
     {
       $<stmval>$ = $<stmval>1;
     }
-  | stm_funcdef
+  | stm_fundef
     {
       $<stmval>$ = $<stmval>1;
     }
@@ -281,13 +281,13 @@ stm_vardef:
 /*
  * function definition
  */
-stm_funcdef:
+stm_fundef:
     MVC_TOK_FUNCTION identifier param_list stm_block MVC_TOK_SEMICOLON
     { 
       mvc::StmFactory *sf = StmFactory::getInstance();
-      mvc::FuncdefStm *fundef = NULL;
-      fundef = sf->createFuncdef(static_cast<SymbolExp *>($<expval>3),
-                                 $<explval>4,static_cast<Stm *>($<stmval>5));
+      mvc::FundefStm *fundef = NULL;
+      fundef = sf->createFundef(static_cast<SymbolExp *>($<expval>3),
+                                $<explval>4,static_cast<Stm *>($<stmval>5));
       $<stmval>$ = fundef;
     }
   ;
