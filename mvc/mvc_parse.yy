@@ -282,12 +282,13 @@ stm_vardef:
  * function definition
  */
 stm_fundef:
-    MVC_TOK_FUNCTION identifier param_list stm_block MVC_TOK_SEMICOLON
+    MVC_TOK_FUNCTION identifier MVC_TOK_LPAREN param_list MVC_TOK_RPAREN 
+    stm_block MVC_TOK_SEMICOLON
     { 
       mvc::StmFactory *sf = StmFactory::getInstance();
       mvc::FundefStm *fundef = NULL;
-      fundef = sf->createFundef(static_cast<SymbolExp *>($<expval>3),
-                                $<explval>4,static_cast<Stm *>($<stmval>5));
+      fundef = sf->createFundef(static_cast<SymbolExp *>($<expval>2),
+                                $<explval>4,static_cast<Stm *>($<stmval>6));
       $<stmval>$ = fundef;
     }
   ;
@@ -309,7 +310,7 @@ one_or_more_identifiers:
     }
   | identifier MVC_TOK_COMMA one_or_more_identifiers
     {
-      SymbolExp *name = static_cast<SymbolExp *>($<expval>3);
+      SymbolExp *name = static_cast<SymbolExp *>($<expval>1);
       $<explval>3->push_back(name);
       $<explval>$ = $<explval>3;
     }

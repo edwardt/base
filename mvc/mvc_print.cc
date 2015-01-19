@@ -121,7 +121,7 @@ public:
 
   void visitVardefStm(VardefStm *s) {
     indent();
-    _os << "variable ";
+    _os << "prop ";
     Util::print(_os, s->getName(), getIndent());
     _os << "; " << std::endl;
   }

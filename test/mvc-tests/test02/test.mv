@@ -5,11 +5,12 @@ module test {
   prop p0;
   prop p1;
 
-#  function foo(arg0, arg1) {
-#    return arg0 + arg1; 
-#  };
+  function foo(arg0, arg1) {
+    return;
+  };
 
   reactor r0 (ev) {
-    dev:set =  foo(ev.val0, ev.val1) + p0;
+    return ;
+    #set =  foo(ev.val0, ev.val1) + p0;
   };
 };
