@@ -8,20 +8,18 @@
 
 #include <string>
 #include <map>
-#include <mv/value.h>
 #include "mvc_exp.hh"
+#include "mvc_value.hh"
 
 namespace mvc {
 
 /**
- * @class SymbolTable
- *
- * @todo For now, we just regard SymbolTable as a singleton class. Later,
- *       we need to extend this to be a "distributed symbol table".
+ * @class SymTab
  */
-class SymbolTable {
+class SymTab {
 public:
-  static SymbolTable *getInstance();
+  SymTab() { }
+  ~SymTab() { }
 
   Value *lookup(SymbolExp *symbol) {
     std::string& name = symbol->getName();
@@ -36,12 +34,6 @@ public:
     std::string name = symbol->getName();
     _map[name] = value;
   }
-
-private:
-  SymbolTable() { }
-  ~SymbolTable() { }
-
-  static SymbolTable *_instance;
 
 private:
   std::map<std::string, Value *> _map;

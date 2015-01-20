@@ -1,9 +1,5 @@
 /**
  * @file mvc_parser.cc
- *
- * @brief Interface to MVC parser.
- *
- * @author cjeong
  */
 #include "mvc_parser_driver.hh" 
 #include "mvc_parser.hh" 

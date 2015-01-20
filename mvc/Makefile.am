@@ -1,10 +1,10 @@
-BUILT_SOURCES = 
+BUILT_SOURCES = mvc_parse.hh
 
 # flags for flex and bison
 
 AM_LFLAGS = --header-file=mvc_scan.hh
 
-AM_YFLAGS = --debug --verbose
+AM_YFLAGS = -d
 
 bin_PROGRAMS = mvc
 
@@ -18,6 +18,7 @@ mvc_SOURCES = \
 	mvc_iterator.cc \
 	mvc_parser_driver.cc \
 	mvc_parser.cc \
+	mvc_analyzer.cc \
 	mvc_main.cc
 
 STRICT_CHECK_C = \

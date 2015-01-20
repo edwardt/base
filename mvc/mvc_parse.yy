@@ -8,10 +8,10 @@
  * -*- part 1: prologue -*-
  */
 %skeleton "lalr1.cc" /* -*- C++ -*- */
-%require "2.5"
+%require "3.0"
 %defines
-%define namespace "mvc::yy"
-%define parser_class_name "Parser"
+%define api.namespace {mvc::yy}
+%define parser_class_name {Parser}
 
 %code top {
 }

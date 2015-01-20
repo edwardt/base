@@ -9,6 +9,7 @@
 #include "mvc_exp.hh"
 #include "mvc_stm.hh"
 #include "mvc_parser.hh"
+#include "mvc_analyzer.hh"
 #include "mvc_util.hh"
 
 using namespace mvc;
@@ -25,6 +26,10 @@ int main(int argc, char *argv[])
 
   Module *mod = Parser::parse(SCT_FILE, std::string(argv[1]));
   Util::print(std::cout, mod);
+
+  SymTab symtab;
+  Analyzer semcheck(mod, &symtab);
+  semcheck.run();
 
   return 0;
 }
