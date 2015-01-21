@@ -1,6 +1,7 @@
 /**
  * @file mvc_analyzer.cc
  */
+#include <cassert>
 #include "mvc_analyzer.hh" 
 #include "mvc_exp.hh" 
 #include "mvc_stm.hh" 
@@ -20,6 +21,8 @@ public:
   int run();
   
 private:
+  int buildSymtab();
+
   int analyzeProp(VardefStm *vardef);
 
 private:
@@ -30,20 +33,47 @@ private:
 
 int AnalyzerImpl::run()
 {
+  buildSymtab();
+  
+  return 0;
+}
+
+int AnalyzerImpl::buildSymtab()
+{
   std::list<Stm *>& stms = _mod->getStms();
   std::list<Stm *>::iterator iter;
   for (iter = stms.begin(); iter != stms.end(); ++iter) {
     Stm *stm = *iter;
-  }
 
-  return 0;
+    switch (stm->getTag()) {
+    case ST_VARDEF: 
+      {
+        VardefStm *vardef = (VardefStm *) stm;
+        
+      }
+      break;
+    case ST_FUNDEF:
+      break;
+    case ST_EVENTDEF:
+      break;
+    case ST_PROCDEF:
+      break;
+    default:
+      assert(0 && "Invalid statement tag.");
+    }
+    if (stm->getTag() == ST_VARDEF)
+      analyzeProp((VardefStm *) stm);
+  }
 }
 
 int AnalyzerImpl::analyzeProp(VardefStm *vardef)
 {
   SymbolExp *sym = vardef->getName();
-  
-  _symtab->add(sym, new Value());
+
+  if (_symtab->add(sym->getName(), new Prop(sym->getName())) == -1) {
+    std::cout << "Prop '" << sym->getName() << "' is already defined." 
+              << std::endl;
+  }
 }
 
 /*

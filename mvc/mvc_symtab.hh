@@ -21,18 +21,20 @@ public:
   SymTab() { }
   ~SymTab() { }
 
-  Value *lookup(SymbolExp *symbol) {
-    std::string& name = symbol->getName();
+  Value *lookup(std::string& name) {
     std::map<std::string, Value *>::iterator iter = _map.find(name);
-    if (iter == _map.end()) { 
+    if (iter == _map.end())
       return NULL;
-    }
+
     return iter->second;
   }
   
-  void add(SymbolExp *symbol, Value *value) {
-    std::string name = symbol->getName();
+  int add(std::string& name, Value *value) {
+    if (lookup(name) != NULL)
+      return -1;
+
     _map[name] = value;
+    return 0;
   }
 
 private:

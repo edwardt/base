@@ -21,6 +21,10 @@ public:
   static void print(std::ostream& os, Exp *exp, size_t indent = 0);
   static void print(std::ostream& os, Stm *stm, size_t indent = 0);
   static void print(std::ostream& os, Module *mod);
+
+  /* Returns a formatted string like sprintf does. */
+  static std::string sformat(const std::string& fmt, ...);
+  
 };
 
 } /* mvc */

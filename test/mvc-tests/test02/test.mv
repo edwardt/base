@@ -4,6 +4,7 @@ module test {
 
   prop p0;
   prop p1;
+  prop p0;
 
   function foo(arg0, arg1) {
     return;

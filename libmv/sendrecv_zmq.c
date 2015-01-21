@@ -279,7 +279,8 @@ void *_mq_output_thread(void *arg)
 
 const char *_mq_selfaddr()
 {
-  static char addr[1024];
+  static char addr_eth[1024];
+  static char addr_wlan[1024];
 
   struct ifaddrs *ifaddr;
   struct ifaddrs *ifa;
@@ -297,14 +298,22 @@ const char *_mq_selfaddr()
       continue;
 
     struct sockaddr_in *paddr = (struct sockaddr_in *) ifa->ifa_addr;
-    if (strcmp(ifa->ifa_name, "eth0"))
-      continue;
-    strcpy(addr, inet_ntoa(paddr->sin_addr));
+    if (!strcmp(ifa->ifa_name, "eth0"))
+      strcpy(addr_eth, inet_ntoa(paddr->sin_addr));
+    if (!strcmp(ifa->ifa_name, "wlan0"))
+      strcpy(addr_wlan, inet_ntoa(paddr->sin_addr));
+      
   }
   
   freeifaddrs(ifaddr);
 
-  return &addr[0];
+  if (strcmp(addr_eth, ""))
+    return &addr_eth[0];
+
+  if (strcmp(addr_wlan, ""))
+    return &addr_wlan[0];
+
+  return NULL;
 }
 
 const char *_mq_getaddr(const char *str)
@@ -331,6 +340,12 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   mqinfo->omq = _mq_new(MAX_MESSAGE_QUEUE);
 
   char s[1024];
+  const char *selfaddr = _mq_selfaddr();
+  if (!selfaddr) {
+    fprintf(stderr, "_mqinfo_init: Failed to get the IP address of host.\n");
+    exit(1);
+  }
+  
   sprintf(s, "tcp://%s:%d", _mq_selfaddr(), port);
   mqinfo->addr = strdup(s);
 
