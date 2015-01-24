@@ -7,6 +7,8 @@
 #ifndef MVC_VALUE_HH
 #define MVC_VALUE_HH
 
+#include "mvc_stm.hh"
+
 namespace mvc {
 
 enum ValueTag {
@@ -26,6 +28,10 @@ public:
   virtual ~Value() { }
   
   ValueTag getTag() { return _tag; }
+  const std::string& getTagstr();
+
+  virtual std::string& getName() = 0;
+
 
 protected:
   ValueTag _tag;
@@ -86,6 +92,20 @@ public:
   
 private:
   std::string _name;
+};
+
+
+/**
+ * @class ValueFactory
+ */
+class ValueFactory {
+public:
+  /** Creates a Value object from VardefStm, FundefStm, etc. */
+  static Value *createValue(Stm *stm);
+
+private:
+  ValueFactory() { }
+  ~ValueFactory() { } 
 };
   
 } /* mvc */

@@ -1,5 +1,7 @@
 /**
  * @file mvc_analyzer.cc
+ *
+ * @brief Performs semantics checking.
  */
 #include <cassert>
 #include "mvc_analyzer.hh" 
@@ -23,7 +25,6 @@ public:
 private:
   int buildSymtab();
 
-  int analyzeProp(VardefStm *vardef);
 
 private:
   Module *_mod;
@@ -45,34 +46,13 @@ int AnalyzerImpl::buildSymtab()
   for (iter = stms.begin(); iter != stms.end(); ++iter) {
     Stm *stm = *iter;
 
-    switch (stm->getTag()) {
-    case ST_VARDEF: 
-      {
-        VardefStm *vardef = (VardefStm *) stm;
-        
-      }
-      break;
-    case ST_FUNDEF:
-      break;
-    case ST_EVENTDEF:
-      break;
-    case ST_PROCDEF:
-      break;
-    default:
-      assert(0 && "Invalid statement tag.");
+    Value *value = ValueFactory::createValue(stm);
+    if (_symtab->add(value->getName(), value) == -1) {
+      std::string s = Util::sformat("Name \"%s\" for is already defined.",
+                                    value->getName().c_str()); 
+      std::cout << s << " :" << value->getTagstr() << std::endl;
+      delete value;
     }
-    if (stm->getTag() == ST_VARDEF)
-      analyzeProp((VardefStm *) stm);
-  }
-}
-
-int AnalyzerImpl::analyzeProp(VardefStm *vardef)
-{
-  SymbolExp *sym = vardef->getName();
-
-  if (_symtab->add(sym->getName(), new Prop(sym->getName())) == -1) {
-    std::cout << "Prop '" << sym->getName() << "' is already defined." 
-              << std::endl;
   }
 }
 

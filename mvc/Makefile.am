@@ -15,9 +15,11 @@ mvc_SOURCES = \
 	mvc_stm.cc \
 	mvc_module.cc \
 	mvc_print.cc \
+	mvc_util.cc \
 	mvc_iterator.cc \
 	mvc_parser_driver.cc \
 	mvc_parser.cc \
+	mvc_value.cc \
 	mvc_analyzer.cc \
 	mvc_main.cc
 
@@ -31,7 +33,8 @@ STRICT_CHECK_CPP = \
 
 mvc_CPPFLAGS = -I$(top_srcdir)/include
 
-mvc_CFLAGS = 
+# use -std=c++11 for gcc 4.7 or later
+mvc_CXXFLAGS = -std=c++0x
 
 mvc_LDADD =  
 

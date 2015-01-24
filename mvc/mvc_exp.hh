@@ -81,14 +81,19 @@ protected:
  */
 class SymbolExp : public Exp {
 public:
-  SymbolExp(const std::string& name) : Exp(ET_SYMBOL), _name(name) { }
+  SymbolExp(const std::string& sym);
   ~SymbolExp() { }
 
+  std::string& getDev() { return _dev; }
   std::string& getName() { return _name; }
   
   void accept(ExpVisitor& v) { v.visitSymbolExp(this); }
 
+  /** Returns true iff symbol denotes a local object. */
+  bool isLocal() { return (_dev == "") ? true : false; }
+
 private:
+  std::string _dev;
   std::string _name;
 };
 

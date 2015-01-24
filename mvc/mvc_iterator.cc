@@ -16,37 +16,32 @@ StmIterator::StmIterator(Stm *stm) : _stm(stm), _pptr(stm), _sptr(NULL)
 
   /* _sptr always points to the next Stm */
   switch (stm->getTag()) {
-  case ST_BLOCK:
-    {
-      BlockStm *block = static_cast<BlockStm *>(stm);
-      std::list<Stm *>& _stms = block->getBody();
-      std::list<Stm *>::iterator iter = _stms.begin();
-    }
+  case ST_BLOCK: {
+    BlockStm *block = static_cast<BlockStm *>(stm);
+    std::list<Stm *>& _stms = block->getBody();
+    std::list<Stm *>::iterator iter = _stms.begin();
     break;
-  case ST_IF:
-    {
-      IfStm *ifs = static_cast<IfStm *>(stm);
-      _sptr = ifs->getStm();
-    }
+  }
+  case ST_IF: {
+    IfStm *ifs = static_cast<IfStm *>(stm);
+    _sptr = ifs->getStm();
     break;
-  case ST_IFELSE:
-    {
-      IfElseStm *ifelse = static_cast<IfElseStm *>(stm);
-      _sptr = ifelse->getThenStm();
-    }
+  }
+  case ST_IFELSE: {
+    IfElseStm *ifelse = static_cast<IfElseStm *>(stm);
+    _sptr = ifelse->getThenStm();
     break;
-  case ST_WHILE:
-    {
-      BlockStm *block = static_cast<BlockStm *>(stm);
-      std::list<Stm *>& _stms = block->getBody();
-      _iter = _stms.begin();
-    }
+  }
+  case ST_WHILE: {
+    BlockStm *block = static_cast<BlockStm *>(stm);
+    std::list<Stm *>& _stms = block->getBody();
+    _iter = _stms.begin();
     break;
-  case ST_FOR:
-    {
-      ForStm *fors = static_cast<ForStm *>(stm);
-    }
+  }
+  case ST_FOR: {
+    ForStm *fors = static_cast<ForStm *>(stm);
     break;
+  }
   case ST_ASSIGN:
   case ST_TRIGGER:
   case ST_RETURN:

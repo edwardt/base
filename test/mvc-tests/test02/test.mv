@@ -10,6 +10,10 @@ module test {
     return;
   };
 
+  function e0(arg0, arg1) {
+    return;
+  };
+
   reactor r0 (ev) {
     dev1:foo(1, 2, 3);
 

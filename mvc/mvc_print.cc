@@ -158,7 +158,6 @@ public:
     _os << ") ";
 
     Util::print(_os, s->getBody(), getIndent());
-    _os << ";" << std::endl;
   }
 
   void visitFundefStm(FundefStm *s) {
@@ -180,7 +179,6 @@ public:
     _os << ") ";
 
     Util::print(_os, s->getBody(), getIndent());
-    _os << ";" << std::endl;
   }
 
   void visitBlockStm(BlockStm *s) {
@@ -194,7 +192,7 @@ public:
     }
     decIndent();
     indent();
-    _os << "}";
+    _os << "};";
     _os << std::endl;
   }
 

@@ -1,9 +1,23 @@
 /**
  * @file mvc_exp.cc
  */
+#include <iostream>
 #include "mvc_exp.hh"
 
 namespace mvc {
+
+
+SymbolExp::SymbolExp(const std::string& sym) : Exp(ET_SYMBOL)
+{
+  std::size_t pos = sym.find(":");
+  if (pos != std::string::npos) {
+    _dev = sym.substr(0, pos);
+    _name = sym.substr(pos + 1);
+  }
+  else 
+    _name = sym;
+}
+
 
 /*
  * ExpFactory

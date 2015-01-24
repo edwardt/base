@@ -23,7 +23,7 @@ public:
   static void print(std::ostream& os, Module *mod);
 
   /* Returns a formatted string like sprintf does. */
-  static std::string sformat(const std::string& fmt, ...);
+  static std::string sformat(const char *fmt, ...);
   
 };
 
