@@ -11,6 +11,12 @@
 
 namespace mvc {
 
+
+enum IterTag {
+  ITER_DFS,     /* depth-first traversal */
+  ITER_BFS      /* breadth-first traversal */
+};
+
 class StmIterator {
 public:
   StmIterator(Stm *stm);
