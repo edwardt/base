@@ -61,7 +61,7 @@ public:
     : Stm(ST_EVENTDEF), _name(name) { }
   ~EventdefStm() { }
 
-  SymbolExp *getName() { return _name; }
+  SymbolExp *getSym() { return _name; }
 
   void accept(StmVisitor& v) { v.visitEventdefStm(this); }
 
@@ -78,7 +78,7 @@ public:
     : Stm(ST_VARDEF), _name(name) { }
   ~VardefStm() { }
 
-  SymbolExp *getName() { return _name; }
+  SymbolExp *getSym() { return _name; }
 
   void accept(StmVisitor& v) { v.visitVardefStm(this); }
 
@@ -99,7 +99,7 @@ public:
 
   void accept(StmVisitor& v) { v.visitProcdefStm(this); }
 
-  SymbolExp *getName() { return _name; }
+  SymbolExp *getSym() { return _name; }
   std::list<Exp *>& getEvents() { return _events; }
   Stm *getBody() { return _body; }
 
@@ -123,7 +123,7 @@ public:
 
   void accept(StmVisitor& v) { v.visitFundefStm(this); }
 
-  SymbolExp *getName() { return _name; }
+  SymbolExp *getSym() { return _name; }
   std::list<Exp *> *getParams() { return _params; }
   Stm *getBody() { return _body; }
 
@@ -328,7 +328,7 @@ public:
     : Stm(ST_DEFINE), _name(name), _def(def) { }
   ~DefineStm() { }
 
-  SymbolExp *getName() { return _name; }
+  SymbolExp *getSym() { return _name; }
   Exp *getDef() { return _def; }
 
   void accept(StmVisitor& v) { v.visitDefineStm(this); }

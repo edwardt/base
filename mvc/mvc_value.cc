@@ -20,37 +20,35 @@ const std::string& Value::getTagstr() {
 }
 
 
-
 /*
  * ValueFactory
  */
-Value *ValueFactory::createValue(Stm *stm)
+Prop *ValueFactory::createProp(const std::string& name)
 {
-  switch (stm->getTag()) {
-  case ST_VARDEF: {
-    VardefStm *vardef = (VardefStm *) stm;
-    Prop *prop = new Prop(vardef->getName()->getName());
-    return prop;
-  }
-  case ST_EVENTDEF: {
-    EventdefStm *evdef = (EventdefStm *) stm;
-    Event *ev = new Event(evdef->getName()->getName());
-    return ev;
-  }
-  case ST_FUNDEF: {
-    FundefStm *fundef = (FundefStm *) stm;
-    Function *fun = new Function(fundef->getName()->getName());
-    return fun;
-  }
-  case ST_PROCDEF: {
-    ProcdefStm *procdef = (ProcdefStm *) stm;
-    Reactor *reactor = new Reactor(procdef->getName()->getName());
-    return reactor;
-  }
-  default:
-    break;
-  }
-  return NULL;
+  Prop *prop = new Prop(name);
+
+  return prop;
+}
+
+Event *ValueFactory::createEvent(const std::string& name)
+{
+  Event *ev = new Event(name);
+
+  return ev;
+}
+
+Function *ValueFactory::createFunction(const std::string& name)
+{
+  Function *fun = new Function(name);
+
+  return fun;
+}
+
+Reactor *ValueFactory::createReactor(const std::string& name)
+{
+  Reactor *reactor = new Reactor(name);
+
+  return reactor;
 }
 
 } /* mvc */

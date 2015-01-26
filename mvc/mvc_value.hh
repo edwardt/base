@@ -100,8 +100,10 @@ private:
  */
 class ValueFactory {
 public:
-  /** Creates a Value object from VardefStm, FundefStm, etc. */
-  static Value *createValue(Stm *stm);
+  static Prop *createProp(const std::string& name);
+  static Event *createEvent(const std::string& name);
+  static Function *createFunction(const std::string& name);
+  static Reactor *createReactor(const std::string& name);
 
 private:
   ValueFactory() { }

@@ -21,7 +21,7 @@ public:
   SymTab() { }
   ~SymTab() { }
 
-  Value *lookup(std::string& name) {
+  Value *lookup(const std::string& name) {
     std::map<std::string, Value *>::iterator iter = _map.find(name);
     if (iter == _map.end())
       return NULL;
@@ -29,7 +29,7 @@ public:
     return iter->second;
   }
   
-  int add(std::string& name, Value *value) {
+  int add(const std::string& name, Value *value) {
     if (lookup(name) != NULL)
       return -1;
 

@@ -80,11 +80,6 @@ bool StmIterator::hasNext()
   return true;
 }
 
-void StmIterator::operator++()
-{
-}
-
-
 Stm *StmIterator::getNext()
 {
   switch (_sptr->getTag()) {
@@ -103,5 +98,41 @@ Stm *StmIterator::getNext()
   }
   return NULL;
 }
+
+StmIterator& StmIterator::next()
+{
+  return *this;
+}
+
+/*
+ * ExpIterator
+ */
+ExpIterator::ExpIterator(Exp *exp)
+{
+}
+
+ExpIterator::ExpIterator(Stm *stm)
+{
+}
+
+ExpIterator::~ExpIterator()
+{
+}
+
+bool ExpIterator::hasNext()
+{
+  return false;
+}
+
+Exp *ExpIterator::getNext()
+{
+  return NULL;
+}
+
+ExpIterator& ExpIterator::next()
+{
+  return *this;
+}
+
 
 } /* mvc */

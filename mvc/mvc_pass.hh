@@ -32,7 +32,7 @@ public:
   const std::string& getName() { return _name; }
 
   /*
-    void addRequired(Pass *pas);
+    void addRequired(Pass *pass);
   */
 
 private:
