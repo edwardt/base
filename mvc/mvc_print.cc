@@ -129,21 +129,21 @@ public:
   void visitEventdefStm(EventdefStm *s) {
     indent();
     _os << "event ";
-    Util::print(_os, s->getName(), getIndent());
+    Util::print(_os, s->getSym(), getIndent());
     _os << "; " << std::endl;
   }
 
   void visitVardefStm(VardefStm *s) {
     indent();
     _os << "prop ";
-    Util::print(_os, s->getName(), getIndent());
+    Util::print(_os, s->getSym(), getIndent());
     _os << "; " << std::endl;
   }
 
   void visitProcdefStm(ProcdefStm *s) {
     indent();
     _os << "reactor ";
-    Util::print(_os, s->getName(), getIndent());
+    Util::print(_os, s->getSym(), getIndent());
     _os << "(";
     std::list<Exp *>& events = s->getEvents();
     std::list<Exp *>::iterator iter;
@@ -163,7 +163,7 @@ public:
   void visitFundefStm(FundefStm *s) {
     indent();
     _os << "function ";
-    Util::print(_os, s->getName(), getIndent());
+    Util::print(_os, s->getSym(), getIndent());
 
     _os << "(";
     std::list<Exp *> *params = s->getParams();
@@ -301,7 +301,7 @@ public:
 
   void visitDefineStm(DefineStm *s) {
     _os << "define ";
-    Util::print(_os, s->getName());
+    Util::print(_os, s->getSym());
     _os << " ";
     Util::print(_os, s->getDef());
     _os << std::endl;

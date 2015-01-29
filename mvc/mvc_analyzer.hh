@@ -18,7 +18,7 @@ namespace mvc {
 class AnalyzerImpl;
 class Analyzer : public Pass {
 public:
-  Analyzer(Module *mod, SymTab *symtab);
+  Analyzer(Module *mod, SymTab& symtab);
   ~Analyzer();
 
 public:

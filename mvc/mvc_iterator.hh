@@ -11,6 +11,12 @@
 
 namespace mvc {
 
+
+enum IterTag {
+  ITER_DFS,     /* depth-first traversal */
+  ITER_BFS      /* breadth-first traversal */
+};
+
 class StmIterator {
 public:
   StmIterator(Stm *stm);
@@ -19,13 +25,13 @@ public:
   bool hasNext();
   Stm *getNext();
 
-  void operator++();
+  StmIterator& next();
 
 private:
   bool iterable(Stm *stm);
 
 private:
-  /* original statement */
+  /* initial statement */
   Stm *_stm;
 
   /* pointer to the parent statement and the current statement */
@@ -36,8 +42,24 @@ private:
 };
 
 class ExpIterator {
+public:
   ExpIterator(Exp *exp);
+  ExpIterator(Stm *stm);
   ~ExpIterator();
+
+  bool hasNext();
+  Exp *getNext();
+
+  ExpIterator& next();
+
+private:
+  /* initial expression */
+  Stm *_stm;
+  Exp *_exp;
+
+  /* pointers to the parent and the current expression */
+  Exp *_pptr;
+  Exp *_sptr;
 };
 
 

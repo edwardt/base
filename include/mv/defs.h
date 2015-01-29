@@ -20,16 +20,16 @@
 
 /* Determine pointer size */
 #if !defined (BITS32) && !defined (BITS64)
-#ifndef __SIZEOF_POINTER__
-#  error "__SIZEOF_POINTER__ undefined"
-#endif
-#if ( __SIZEOF_POINTER__ == 8 )
-#  define BITS64
-#elif ( __SIZEOF_POINTER__ == 4 )
-#  define BITS32
-#else
-#  error "Failed to determine POINTER size"
-#endif
+#  ifndef __SIZEOF_POINTER__
+#    error "__SIZEOF_POINTER__ undefined"
+#  endif
+#  if ( __SIZEOF_POINTER__ == 8 )
+#    define BITS64
+#  elif ( __SIZEOF_POINTER__ == 4 )
+#    define BITS32
+#  else
+#    error "Failed to determine POINTER size"
+#  endif
 #endif
 
 /* DLLEXPORT */

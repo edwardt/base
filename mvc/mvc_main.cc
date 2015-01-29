@@ -28,8 +28,10 @@ int main(int argc, char *argv[])
   Util::print(std::cout, mod);
 
   SymTab symtab;
-  Analyzer semcheck(mod, &symtab);
+  Analyzer semcheck(mod, symtab);
   semcheck.run();
+
+  
 
   return 0;
 }
