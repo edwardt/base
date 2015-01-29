@@ -53,7 +53,8 @@ int AnalyzerImpl::buildSymtab()
   std::list<Stm *>::iterator iter;
   for (iter = stms.begin(); iter != stms.end(); ++iter) {
     Stm *stm = *iter;
-
+    
+    Util::print(std::cout, stm);
     if (analyze(stm) == -1)
       continue;
   }
@@ -136,6 +137,8 @@ int AnalyzerImpl::analyzeProcdef(ProcdefStm *procdef)
     return -1;
   }
   
+  Util::print(std::cout, procdef);
+  analyzeStm(procdef->getBody());
   return 0;
 }
 
@@ -156,13 +159,17 @@ int AnalyzerImpl::analyzeFundef(FundefStm *fundef)
     return -1;
   }
   
+  Util::print(std::cout, fundef);
+  analyzeStm(fundef->getBody());
   return 0;
 }
 
 
 int AnalyzerImpl::analyzeStm(Stm *stm)
 {
-  Exp *exp;
+  std::cout << "ANALYZE_STM: ";
+  Util::print(std::cout, stm);
+
   ExpIterator eiter(stm);
   while (eiter.hasNext()) {
     Exp *exp = eiter.getNext();
@@ -174,12 +181,17 @@ int AnalyzerImpl::analyzeStm(Stm *stm)
   StmIterator siter(stm);
   while (siter.hasNext()) {
     Stm *stm = siter.getNext();
+    analyzeStm(stm);
     siter.next();
   }
 }
 
 int AnalyzerImpl::analyzeExp(Exp *exp)
 {
+  std::cout << "ANALYZE_EXP: ";
+  Util::print(std::cout, exp);
+  std::cout << std::endl;
+
   switch (exp->getTag()) {
   case ET_SYMBOL: {
     SymbolExp *sym = static_cast<SymbolExp *>(exp);
@@ -192,7 +204,17 @@ int AnalyzerImpl::analyzeExp(Exp *exp)
     break;
   }
   default:
-    assert(0 && "analyzeExp: Invalid expression tag");
+    //assert(0 && "analyzeExp: Invalid expression tag");
+    break;
+  }
+
+
+  ExpIterator eiter(exp);
+  while (eiter.hasNext()) {
+    Exp *subexp = eiter.getNext();
+    if (analyzeExp(subexp) == -1)
+      return -1;
+    eiter.next();
   }
 
   return 0;

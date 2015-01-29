@@ -115,7 +115,7 @@ private:
 class FundefStm : public Stm {
 public:
   FundefStm(SymbolExp *name, std::list<Exp *> *params, Stm *body) 
-    : Stm(ST_PROCDEF), _name(name), _params(params), _body(body) {
+    : Stm(ST_FUNDEF), _name(name), _params(params), _body(body) {
   }
   ~FundefStm() { 
     delete _params;
@@ -275,7 +275,7 @@ public:
 
   void accept(StmVisitor& v) { v.visitTriggerStm(this); }
 
-  std::vector<Exp *>& getEevents() { return _events; }
+  std::vector<Exp *>& getEvents() { return _events; }
 
 private:
   std::vector<Exp *> _events;

@@ -11,7 +11,6 @@
 
 namespace mvc {
 
-
 enum IterTag {
   ITER_DFS,     /* depth-first traversal */
   ITER_BFS      /* breadth-first traversal */
@@ -28,14 +27,10 @@ public:
   StmIterator& next();
 
 private:
-  bool iterable(Stm *stm);
-
-private:
   /* initial statement */
   Stm *_stm;
+  IterTag _tag;
 
-  /* pointer to the parent statement and the current statement */
-  Stm *_pptr;
   Stm *_sptr;
 
   std::list<Stm *>::iterator _iter;
@@ -57,9 +52,8 @@ private:
   Stm *_stm;
   Exp *_exp;
 
-  /* pointers to the parent and the current expression */
-  Exp *_pptr;
-  Exp *_sptr;
+  Exp *_eptr;
+  std::list<Exp *>::iterator _iter;
 };
 
 

@@ -14,6 +14,12 @@ module test {
     return;
   };
 
+  function e2(arg0, arg1) {
+    p1 = arg0 + arg1;
+    p2 = arg0 * arg1;
+    return;
+  };
+
   reactor r0 (ev) {
     dev1:foo(1, 2, 3);
 
