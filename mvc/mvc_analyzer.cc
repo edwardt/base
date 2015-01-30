@@ -208,7 +208,6 @@ int AnalyzerImpl::analyzeExp(Exp *exp)
     break;
   }
 
-
   ExpIterator eiter(exp);
   while (eiter.hasNext()) {
     Exp *subexp = eiter.getNext();
