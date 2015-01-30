@@ -1,7 +1,7 @@
 /**
- * @file sendrecv_zmq.c
+ * @file sendrecv_sock.c
  *
- * @brief Implementation of sendrecv functions using ZeroMQ.
+ * @brief Implementation of sendrecv functions using Unix sockets.
  */
 #include <stdio.h>       /* sprintf */
 #include <stdlib.h>      /* malloc */
@@ -16,10 +16,8 @@
 #include <netinet/in.h>  /* sockaddr_in */
 #include <arpa/inet.h>   /* inet_nota */
 #include <ifaddrs.h>     /* getifaddrs */
-#include <zmq.h>         /* zmq_ctx_new */
 #include <mv/device.h>   /* mv_device_self */
 #include <mv/message.h>
-
 
 #define MAX_MESSAGE_QUEUE 4096
 typedef struct _mq {
@@ -46,7 +44,7 @@ typedef struct _mqinfo {
   char *srcstr;        /* {"dev": "mydev", "addr": "..."} */
 
   void *ctx;           /* zmq context */
-  void *sock;          /* REP socket */
+  int sock;            /* REP socket */
 
   pthread_t thr_rep;   /* REP thread for input queue */
   pthread_t thr_req;   /* REQ thread for output queue */
@@ -61,7 +59,7 @@ static int _mqinfo_run(_mqinfo_t *mqinfo);
 
 #define MAX_MQSOCK_POOL 32
 typedef struct _sock {
-  void *sock;               /* sock */
+  int sock;                 /* sock */
   char *addr;               /* transport addr */
 
   unsigned free     : 1;    /* free or not */
@@ -166,25 +164,7 @@ void *_mq_input_thread(void *arg)
   ts.tv_sec = 0;
   ts.tv_nsec = 1000;
 
-  zmq_pollitem_t items[] = {
-    { mq->sock, 0, ZMQ_POLLIN, 0 },
-  };
-  int nitems = sizeof(items)/sizeof(items[0]);
-
   while (1) {
-    zmq_msg_t recvmsg;
-    zmq_msg_t sendmsg;
-    zmq_msg_init(&recvmsg);
-    zmq_msg_init(&sendmsg);
-
-    /* 
-       printf("Poll\n");
-       zmq_poll(items, nitems, -1);
-
-       if (!(items[0].revents & ZMQ_POLLIN))
-       continue;
-    */
-
     if ((recvsz = zmq_msg_recv(&recvmsg, mq->sock, 0)) == -1) {
       if (errno == EAGAIN) {
         zmq_msg_close(&recvmsg);
@@ -574,3 +554,4 @@ int mv_message_setport(unsigned port)
   _mqport = port;
   return 0;
 }
+
