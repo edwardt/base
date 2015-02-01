@@ -1,9 +1,9 @@
 noinst_LIBRARIES = libmv.a
 libmv_a_SOURCES = \
-	value.c \
-	device.c \
-	message.c \
-	sendrecv.c
+	mv_value.c \
+	mv_device.c \
+	mv_message.c \
+	mv_sendrecv.c
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \

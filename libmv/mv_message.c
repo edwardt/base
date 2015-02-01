@@ -1,5 +1,5 @@
 /**
- * @file message.c
+ * @file mv_message.c
  */
 #include <stdio.h>       /* printf */
 #include <stdlib.h>      /* malloc */

@@ -1,5 +1,5 @@
 /**
- * @file sendrecv_sock.c
+ * @file mv_sendrecv_sock.c
  *
  * @brief Implementation of sendrecv functions using Unix sockets.
  */

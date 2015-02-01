@@ -1,5 +1,5 @@
 /**
- * @file device.c
+ * @file mv_device.c
  */
 #include <stdio.h>       /* fprintf */
 #include <stdlib.h>      /* free, exit */

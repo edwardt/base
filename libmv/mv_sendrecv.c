@@ -1,5 +1,5 @@
 /**
- * @file sendrecv.c
+ * @file mv_sendrecv.c
  *
  * @brief Implementation of mv_message_send and mv_message_recv functions.
  */
@@ -14,9 +14,9 @@
 #define USE_ZEROMQ
 
 #if defined(USE_SOCKTCP)
-#  include "sendrecv_sock.c"
+#  include "mv_sendrecv_sock.c"
 #elif defined(USE_ZEROMQ)
-#  include "sendrecv_zmq.c"
+#  include "mv_sendrecv_zmq.c"
 #else
 #  error Only ZeroMQ-based implementation is available.
 #endif

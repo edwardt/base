@@ -1,5 +1,5 @@
 /**
- * @file sendrecv_zmq.c
+ * @file mv_sendrecv_zmq.c
  *
  * @brief Implementation of sendrecv functions using ZeroMQ.
  */
