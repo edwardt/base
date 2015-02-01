@@ -285,7 +285,7 @@ const char *_mq_selfaddr()
   struct ifaddrs *ifa;
 
   if (getifaddrs(&ifaddr) == -1) {
-    perror("getifaddrs@mqutil_getaddr");
+    perror("getifaddrs@_mq_selfaddr");
     return NULL;
   }
 
@@ -357,11 +357,11 @@ _mqinfo_t *_mqinfo_init(unsigned port)
 
   /* create socket for receiving requests */
   if ((mqinfo->sock = zmq_socket(mqinfo->ctx, ZMQ_REP)) == NULL) {
-    perror("zmq_socket@mv_mq_new");
+    perror("zmq_socket@_mqinfo_init");
     exit(1);
   }
   if (zmq_bind(mqinfo->sock, mqinfo->addr) == -1) {
-    perror("zmq_bind@mv_mq_new");
+    perror("zmq_bind@_mqinfo_init");
     exit(1);
   }
 
@@ -495,13 +495,13 @@ void *_sockpool_getsock(const char *addr, void *ctx)
     return NULL;
 
   if ((sock->sock = zmq_socket(ctx, ZMQ_REQ)) == NULL) {
-    perror("zmq_socket");
+    perror("zmq_socket@_sockpool_getsock");
     _sock_delete(sock);
     return NULL;
   }
 
   if (zmq_connect(sock->sock, addr) != 0) {
-    perror("zmq_connect");
+    perror("zmq_connect@_sockpool_getsock");
     _sock_delete(sock);
     return NULL;
   }

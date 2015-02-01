@@ -39,32 +39,40 @@ static const char *_mq_getaddr(const char *str);
 static const char *_mq_getdata(const char *str);
 
 
+/* 
+ * Message layer info structure.
+ */
 typedef struct _mqinfo {
-  char *addr;          /* address for input queue */
-  char *srcstr;        /* {"dev": "mydev", "addr": "..."} */
+  struct sockaddr_in servaddr;  /* server address */
+  char *addr;                   /* address string for input queue */
+  char *srcstr;                 /* {"dev": "mydev", "addr": "..."} */
 
-  void *ctx;           /* zmq context */
-  int sock;            /* REP socket */
+  void *ctx;                    /* zmq context */
+  int sock;                     /* REP (server) socket */
 
-  pthread_t thr_rep;   /* REP thread for input queue */
-  pthread_t thr_req;   /* REQ thread for output queue */
+  pthread_t thr_rep;            /* REP (server) thread for input queue */
+  pthread_t thr_req;            /* REQ (client) thread for output queue */
 
-  _mq_t *imq;          /* input message qeueue */
-  _mq_t *omq;          /* output message qeueue */
+  _mq_t *imq;                   /* input message qeueue */
+  _mq_t *omq;                   /* output message qeueue */
 } _mqinfo_t;
 static _mqinfo_t *_mqinfo_init(unsigned port);
 static _mqinfo_t *_mqinfo_get();
 static int _mqinfo_run(_mqinfo_t *mqinfo);
 
 
+/*
+ * Socket pool for outoing connections. 
+ */
 #define MAX_MQSOCK_POOL 32
 typedef struct _sock {
-  int sock;                 /* sock */
-  char *addr;               /* transport addr */
+  int sock;                     /* sock */
+  char *addr;                   /* transport addr */
+  struct sockaddr_in sockaddr;  /* socket addr */
 
-  unsigned free     : 1;    /* free or not */
-  unsigned free_idx : 12;   /* index to free list */
-  unsigned free_nxt : 12;   /* index of next free entry */
+  unsigned free     : 1;        /* free or not */
+  unsigned free_idx : 12;       /* index to free list */
+  unsigned free_nxt : 12;       /* index of next free entry */
   unsigned pad      : 7;
 } _sock_t;
 static _sock_t _sockpool[MAX_MQSOCK_POOL];
@@ -151,27 +159,50 @@ char *_mq_dequeue(_mq_t *mq)
   return s;
 }
 
+#define INITIAL_IMSG_SIZE = 1024;
+static int input_msg_size = INITIAL_IMSG_SIZE;
+int _mq_input_message_append(char *seg, int seglen)
+{
+  static char msg[INITIAL_IMSG_SIZE];
+  
+}
+
+#define LISTENQ_SIZE 128
+#define MAX_RECVBUF 4096
 void *_mq_input_thread(void *arg)
 {
   _mqinfo_t *mq = (_mqinfo_t *) arg;  /* message queue */
 
-  int recvsz;                         /* msg size from zmq_msg_recv */
-  char *recvstr;                      /* msg str from zmq_msg_recv */
-  int sendsz;                         /* msg size for zmq_msg_send */
-  char sendstr[1024];                 /* msg str for zmq_msg_send */
+  if (listen(mq->sock, LISTENQ_SIZE) == -1) {
+    perror("listen@_mq_input_thread");
+    exit(1);
+  }
+
   struct timespec ts;                 /* time for nanosleep */
 
   ts.tv_sec = 0;
   ts.tv_nsec = 1000;
 
+  int connfd;
+  int nread;
+  int wptr;
+  char recvbuf[MAX_RECVBUF + 1];
   while (1) {
-    if ((recvsz = zmq_msg_recv(&recvmsg, mq->sock, 0)) == -1) {
-      if (errno == EAGAIN) {
-        zmq_msg_close(&recvmsg);
-        zmq_msg_close(&sendmsg);
-        continue;
-      }
 
+    if ((connfd = accept(mq->sockaddr, (struct sockadddr_in *) 0, 0)) == -1) {
+      perror("accept@_mq_input_thread");
+      continue;
+    }
+
+    while ((nread = read(connfd, recvbuf, MAX_RECVBUF)) > 0) {
+      recvbuf[nread] = '\0';
+      snprintf(
+    }
+
+
+
+    
+    if ((recvsz = zmq_msg_recv(&recvmsg, mq->sock, 0)) == -1) {
       perror("zmq_msg_recv@_mq_input_thread");
       exit(1);
     }
@@ -210,6 +241,12 @@ void *_mq_input_thread(void *arg)
 void *_mq_output_thread(void *arg)
 {
   _mqinfo_t *mq = (_mqinfo_t *) arg;  /* message queue */
+
+
+
+
+
+
 
   char *recvstr;                      /* msg str from zmq_msg_recv */
   char *sendstr;                      /* msg str for zmq_msg_send */
@@ -332,16 +369,21 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   sprintf(s, "{\"dev\":\"%s\", \"addr\":\"%s\"}", dev_s, mqinfo->addr);
   mqinfo->srcstr = strdup(s);
 
-  /* create ZMQ context */
-  mqinfo->ctx = zmq_ctx_new();
 
-  /* create socket for receiving requests */
-  if ((mqinfo->sock = zmq_socket(mqinfo->ctx, ZMQ_REP)) == NULL) {
-    perror("zmq_socket@mv_mq_new");
+  /* create server socket for incoming messages */
+  if ((mqinfo->sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    perror("socket@_mqinfo_init");
     exit(1);
   }
-  if (zmq_bind(mqinfo->sock, mqinfo->addr) == -1) {
-    perror("zmq_bind@mv_mq_new");
+  
+  bzero(&mqinfo->servaddr, sizeof(mqinfo->servaddr));
+  mqinfo->servaddr.sin_family = AF_INET;
+  mqinfo->servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  mqinfo->servaddr.sin_port = htons(port);
+  
+  if (bind(mqinfo->sock, (struct sockaddr_in *) mqinfo->servaddr, 
+           sizeof(mqinfo->servaddr)) == -1) {
+    perror("bind@_mqinfo_init");
     exit(1);
   }
 

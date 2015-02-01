@@ -5,9 +5,15 @@
  */
 #include <mv/message.h>
 
+
+/* 
+   Possible message layer:
+     USE_ZEROMQ
+     USE_SOCKTCP
+*/
 #define USE_ZEROMQ
 
-#if defined(USE_SOCK)
+#if defined(USE_SOCKTCP)
 #  include "sendrecv_sock.c"
 #elif defined(USE_ZEROMQ)
 #  include "sendrecv_zmq.c"
