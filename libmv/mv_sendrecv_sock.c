@@ -341,6 +341,20 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   int rv;                             /* return value */
   int reuseaddr;
 
+  char s[1024];
+  const char *selfaddr = _mq_selfaddr();
+  if (!selfaddr) {
+    fprintf(stderr, "_mqinfo_init: Failed to get the IP address of host.\n");
+    exit(1);
+  }
+  
+  snprintf(s, 1024, "tcp://%s:%d", _mq_selfaddr(), port);
+  mq->addr = strdup(s);
+
+  const char *dev_s = mv_device_self();
+  sprintf(s, "{\"dev\":\"%s\", \"addr\":\"%s\"}", dev_s, mq->addr);
+  mq->srcstr = strdup(s);
+  
   if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
     fprintf(stderr, "_mqinfo_init: Failed to ignore SIGPIPE.\n");
     exit(1);
@@ -390,9 +404,6 @@ _mqinfo_t *_mqinfo_init(unsigned port)
 
   freeaddrinfo(result);
 
-  mq->addr = malloc(128);
-  snprintf(mq->addr, 128, "tcp://%s:%d", _mq_selfaddr(), port);;
-  
   return mq;
 }
 
