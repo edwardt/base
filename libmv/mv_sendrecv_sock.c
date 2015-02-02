@@ -135,26 +135,41 @@ char *_mq_dequeue(_mq_t *mq)
   return s;
 }
 
-#define LISTENQ_SIZE 128
+#define CLIADDRLEN (NI_MAXHOST + NI_MAXSERV + 10)
 void *_mq_input_thread(void *arg)
 {
   _mqinfo_t *mq = (_mqinfo_t *) arg;  /* message queue */
+
   struct timespec ts;                 /* time for nanosleep */
+  struct sockaddr_storage claddr;     /* addr */
+  int addrlen;                        /* addr length */
   int connfd;                         /* connected descriptor */
   int recvsz;                         /* size of received message */
   char *recvbuf;                      /* pointer to received message */
   char *recvstr;                      /* copy of received message */
 
+  char cliaddr_s[CLIADDRLEN];         /* client addrress */
+  char host[NI_MAXHOST];
+  char service[NI_MAXSERV];
+
   ts.tv_sec = 0;
   ts.tv_nsec = 1000;
+  addrlen = sizeof(struct sockaddr_storage);
 
   while (1) {
 
     printf("accept\n");
-    if ((connfd = accept(mq->listenfd, (SA *) NULL, NULL)) == -1) {
+    if ((connfd = accept(mq->listenfd, (SA *) &claddr, &addrlen)) == -1) {
       perror("accept@_mq_input_thread");
       continue;
     }
+
+    if (getnameinfo((SA *) & claddr, addrlen, host, NI_MAXHOST, service,
+                    NI_MAXSERV, 0) == 0)
+      snprintf(cliaddr_s, CLIADDRLEN, "(%s, %s)", host, service);
+    else
+      snprintf(cliaddr_s, CLIADDRLEN, "(UNKNOWN)");
+    fprintf(stdout, "Connection from %s\n", cliaddr_s);
 
     printf("read\n");
     if ((recvsz = mv_readmsg(connfd, &recvbuf)) == -1) {
