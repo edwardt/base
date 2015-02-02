@@ -86,7 +86,7 @@ reactor r3
 {
   pushi 10                
   pushs "dev1:foo"
-  call_func              # call dev1:gpioPut(10 1)
+  call_func              # call dev1:foo
 }
 
 reactor r4 
@@ -99,7 +99,7 @@ reactor r4
 
 # event-reactor associations
 # <eventname> <reactorname>
-#assoc timer0 r1
-#assoc timer1 r2
+assoc timer0 r1
+assoc timer1 r2
 #assoc timer2 r3
-#assoc timer2 r4
+assoc timer2 r4
