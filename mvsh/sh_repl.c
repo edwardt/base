@@ -1,11 +1,11 @@
 /**
- * @file repl.c
+ * @file sh_repl.c
  *
  * @brief Read-eval-print loop.
  */
-#include <stdio.h>     /* fprintf */
-#include <string.h>    /* strchr */
-#include "command.h"   /* mvsh_command_process */
+#include <stdio.h>        /* fprintf */
+#include <string.h>       /* strchr */
+#include "sh_command.h"   /* mvsh_command_process */
 
 #define MVSH_PROMPT     "#"
 #define MVSH_MAX_LINE   4096

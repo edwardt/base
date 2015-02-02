@@ -1,8 +1,8 @@
 bin_PROGRAMS = mvsh
 mvsh_SOURCES = \
-	command.c \
-	repl.c \
-	main.c
+	sh_command.c \
+	sh_repl.c \
+	sh_main.c
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \

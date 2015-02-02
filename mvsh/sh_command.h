@@ -1,5 +1,5 @@
 /**
- * @file command.h
+ * @file sh_command.h
  *
  * @brief Interface to MVSH command processor.
  */

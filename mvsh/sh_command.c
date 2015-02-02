@@ -1,13 +1,13 @@
 /**
- * @file command.c
+ * @file sh_command.c
  */
-#include <stdio.h>       /* fprintf */
-#include <stdlib.h>      /* exit */
-#include <string.h>      /* strchr */
-#include <mv/device.h>   /* mv_device_addr */
-#include <mv/value.h>    /* mv_value_t */
-#include <mv/message.h>  /* mv_message_send */
-#include "command.h"
+#include <stdio.h>        /* fprintf */
+#include <stdlib.h>       /* exit */
+#include <string.h>       /* strchr */
+#include <mv/device.h>    /* mv_device_addr */
+#include <mv/value.h>     /* mv_value_t */
+#include <mv/message.h>   /* mv_message_send */
+#include "sh_command.h"
 
 struct {
   const char *str;

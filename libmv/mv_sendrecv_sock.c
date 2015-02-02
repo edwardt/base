@@ -13,9 +13,10 @@
 #include <assert.h>      /* assert */
 #include <sys/socket.h>  /* inet_nota */
 #include <sys/types.h>   /* getifaddrs */
-#include <netinet/in.h>  /* sockaddr_in */
+#include <netinet/in.h>  /* struct sockaddr_in */
 #include <arpa/inet.h>   /* inet_nota */
 #include <ifaddrs.h>     /* getifaddrs */
+#include <netdb.h>       /* getaddrinfo */
 #include <mv/device.h>   /* mv_device_self */
 #include <mv/message.h>  /* mv_message_send */
 #include "mv_netutil.h"  /* mv_writemsg */
@@ -44,12 +45,10 @@ static const char *_mq_getdata(const char *str);
  * Message layer info structure.
  */
 typedef struct _mqinfo {
-  struct sockaddr_in servaddr;  /* server address */
   char *addr;                   /* address string for input queue */
   char *srcstr;                 /* {"dev": "mydev", "addr": "..."} */
 
-  void *ctx;                    /* zmq context */
-  int sock;                     /* REP (server) socket */
+  int listenfd;                 /* REP (server) listen socket */
 
   pthread_t thr_rep;            /* REP (server) thread for input queue */
   pthread_t thr_req;            /* REQ (client) thread for output queue */
@@ -149,16 +148,10 @@ void *_mq_input_thread(void *arg)
   ts.tv_sec = 0;
   ts.tv_nsec = 1000;
 
-  printf("listen\n");
-  if (listen(mq->sock, LISTENQ_SIZE) == -1) {
-    perror("listen@_mq_input_thread");
-    exit(1);
-  }
-
   while (1) {
 
     printf("accept\n");
-    if ((connfd = accept(mq->sock, (SA *) NULL, NULL)) == -1) {
+    if ((connfd = accept(mq->listenfd, (SA *) NULL, NULL)) == -1) {
       perror("accept@_mq_input_thread");
       continue;
     }
@@ -198,6 +191,11 @@ void *_mq_output_thread(void *arg)
   struct sockaddr_in servaddr;        /* server addr */
   char *sendstr;                      /* message to send */
 
+  struct addrinfo hints;              /* addrinfo */
+  struct addrinfo *result, *rp;       /* getaddrinfo results */
+  int connfd;                         /* connected description */
+  int rv;                             /* returnv value */
+
   ts.tv_sec = 0;
   ts.tv_nsec = 1000;
 
@@ -208,44 +206,46 @@ void *_mq_output_thread(void *arg)
       continue;
     }
 
-    const char *sendaddr = _mq_getaddr(sendstr);
+    const char * sendaddr = _mq_getaddr(sendstr);
     const char *senddata = _mq_getdata(sendstr);
-
-#if 1
-    fprintf(stdout, "Message to %s: %s\n", sendaddr, senddata);
-#endif
-
     char *addr = strstr(sendaddr, "//") + 2;
     char *port = strstr(addr, ":");
-
     char *ipaddr = strdup(addr);
     ipaddr[port-addr] = '\0';
-  
-    printf("ipaddr: %s\n", ipaddr);
+#if 1
+    fprintf(stdout, "Message to %s (ip:%s): %s\n", sendaddr, ipaddr, senddata);
+#endif
 
-    int sock;
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-      perror("socket@_mq_output_thread");
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_canonname = NULL;
+    hints.ai_addr = NULL;
+    hints.ai_next = NULL;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_NUMERICSERV;
+
+    if ((rv = getaddrinfo(ipaddr, port, &hints, &result)) != 0) {
+      fprintf(stderr, "getaddrinfo@_mq_output_thread: %s at %s\n", 
+              gai_strerror(rv), ipaddr);
       continue;
     }
-    printf("sock\n");
 
-    bzero(&servaddr, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(atoi(port));
-    if (inet_pton(AF_INET, ipaddr, &servaddr.sin_addr) == -1) {
-      perror("inet_pton@_mq_output_thread");
-      continue;
+    /* walk through returned list until we find an address structure that
+       can be used to succeffully connect a socket */
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+      connfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+      if (connfd == -1)
+        continue;
+
+      if (connect(connfd, rp->ai_addr, rp->ai_addrlen) != -1)
+        break;
+
+      close(connfd);
     }
-    if (connect(sock, (SA *) &servaddr, sizeof(servaddr)) < 0) {
-      perror("connect@_mq_output_thread");
-      continue;
-    }
-    printf("connect\n");
 
-    mv_writemsg(sock, senddata);
+    mv_writemsg(connfd, senddata);
 
-    close(sock);
+    close(connfd);
     free(sendstr);
   }
 }
@@ -306,42 +306,67 @@ const char *_mq_getdata(const char *str)
   return strstr(str, "{");
 }
 
+#define BACKLOG 128
 _mqinfo_t *_mqinfo_init(unsigned port)
 {
   _mqinfo_t *mq = malloc(sizeof(_mqinfo_t));
   mq->imq = _mq_new(MAX_MESSAGE_QUEUE);
   mq->omq = _mq_new(MAX_MESSAGE_QUEUE);
 
-  char s[1024];
-  const char *selfaddr = _mq_selfaddr();
-  if (!selfaddr) {
-    fprintf(stderr, "_mqinfo_init: Failed to get the IP address of host.\n");
+  char port_s[128];                   /* port */
+  struct addrinfo hints;              /* addrinfo */
+  struct addrinfo *result, *rp;       /* getaddrinfo results */
+  int rv;                             /* return value */
+  int optval;
+
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+    fprintf(stderr, "_mqinfo_init: Failed to ignore SIGPIPE.\n");
+    exit(1);
+  }
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_canonname = NULL;
+  hints.ai_addr = NULL;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+  snprintf(port_s, 127, "%d", port);
+  if ((rv = getaddrinfo(NULL, port_s, &hints, &result)) != 0) {
+    fprintf(stderr, "getaddrinfo@_mqinfo_init: %s\n", gai_strerror(rv));
     exit(1);
   }
   
-  sprintf(s, "tcp://%s:%d", _mq_selfaddr(), port);
-  mq->addr = strdup(s);
+  /* walk through returned list until we find an address structure that
+     can be used to succeffully create and bind a socket */
+  optval = 1;
+  for (rp = result; rp != NULL; rp = rp->ai_next) {
+    mq->listenfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (mq->listenfd == -1)
+      continue;
 
-  const char *dev_s = mv_device_self();
-  sprintf(s, "{\"dev\":\"%s\", \"addr\":\"%s\"}", dev_s, mq->addr);
-  mq->srcstr = strdup(s);
+    if (setsockopt(mq->listenfd, SOL_SOCKET, SO_REUSEADDR, 
+                   &optval, sizeof(optval)) == -1) {
+      perror("setsockopt@_mqinfo_init");
+      exit(1);
+    }
 
+    if (bind(mq->listenfd, rp->ai_addr, rp->ai_addrlen) == 0)
+      break;
 
-  /* create server socket for incoming messages */
-  if ((mq->sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-    perror("socket@_mqinfo_init");
+    close(mq->listenfd);
+  }
+
+  if (rp == NULL) {
+    fprintf(stderr, "Failed to bind a socket to any address.\n");
     exit(1);
   }
-  
-  bzero(&mq->servaddr, sizeof(mq->servaddr));
-  mq->servaddr.sin_family = AF_INET;
-  mq->servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  mq->servaddr.sin_port = htons(port);
-  
-  if (bind(mq->sock, (SA *) &mq->servaddr, sizeof(mq->servaddr)) == -1) {
-    perror("bind@_mqinfo_init");
+
+  if (listen(mq->listenfd, BACKLOG) == -1) {
+    perror("listen@_mqinfo_init");
     exit(1);
   }
+
+  freeaddrinfo(result);
 
   return mq;
 }
@@ -449,6 +474,11 @@ const char *mv_message_selfaddr()
 
 int mv_message_setport(unsigned port)
 {
+  if (_mqinfo) {
+    fprintf(stderr, "Message queue already created. Call mv_message_setport "
+            "before any mv_message_send/recv calls.\n");
+    exit(1);
+  }
   _mqport = port;
   return 0;
 }

@@ -1,5 +1,5 @@
 /**
- * @file main.c
+ * @file sh_main.c
  */
 #include <stdio.h>      /* fprintf */
 #include <stdlib.h>     /* exit */
