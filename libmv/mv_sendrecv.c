@@ -8,7 +8,7 @@
 #define USE_SOCKTCP
 #define USE_ZEROMQ
 */
-#define USE_ZEROMQ
+#define USE_SOCKTCP
 
 #if defined(USE_SOCKTCP)
 #  include "mv_sendrecv_sock.c"

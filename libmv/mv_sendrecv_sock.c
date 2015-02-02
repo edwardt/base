@@ -135,22 +135,17 @@ char *_mq_dequeue(_mq_t *mq)
   return s;
 }
 
-#define CLIADDRLEN (NI_MAXHOST + NI_MAXSERV + 10)
 void *_mq_input_thread(void *arg)
 {
   _mqinfo_t *mq = (_mqinfo_t *) arg;  /* message queue */
 
   struct timespec ts;                 /* time for nanosleep */
   struct sockaddr_storage claddr;     /* addr */
-  int addrlen;                        /* addr length */
+  socklen_t addrlen;                  /* addr length */
   int connfd;                         /* connected descriptor */
   int recvsz;                         /* size of received message */
   char *recvbuf;                      /* pointer to received message */
   char *recvstr;                      /* copy of received message */
-
-  char cliaddr_s[CLIADDRLEN];         /* client addrress */
-  char host[NI_MAXHOST];
-  char service[NI_MAXSERV];
 
   ts.tv_sec = 0;
   ts.tv_nsec = 1000;
@@ -164,12 +159,18 @@ void *_mq_input_thread(void *arg)
       continue;
     }
 
+#if 0
+#   define CLIADDRLEN (NI_MAXHOST + NI_MAXSERV + 10)
+    char cliaddr_s[CLIADDRLEN];         /* client addrress */
+    char host[NI_MAXHOST];
+    char service[NI_MAXSERV];
     if (getnameinfo((SA *) & claddr, addrlen, host, NI_MAXHOST, service,
                     NI_MAXSERV, 0) == 0)
       snprintf(cliaddr_s, CLIADDRLEN, "(%s, %s)", host, service);
     else
       snprintf(cliaddr_s, CLIADDRLEN, "(UNKNOWN)");
     fprintf(stdout, "Connection from %s\n", cliaddr_s);
+#endif
 
     printf("read\n");
     if ((recvsz = mv_readmsg(connfd, &recvbuf)) == -1) {
@@ -228,7 +229,7 @@ void *_mq_output_thread(void *arg)
     char *ipaddr = strdup(addr);
     ipaddr[port-addr] = '\0';
 #if 1
-    fprintf(stdout, "Message to %s (ip:%s): %s\n", sendaddr, ipaddr, senddata);
+    fprintf(stdout, "Message to %s:%s: %s\n", ipaddr, port, senddata);
 #endif
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -240,8 +241,8 @@ void *_mq_output_thread(void *arg)
     hints.ai_flags = AI_NUMERICSERV;
 
     if ((rv = getaddrinfo(ipaddr, port, &hints, &result)) != 0) {
-      fprintf(stderr, "getaddrinfo@_mq_output_thread: %s at %s\n", 
-              gai_strerror(rv), ipaddr);
+      fprintf(stderr, "getaddrinfo@_mq_output_thread: %s at %s:%s\n", 
+              gai_strerror(rv), ipaddr, port);
       continue;
     }
 
@@ -257,6 +258,12 @@ void *_mq_output_thread(void *arg)
 
       close(connfd);
     }
+
+    if (rp == NULL) {
+      fprintf(stderr, "Failed to connect socket to any address.\n");
+      continue;
+    }
+    freeaddrinfo(result);
 
     mv_writemsg(connfd, senddata);
 
@@ -332,7 +339,7 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   struct addrinfo hints;              /* addrinfo */
   struct addrinfo *result, *rp;       /* getaddrinfo results */
   int rv;                             /* return value */
-  int optval;
+  int reuseaddr;
 
   if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
     fprintf(stderr, "_mqinfo_init: Failed to ignore SIGPIPE.\n");
@@ -344,7 +351,7 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   hints.ai_addr = NULL;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_family = AF_UNSPEC;
-  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV | AI_ADDRCONFIG;
   snprintf(port_s, 127, "%d", port);
   if ((rv = getaddrinfo(NULL, port_s, &hints, &result)) != 0) {
     fprintf(stderr, "getaddrinfo@_mqinfo_init: %s\n", gai_strerror(rv));
@@ -353,14 +360,14 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   
   /* walk through returned list until we find an address structure that
      can be used to succeffully create and bind a socket */
-  optval = 1;
+  reuseaddr = 1;
   for (rp = result; rp != NULL; rp = rp->ai_next) {
     mq->listenfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
     if (mq->listenfd == -1)
       continue;
 
     if (setsockopt(mq->listenfd, SOL_SOCKET, SO_REUSEADDR, 
-                   &optval, sizeof(optval)) == -1) {
+                   &reuseaddr, sizeof(reuseaddr)) == -1) {
       perror("setsockopt@_mqinfo_init");
       exit(1);
     }
@@ -376,7 +383,7 @@ _mqinfo_t *_mqinfo_init(unsigned port)
     exit(1);
   }
 
-  if (listen(mq->listenfd, BACKLOG) == -1) {
+  if (listen(mq->listenfd, SOMAXCONN) == -1) {
     perror("listen@_mqinfo_init");
     exit(1);
   }
@@ -417,7 +424,7 @@ static _mqinfo_t *_mqinfo = NULL;
 _mqinfo_t *_mqinfo_get()
 {
   if (!_mqinfo) {
-    /* create an mqinfo and initialize the queues when this function
+    /* create mqinfo and initialize the queues when this function
        is first called. */
     if ((_mqinfo = _mqinfo_init(_mqport)) == NULL)
       return NULL;
