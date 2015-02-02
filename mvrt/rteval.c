@@ -340,22 +340,33 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
     mv_value_t value_v = mvrt_prop_getvalue(mvprop);
     mvrt_stack_push(stack, value_v);
 
-    printf("\t=>prop_get: "); mv_value_print(value_v);
+#if 1
+    fprintf(stdout, "\t=> PROP_GET: "); mv_value_print(value_v);
+#endif
 
     free(dev_s);
     return ip + 1;
   }
 
-  static char arg[4096];
-  const char *destaddr = mv_device_addr(dev_s);
-  int retid = mvrt_continuation_new(ctx);
-  sprintf(arg, "{\"name\":\"%s\", \"retid\":%d, \"retaddr\":\"%s\"}",
-          name_s, retid, mv_message_selfaddr());
-  fprintf(stdout, "MQSEND: %s\n", arg);
-  mv_message_send(destaddr, MV_MESSAGE_PROP_GET, arg);
+  /* no local property with the given name found; if it's a 
+     remote property (i.e. dev_s != NULL), send request */
+  if (dev_s) {
+    static char arg[4096];
+    const char *destaddr = mv_device_addr(dev_s);
+    int retid = mvrt_continuation_new(ctx);
+    sprintf(arg, "{\"name\":\"%s\", \"retid\":%d, \"retaddr\":\"%s\"}",
+            name_s, retid, mv_message_selfaddr());
+    fprintf(stdout, "MQSEND: %s\n", arg);
+    mv_message_send(destaddr, MV_MESSAGE_PROP_GET, arg);
+    
+    free(dev_s);
+    return _EVAL_SUSPEND;
+  }
 
-  free(dev_s);
-  return _EVAL_SUSPEND;
+  /* failed to find the property; process error */
+  mv_value_t value_v = mv_value_string("E:NO_SUCH_PROP");
+  mvrt_stack_push(stack, value_v);
+  return ip + 1;
 }
 
 int _eval_prop_set(mvrt_instr_t *instr, mvrt_context_t *ctx)

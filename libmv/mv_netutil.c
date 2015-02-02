@@ -64,8 +64,6 @@ ssize_t _writen(int fd, const void *vptr, size_t n)
   return n;
 }
 
-
-
 static size_t _rdbufsz = 8192;
 static char _rdbuf[8192];
 ssize_t mv_readmsg(int fd, char **buf)

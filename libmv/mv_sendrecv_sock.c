@@ -153,7 +153,6 @@ void *_mq_input_thread(void *arg)
 
   while (1) {
 
-    printf("accept\n");
     if ((connfd = accept(mq->listenfd, (SA *) &claddr, &addrlen)) == -1) {
       perror("accept@_mq_input_thread");
       continue;
@@ -172,7 +171,6 @@ void *_mq_input_thread(void *arg)
     fprintf(stdout, "Connection from %s\n", cliaddr_s);
 #endif
 
-    printf("read\n");
     if ((recvsz = mv_readmsg(connfd, &recvbuf)) == -1) {
       perror("read@_mq_input_thread");
       continue;
