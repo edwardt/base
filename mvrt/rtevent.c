@@ -81,8 +81,11 @@ static void _rtimer_handler(int sig, siginfo_t *sinfo, void *uc)
   int i;
   timer_t *tid;
   _rtimer_t *rtimer;
-  
-  printf("rtimer_handler\n");
+
+#if 0  
+  fprintf(stdout, "rtimer_handler\n");
+#endif
+
   struct timespec ts; /* 1ms */
   ts.tv_sec = 0;
   ts.tv_nsec = 1000; 

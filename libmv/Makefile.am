@@ -3,7 +3,8 @@ libmv_a_SOURCES = \
 	mv_value.c \
 	mv_device.c \
 	mv_message.c \
-	mv_sendrecv.c
+	mv_sendrecv.c \
+	mv_netutil.c
 
 STRICT_CHECK_C = \
 	-pedantic-errors -ansi -Wextra -Wall \

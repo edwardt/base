@@ -17,7 +17,8 @@
 #include <arpa/inet.h>   /* inet_nota */
 #include <ifaddrs.h>     /* getifaddrs */
 #include <mv/device.h>   /* mv_device_self */
-#include <mv/message.h>
+#include <mv/message.h>  /* mv_message_send */
+#include "mv_netutil.h"  /* mv_writemsg */
 
 #define MAX_MESSAGE_QUEUE 4096
 typedef struct _mq {
@@ -59,30 +60,6 @@ typedef struct _mqinfo {
 static _mqinfo_t *_mqinfo_init(unsigned port);
 static _mqinfo_t *_mqinfo_get();
 static int _mqinfo_run(_mqinfo_t *mqinfo);
-
-
-/*
- * Socket pool for outoing connections. 
- */
-#define MAX_MQSOCK_POOL 32
-typedef struct _sock {
-  int sock;                     /* sock */
-  char *addr;                   /* transport addr */
-  struct sockaddr_in sockaddr;  /* socket addr */
-
-  unsigned free     : 1;        /* free or not */
-  unsigned free_idx : 12;       /* index to free list */
-  unsigned free_nxt : 12;       /* index of next free entry */
-  unsigned pad      : 7;
-} _sock_t;
-static _sock_t _sockpool[MAX_MQSOCK_POOL];
-static _sock_t *_free_sock;
-
-static void _sockpool_init();
-static _sock_t *_sock_getfree();
-static int _sock_delete(_sock_t *sock);
-static _sock_t *_sockpool_lookup(const char *addr);
-static void *_sockpool_getsock(const char *addr, void *ctx);
 
 
 _mq_t *_mq_new(int size)
@@ -159,80 +136,55 @@ char *_mq_dequeue(_mq_t *mq)
   return s;
 }
 
-#define INITIAL_IMSG_SIZE = 1024;
-static int input_msg_size = INITIAL_IMSG_SIZE;
-int _mq_input_message_append(char *seg, int seglen)
-{
-  static char msg[INITIAL_IMSG_SIZE];
-  
-}
-
 #define LISTENQ_SIZE 128
-#define MAX_RECVBUF 4096
 void *_mq_input_thread(void *arg)
 {
   _mqinfo_t *mq = (_mqinfo_t *) arg;  /* message queue */
+  struct timespec ts;                 /* time for nanosleep */
+  int connfd;                         /* connected descriptor */
+  int recvsz;                         /* size of received message */
+  char *recvbuf;                      /* pointer to received message */
+  char *recvstr;                      /* copy of received message */
 
+  ts.tv_sec = 0;
+  ts.tv_nsec = 1000;
+
+  printf("listen\n");
   if (listen(mq->sock, LISTENQ_SIZE) == -1) {
     perror("listen@_mq_input_thread");
     exit(1);
   }
 
-  struct timespec ts;                 /* time for nanosleep */
-
-  ts.tv_sec = 0;
-  ts.tv_nsec = 1000;
-
-  int connfd;
-  int nread;
-  int wptr;
-  char recvbuf[MAX_RECVBUF + 1];
   while (1) {
 
-    if ((connfd = accept(mq->sockaddr, (struct sockadddr_in *) 0, 0)) == -1) {
+    printf("accept\n");
+    if ((connfd = accept(mq->sock, (SA *) NULL, NULL)) == -1) {
       perror("accept@_mq_input_thread");
       continue;
     }
 
-    while ((nread = read(connfd, recvbuf, MAX_RECVBUF)) > 0) {
-      recvbuf[nread] = '\0';
-      snprintf(
+    printf("read\n");
+    if ((recvsz = read(connfd, &recvbuf)) == -1) {
+      perror("read@_mq_input_thread");
+      continue;
     }
-
-
-
-    
-    if ((recvsz = zmq_msg_recv(&recvmsg, mq->sock, 0)) == -1) {
-      perror("zmq_msg_recv@_mq_input_thread");
-      exit(1);
-    }
-
-    /* str must be freed when _mq_dequeued */
+     
     recvstr = malloc(recvsz + 1);
-    memcpy(recvstr, (char *) zmq_msg_data(&recvmsg), recvsz);
-    zmq_msg_close(&recvmsg);
+    memcpy(recvstr, (char *) recvbuf, recvsz);
     recvstr[recvsz] = '\0';
 
-    /*
-      fprintf(stdout, "Message received: [%s]:%d\n", recvstr, recvsz);
-    */
-
+#if 0
+    fprintf(stdout, "Message received: [%s]:%d\n", recvstr, recvsz);
+#endif
+    
     while (_mq_enqueue(mq->imq, recvstr) != 0) {
       nanosleep(&ts, NULL);
     }
 
-    /* ACK - optimize away this later */
-    strcpy(sendstr, "REPLY");
-    sendsz = strlen(sendstr);
-    zmq_msg_init_size(&sendmsg, sendsz);
-    memcpy(zmq_msg_data(&sendmsg), sendstr, sendsz);
-    if (zmq_msg_send(&sendmsg, mq->sock, 0) == -1) {
-      perror("zmg_msg_send@_mq_input_thread");
-      exit(1);
+    if (close(connfd) == -1) {
+      perror("close@_mq_input_thread");
+      continue;
     }
-
-    zmq_msg_close(&recvmsg);
-    zmq_msg_close(&sendmsg);
   }
 
   pthread_exit(NULL);
@@ -242,54 +194,59 @@ void *_mq_output_thread(void *arg)
 {
   _mqinfo_t *mq = (_mqinfo_t *) arg;  /* message queue */
 
-
-
-
-
-
-
-  char *recvstr;                      /* msg str from zmq_msg_recv */
-  char *sendstr;                      /* msg str for zmq_msg_send */
   struct timespec ts;                 /* time for nanosleep */
+  struct sockaddr_in servaddr;        /* server addr */
+  char *sendstr;                      /* message to send */
+
   ts.tv_sec = 0;
   ts.tv_nsec = 1000;
 
-  char *smsg;
-
   while (1) {
+
     if ((sendstr = _mq_dequeue(mq->omq)) == NULL) {
       nanosleep(&ts, NULL);
       continue;
     }
 
-    printf("sendstr:%s\n", sendstr);
     const char *sendaddr = _mq_getaddr(sendstr);
     const char *senddata = _mq_getdata(sendstr);
 
-    void *sendsock = _sockpool_getsock(sendaddr, mq->ctx);
-    if (sendsock == NULL) 
-      continue;
+#if 1
+    fprintf(stdout, "Message to %s: %s\n", sendaddr, senddata);
+#endif
 
-    zmq_msg_t sendmsg;
-    int sendsz = strlen(senddata);
-    zmq_msg_init_size(&sendmsg, sendsz);
-    memcpy(zmq_msg_data(&sendmsg), senddata, sendsz);
-    int sz;
-    if ((sz = zmq_msg_send(&sendmsg, sendsock, 0)) == -1) {
-      perror("zmq_msg_send@_mq_output_thread");
-      zmq_msg_close(&sendmsg);
+    char *addr = strstr(sendaddr, "//") + 2;
+    char *port = strstr(addr, ":");
+
+    char *ipaddr = strdup(addr);
+    ipaddr[port-addr] = '\0';
+  
+    printf("ipaddr: %s\n", ipaddr);
+
+    int sock;
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+      perror("socket@_mq_output_thread");
       continue;
     }
-    zmq_msg_close(&sendmsg);
+    printf("sock\n");
 
-    zmq_msg_t recvmsg;
-    int recvsz;
-    zmq_msg_init(&recvmsg);
-    if ((recvsz = zmq_msg_recv(&recvmsg, sendsock, ZMQ_DONTWAIT)) != -1) {
-      char *recvstr = malloc(recvsz + 1);
-      memcpy(recvstr, (char *) zmq_msg_data(&recvmsg), recvsz);
-      recvstr[recvsz] = '\0';
+    bzero(&servaddr, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(atoi(port));
+    if (inet_pton(AF_INET, ipaddr, &servaddr.sin_addr) == -1) {
+      perror("inet_pton@_mq_output_thread");
+      continue;
     }
+    if (connect(sock, (SA *) &servaddr, sizeof(servaddr)) < 0) {
+      perror("connect@_mq_output_thread");
+      continue;
+    }
+    printf("connect\n");
+
+    mv_writemsg(sock, senddata);
+
+    close(sock);
+    free(sendstr);
   }
 }
 
@@ -351,9 +308,9 @@ const char *_mq_getdata(const char *str)
 
 _mqinfo_t *_mqinfo_init(unsigned port)
 {
-  _mqinfo_t *mqinfo = malloc(sizeof(_mqinfo_t));
-  mqinfo->imq = _mq_new(MAX_MESSAGE_QUEUE);
-  mqinfo->omq = _mq_new(MAX_MESSAGE_QUEUE);
+  _mqinfo_t *mq = malloc(sizeof(_mqinfo_t));
+  mq->imq = _mq_new(MAX_MESSAGE_QUEUE);
+  mq->omq = _mq_new(MAX_MESSAGE_QUEUE);
 
   char s[1024];
   const char *selfaddr = _mq_selfaddr();
@@ -363,40 +320,36 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   }
   
   sprintf(s, "tcp://%s:%d", _mq_selfaddr(), port);
-  mqinfo->addr = strdup(s);
+  mq->addr = strdup(s);
 
   const char *dev_s = mv_device_self();
-  sprintf(s, "{\"dev\":\"%s\", \"addr\":\"%s\"}", dev_s, mqinfo->addr);
-  mqinfo->srcstr = strdup(s);
+  sprintf(s, "{\"dev\":\"%s\", \"addr\":\"%s\"}", dev_s, mq->addr);
+  mq->srcstr = strdup(s);
 
 
   /* create server socket for incoming messages */
-  if ((mqinfo->sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+  if ((mq->sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     perror("socket@_mqinfo_init");
     exit(1);
   }
   
-  bzero(&mqinfo->servaddr, sizeof(mqinfo->servaddr));
-  mqinfo->servaddr.sin_family = AF_INET;
-  mqinfo->servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  mqinfo->servaddr.sin_port = htons(port);
+  bzero(&mq->servaddr, sizeof(mq->servaddr));
+  mq->servaddr.sin_family = AF_INET;
+  mq->servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  mq->servaddr.sin_port = htons(port);
   
-  if (bind(mqinfo->sock, (struct sockaddr_in *) mqinfo->servaddr, 
-           sizeof(mqinfo->servaddr)) == -1) {
+  if (bind(mq->sock, (SA *) &mq->servaddr, sizeof(mq->servaddr)) == -1) {
     perror("bind@_mqinfo_init");
     exit(1);
   }
 
-  /* initialize socket pool for sending requests */
-  _sockpool_init(mqinfo->ctx);
-
-  return mqinfo;
+  return mq;
 }
 
 int _mqinfo_run(_mqinfo_t *mqinfo) 
 {
-  /* SIGRTMIN will be used by runtime in interval timers. Blcok this
-     signal in any thread. */
+  /* SIGRTMIN will be used by runtime in interval timers. Block this
+     signal in mq threads. */
   sigset_t sigmask;
   sigemptyset(&sigmask);
   sigaddset(&sigmask, SIGRTMIN);
@@ -436,103 +389,9 @@ _mqinfo_t *_mqinfo_get()
   return _mqinfo;
 }
 
-
-
-void _sockpool_init()
-{
-  int i;
-  _sock_t *sock = &_sockpool[0];
-
-  for (i = 0; i < MAX_MQSOCK_POOL; i++) {
-    sock->sock = NULL;
-    sock->addr = NULL;
-
-    sock->free = 1;
-    sock->free_idx = i;
-    sock->free_nxt = i + 1;
-    sock++;
-  }
-  /* the last element */
-  sock->free_idx = i;
-  sock->free_nxt = 0;
-
-  /* The first socket, _mqsock_pool[0], is reserved to represent "no more
-     mqsock". If free_nxt == 0, it means no more free mqsock is available. */
-  _free_sock = _sockpool + 1;
-  _sockpool[0].free = 0;
-}
-
-_sock_t *_sock_getfree()
-{
-  if (_free_sock == _sockpool) {
-    /* if full, delete one, say mqsock_pool[1] */
-    _sock_delete(&_sockpool[1]);
-    return _sock_getfree();
-  }
-
-  _free_sock = _sockpool + _free_sock->free_nxt;
-  _free_sock->free = 0;
-
-  return _free_sock;
-}
-
-int _sock_delete(_sock_t *sock)
-{
-  free(sock->addr);
-  zmq_close(sock->sock);
-  sock->free = 1;
-
-  sock->free_nxt = sock->free_idx;
-  _free_sock = sock;
-
-  return 0;
-}
-
-_sock_t *_sockpool_lookup(const char *addr)
-{
-  /* TODO: hash table */
-  int i;
-  _sock_t *sock;
-  for (i = 1; i < MAX_MQSOCK_POOL; i++) {
-    sock = _sockpool + i;
-    if (!sock->free && !strcmp(sock->addr, addr))
-      return sock;
-  }
-
-  return NULL;
-}
-
-void *_sockpool_getsock(const char *addr, void *ctx)
-{
-  _sock_t *sock = NULL;
-  /*
-    FIX: For now, just create socket every time we send message.
-    mqsock = _mqsock_lookup(addr);
-    if (mqsock) {
-    return mqsock->sock;
-    }
-  */
-
-  if ((sock = _sock_getfree() ) == NULL)
-    return NULL;
-
-  if ((sock->sock = zmq_socket(ctx, ZMQ_REQ)) == NULL) {
-    perror("zmq_socket");
-    _sock_delete(sock);
-    return NULL;
-  }
-
-  if (zmq_connect(sock->sock, addr) != 0) {
-    perror("zmq_connect");
-    _sock_delete(sock);
-    return NULL;
-  }
-
-  sock->addr = strdup(addr);
-  return sock->sock;
-}
-
-
+/*
+ * Implementation of send and recv functions.
+ */
 int mv_message_send(const char *adr, mv_mtag_t tag, char *arg_s)
 {
   _mqinfo_t *mqinfo = _mqinfo_get();
@@ -551,9 +410,6 @@ int mv_message_send(const char *adr, mv_mtag_t tag, char *arg_s)
   return 0;
 }
 
-/*
- * Implementation of send and recv functions.
- */
 int mv_message_send_value(const char *adr, mv_mtag_t tag, mv_value_t arg)
 {
   _mqinfo_t *mqinfo = _mqinfo_get();

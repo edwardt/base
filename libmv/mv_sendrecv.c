@@ -3,13 +3,9 @@
  *
  * @brief Implementation of mv_message_send and mv_message_recv functions.
  */
-#include <mv/message.h>
-
 
 /* 
-   Possible message layer:
-     USE_ZEROMQ
-     USE_SOCKTCP
+   #define USE_SOCKTCP
 */
 #define USE_ZEROMQ
 

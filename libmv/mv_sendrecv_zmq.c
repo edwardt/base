@@ -373,8 +373,8 @@ _mqinfo_t *_mqinfo_init(unsigned port)
 
 int _mqinfo_run(_mqinfo_t *mqinfo) 
 {
-  /* SIGRTMIN will be used by runtime in interval timers. Blcok this
-     signal in any thread. */
+  /* SIGRTMIN will be used by runtime in interval timers. Block this
+     signal in mq threads. */
   sigset_t sigmask;
   sigemptyset(&sigmask);
   sigaddset(&sigmask, SIGRTMIN);
@@ -511,6 +511,9 @@ void *_sockpool_getsock(const char *addr, void *ctx)
 }
 
 
+/*
+ * Implementation of send and recv functions.
+ */
 int mv_message_send(const char *adr, mv_mtag_t tag, char *arg_s)
 {
   _mqinfo_t *mqinfo = _mqinfo_get();
@@ -529,9 +532,6 @@ int mv_message_send(const char *adr, mv_mtag_t tag, char *arg_s)
   return 0;
 }
 
-/*
- * Implementation of send and recv functions.
- */
 int mv_message_send_value(const char *adr, mv_mtag_t tag, mv_value_t arg)
 {
   _mqinfo_t *mqinfo = _mqinfo_get();
