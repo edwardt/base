@@ -86,9 +86,9 @@ int _message_gettag(char *tag_s)
 
 mv_message_t *_message_build(mv_value_t value, char *s)
 {
-  printf("VVV\n");
+#if 0
   mv_value_print(value);
-  printf("VVV\n");
+#endif
 
   mv_value_t tagkey = mv_value_string("tag");
   mv_value_t tagval = mv_value_map_lookup(value, tagkey);

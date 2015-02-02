@@ -225,10 +225,9 @@ void *_mq_output_thread(void *arg)
     const char * sendaddr = _mq_getaddr(sendstr);
     const char *senddata = _mq_getdata(sendstr);
     char *addr = strstr(sendaddr, "//") + 2;
-    char *port = strdup(strstr(addr, ":") + 1);
-    port[strlen(port)] = '\0';
+    char *port = strstr(addr, ":") + 1;
     char *ipaddr = strdup(addr);
-    ipaddr[port-addr] = '\0';
+    ipaddr[port-addr-1] = '\0';
 #if 1
     fprintf(stdout, "Message to [%s]:[%s]: %s\n", ipaddr, port, senddata);
 #endif
@@ -242,7 +241,7 @@ void *_mq_output_thread(void *arg)
     hints.ai_flags = AI_NUMERICSERV;
 
     if ((rv = getaddrinfo(ipaddr, port, &hints, &result)) != 0) {
-      fprintf(stderr, "getaddrinfo@_mq_output_thread: %s at %s:%s\n", 
+      fprintf(stderr, "getaddrinfo@_mq_output_thread: %s at [%s]:[%s]\n", 
               gai_strerror(rv), ipaddr, port);
       continue;
     }
@@ -319,7 +318,7 @@ const char *_mq_getaddr(const char *str)
 
   unsigned len = (unsigned long) data - (unsigned long) str;
   strncpy(addr, str, len);
-  addr[len] = '\0';
+  addr[len-1] = '\0';
 
   return &addr[0];
 }
@@ -353,7 +352,7 @@ _mqinfo_t *_mqinfo_init(unsigned port)
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_family = AF_UNSPEC;
   hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV | AI_ADDRCONFIG;
-  snprintf(port_s, 127, "%d", port);
+  snprintf(port_s, 128, "%d", port);
   if ((rv = getaddrinfo(NULL, port_s, &hints, &result)) != 0) {
     fprintf(stderr, "getaddrinfo@_mqinfo_init: %s\n", gai_strerror(rv));
     exit(1);
@@ -391,7 +390,8 @@ _mqinfo_t *_mqinfo_init(unsigned port)
 
   freeaddrinfo(result);
 
-  mq->addr = strdup(_mq_selfaddr());
+  mq->addr = malloc(128);
+  snprintf(mq->addr, 128, "tcp://%s:%d", _mq_selfaddr(), port);;
   
   return mq;
 }
