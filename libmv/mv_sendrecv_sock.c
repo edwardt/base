@@ -164,7 +164,7 @@ void *_mq_input_thread(void *arg)
     }
 
     printf("read\n");
-    if ((recvsz = read(connfd, &recvbuf)) == -1) {
+    if ((recvsz = mv_readmsg(connfd, &recvbuf)) == -1) {
       perror("read@_mq_input_thread");
       continue;
     }
