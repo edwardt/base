@@ -225,11 +225,12 @@ void *_mq_output_thread(void *arg)
     const char * sendaddr = _mq_getaddr(sendstr);
     const char *senddata = _mq_getdata(sendstr);
     char *addr = strstr(sendaddr, "//") + 2;
-    char *port = strstr(addr, ":");
+    char *port = strdup(strstr(addr, ":") + 1);
+    port[strlen(port)] = '\0';
     char *ipaddr = strdup(addr);
     ipaddr[port-addr] = '\0';
 #if 1
-    fprintf(stdout, "Message to %s:%s: %s\n", ipaddr, port, senddata);
+    fprintf(stdout, "Message to [%s]:[%s]: %s\n", ipaddr, port, senddata);
 #endif
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -281,7 +282,7 @@ const char *_mq_selfaddr()
   struct ifaddrs *ifa;
 
   if (getifaddrs(&ifaddr) == -1) {
-    perror("getifaddrs@mqutil_getaddr");
+    perror("getifaddrs@_mq_selfaddr");
     return NULL;
   }
 
@@ -390,6 +391,8 @@ _mqinfo_t *_mqinfo_init(unsigned port)
 
   freeaddrinfo(result);
 
+  mq->addr = strdup(_mq_selfaddr());
+  
   return mq;
 }
 
