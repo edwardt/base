@@ -1,14 +1,53 @@
-# system properties
+######################################################################
+##
+## system properties
+##
+######################################################################
+
+## device name
 prop _P_device null
 
-# system events
+## map from event name to subscribers
+prop _P_subscription
+
+######################################################################
+##
+## system events
+##
+######################################################################
+
+## events generated from messages
+event _E_event_sub
+event _E_event_unsub
+event _E_event_occur
 event _E_prop_get
 event _E_prop_set
 event _E_func_call
 event _E_func_call_ret
 event _E_reply
 
-# system reactors
+# internal events
+event _E_syserr
+
+
+######################################################################
+##
+## system reactors
+##
+######################################################################
+
+reactor _R_event_sub
+{
+}
+
+reactor _R_event_unsub
+{
+}
+
+reactor _R_event_occur
+{
+}
+
 reactor _R_func_call 
 {
   getarg              # put event arg to stack top
@@ -84,7 +123,12 @@ reactor _R_reply
 # call_continue retid
 #}
 
-# system event-reactor associations
+######################################################################
+##
+## system event-reactor associations
+##
+######################################################################
+
 assoc _E_func_call      _R_func_call
 assoc _E_func_call_ret  _R_func_call_ret
 assoc _E_prop_get       _R_prop_get
