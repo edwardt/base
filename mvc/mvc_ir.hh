@@ -16,7 +16,7 @@ namespace mvc {
 class Quad {
 public:
   Quad();
-  ~Qual();
+  ~Quad();
 
 private:
   Quad(const Quad& quad) = delete;
