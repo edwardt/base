@@ -39,6 +39,8 @@ public:
 
 private:
   std::map<std::string, Value *> _map;
+
+  /* std::map<Name *, Value *> _map; */
 };
 
 } /* mvc */

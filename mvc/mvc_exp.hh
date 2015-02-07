@@ -1,5 +1,7 @@
 /**
  * @file mvc_exp.hh
+ *
+ * @brief Expression classes.
  */
 #ifndef MVC_EXP_HH
 #define MVC_EXP_HH
@@ -285,7 +287,7 @@ public:
   IntegerExp *createInteger(int v);
   FloatExp *createFloat(float v);
   StringExp *createString(const std::string& v);
-  UnaryExp *createUnary(UnaryTag utag);
+  UnaryExp *createUnary(UnaryTag utag, Exp *exp);
   BinaryExp *createBinary(BinaryTag btag, Exp *lexp, Exp *rexp);
   
   FuncallExp *createFuncall(SymbolExp *name, std::list<Exp *> *args);

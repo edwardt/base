@@ -12,6 +12,7 @@
 namespace mvc {
 
 enum ValueTag {
+  VT_NAME,
   VT_PROP,
   VT_FUNC,
   VT_EVENT,
@@ -32,9 +33,36 @@ public:
 
   virtual std::string& getName() = 0;
 
+private:
+  Value(const Value& v) = delete;
+  Value& operator=(const Value& v) = delete;
 
 protected:
   ValueTag _tag;
+};
+
+/**
+ * @class Name
+ *
+ * @brief Name represents an identifier which identifies a compile-time
+ * object. 
+ */
+class Name : public Value {
+public:
+  Name(const std::string& dev, const std::string& name) :
+    Value(VT_NAME), _dev(dev), _name(name) { }
+  ~Name() { }
+
+  std::string& getDev() { return _dev; }
+  std::string& getName() { return _name; }
+
+private:
+  Name(const Name& v) = delete;
+  Name& operator=(const Name& v) = delete;
+  
+private:
+  std::string _dev;
+  std::string _name;
 };
 
 /**
@@ -46,6 +74,10 @@ public:
   ~Prop() { }
 
   std::string& getName() { return _name; }
+  
+private:
+  Prop(const Prop& v) = delete;
+  Prop& operator=(const Prop& v) = delete;
   
 private:
   std::string _name;
@@ -62,6 +94,10 @@ public:
   std::string& getName() { return _name; }
   
 private:
+  Event(const Event& v) = delete;
+  Event& operator=(const Event& v) = delete;
+  
+private:
   std::string _name;
 };
 
@@ -74,6 +110,10 @@ public:
   ~Function() { }
   
   std::string& getName() { return _name; }
+  
+private:
+  Function(const Function& v) = delete;
+  Function& operator=(const Function& v) = delete;
   
 private:
   std::string _name;
@@ -91,6 +131,10 @@ public:
   std::string& getName() { return _name; }
   
 private:
+  Reactor(const Reactor& v) = delete;
+  Reactor& operator=(const Reactor& v) = delete;
+  
+private:
   std::string _name;
 };
 
@@ -100,6 +144,7 @@ private:
  */
 class ValueFactory {
 public:
+  static Name *createName(SymbolExp *sym);
   static Prop *createProp(const std::string& name);
   static Event *createEvent(const std::string& name);
   static Function *createFunction(const std::string& name);

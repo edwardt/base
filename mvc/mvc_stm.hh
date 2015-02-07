@@ -1,7 +1,7 @@
 /**
  * @file mvc_stm.hh
  *
- * @brief Abstract syntax trees for statements.
+ * @brief Statement classes.
  */
 #ifndef MVC_STM_HH
 #define MVC_STM_HH

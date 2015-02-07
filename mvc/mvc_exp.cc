@@ -60,11 +60,54 @@ ArrayrefExp *ExpFactory::createArrayref(Exp *varref, Exp *index)
   return arrayref;
 }
 
+IntegerExp *ExpFactory::createInteger(int v)
+{
+  IntegerExp *intexp = new IntegerExp(v);
+  
+  return intexp;
+}
+
+FloatExp *ExpFactory::createFloat(float v)
+{
+  FloatExp *floatexp = new FloatExp(v);
+  
+  return floatexp;
+}
+
+StringExp *ExpFactory::createString(const std::string& v)
+{
+  StringExp *strexp = new StringExp(v);
+  
+  return strexp;
+}
+
+UnaryExp *ExpFactory::createUnary(UnaryTag utag, Exp *exp)
+{
+  UnaryExp *unary = new UnaryExp(utag, exp);
+  
+  return unary;
+}
+
+BinaryExp *ExpFactory::createBinary(BinaryTag btag, Exp *lexp, Exp *rexp)
+{
+  BinaryExp *binary = new BinaryExp(btag, lexp, rexp);
+  
+  return binary;
+}
+
 FuncallExp *ExpFactory::createFuncall(SymbolExp *name, std::list<Exp *> *args)
 {
   FuncallExp *call = new FuncallExp(name, args);
 
   return call;
+}
+
+TimeExp *ExpFactory::createTime(size_t d, size_t h, size_t m, size_t s, 
+                                size_t ms)
+{
+  TimeExp *timexp = new TimeExp(d, h, m, s, ms);
+
+  return timexp;
 }
 
 
