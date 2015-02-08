@@ -26,7 +26,7 @@ event _E_func_call
 event _E_func_call_ret
 event _E_reply
 
-# internal events
+## internal events
 event _E_syserr
 
 
@@ -35,8 +35,8 @@ event _E_syserr
 ## system reactors
 ##
 ######################################################################
-
-reactor _R_event_sub
+r
+eactor _R_event_sub
 {
 }
 
