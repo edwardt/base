@@ -223,7 +223,7 @@ mv_value_t _value_parse_token(_parsedata_t *data)
 {
   mv_value_t retval = (mv_value_t) 0;
 
-#if 0
+#if 1
   char tokstr[1024];
   int toksz;
   int tokint;
@@ -232,7 +232,8 @@ mv_value_t _value_parse_token(_parsedata_t *data)
   toksz = tok->end - tok->start;
   strncpy(tokstr, data->msg + tok->start, toksz);
   tokstr[toksz] = '\0';
-  printf("_value_parse_token[%d:%d]: %s\n", tok->start, tok->end, tokstr);
+  fprintf(stdout, "_value_parse_token[%d:%d] begin: %s\n", 
+          tok->start, tok->end, tokstr);
 #endif
 
   switch (data->ctok->type) {
@@ -252,8 +253,11 @@ mv_value_t _value_parse_token(_parsedata_t *data)
     assert(0);
   }
 
-#if 0
+#if 1
+  fprintf(stdout, "\t=> ");
   mv_value_print(retval);
+  fprintf(stdout, "_value_parse_token[%d:%d] end: %s\n", 
+          tok->start, tok->end, tokstr);
 #endif
 
   return retval;
@@ -309,9 +313,7 @@ mv_value_t _value_parse_token_object(_parsedata_t *data)
 
   map = mv_value_map();
 
-  int min = data->ctok->start;
   int max = data->ctok->end;
-
   data->ctok++;
   while (data->ctok) {
     if ((key = _value_parse_token(data)) == 0)
@@ -344,8 +346,10 @@ mv_value_t _value_parse_token_array(_parsedata_t *data)
 
   prev = mv_value_null();
   cons = prev;
+
+  int max = data->ctok->end;
   data->ctok++;
-  while (data->ctok && (data->ctok->start < data->ctok->end)) {
+  while (data->ctok) {
     if ((value = _value_parse_token(data)) == 0)
       return cons;
 
@@ -353,7 +357,12 @@ mv_value_t _value_parse_token_array(_parsedata_t *data)
     mv_value_cons_setcar(cons, value);
     mv_value_cons_setcdr(cons, prev);
     prev = cons;
+    
     data->ctok++;
+    if (data->ctok->start >= data->ctok->end || data->ctok->end > max) {
+      data->ctok--;
+      break;
+    }
   }
 
   return cons;
