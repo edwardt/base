@@ -223,7 +223,7 @@ mv_value_t _value_parse_token(_parsedata_t *data)
 {
   mv_value_t retval = (mv_value_t) 0;
 
-#if 1
+#if 0
   char tokstr[1024];
   int toksz;
   int tokint;
@@ -253,7 +253,7 @@ mv_value_t _value_parse_token(_parsedata_t *data)
     assert(0);
   }
 
-#if 1
+#if 0
   fprintf(stdout, "\t=> ");
   mv_value_print(retval);
   fprintf(stdout, "_value_parse_token[%d:%d] end: %s\n", 
