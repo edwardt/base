@@ -1,9 +1,5 @@
 # properties
 prop batterylife 33
-prop prop0 3
-prop prop1 4
 
 # native functions
-native gpioGet   ../../gpio/libgpio.so
 native gpioPut   ../../gpio/libgpio.so
-native sysprint  ../../term/libterm.so
