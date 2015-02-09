@@ -47,6 +47,10 @@ public:
   StmTag getTag() { return _tag; }
 
   virtual void accept(StmVisitor& v) = 0;
+
+private:
+  Stm(const Stm& stm) = delete;
+  Stm& operator=(const Stm& stm) = delete;
   
 protected:
   StmTag _tag;

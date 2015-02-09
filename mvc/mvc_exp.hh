@@ -74,6 +74,10 @@ public:
 
   virtual void accept(ExpVisitor& v) = 0;
 
+private:
+  Exp(const Exp& exp) = delete;
+  Exp& operator=(const Exp& exp) = delete;
+
 protected:
   ExpTag _tag;
 };

@@ -36,9 +36,8 @@ public:
   */
 
 private:
-  /* do not implement */
-  void operator=(const Pass&);
-  Pass(const Pass&);
+  Pass(const Pass&) = delete;
+  Pass& operator=(const Pass&) = delete;
 
 private:
   PassTag _tag;
