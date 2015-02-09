@@ -2,4 +2,4 @@
 prop batterylife 33
 
 # native functions
-native gpioPut   ../../gpio/libgpio.so
+native gpioPut   gpio/libgpio.so

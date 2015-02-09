@@ -10,7 +10,7 @@ timer timer0 1 0
 
 # native functions
 # native <name> <dynlib>
-native gpioGet   ../../gpio/libgpio.so
+native gpioGet   gpio/libgpio.so
 
 # reactors
 # r0 reads the value of pin 2 of dev0 and calls gpioPut function in dev2
@@ -23,7 +23,7 @@ reactor r0
   call_func               # call ":gpioGet(2)"
                           # now, stack top contains the value of pin 2
   cons                    # create cons cell (value . null)
-  pushs "dev1:gpioPut"    # set the name of function to call
+  pushs "newton:gpioPut"    # set the name of function to call
   call_func
 }
 
