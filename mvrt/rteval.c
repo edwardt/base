@@ -335,21 +335,6 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
   char *dev_s = _eval_getdev(prop_s);
   char *name_s = _eval_getname(prop_s);
 
-  mvrt_prop_t *mvprop = mvrt_prop_lookup(name_s);
-  if (mvprop) {
-    mv_value_t value_v = mvrt_prop_getvalue(mvprop);
-    mvrt_stack_push(stack, value_v);
-
-#if 1
-    fprintf(stdout, "\t=> PROP_GET: "); mv_value_print(value_v);
-#endif
-
-    free(dev_s);
-    return ip + 1;
-  }
-
-  /* no local property with the given name found; if it's a 
-     remote property (i.e. dev_s != NULL), send request */
   if (dev_s) {
     static char arg[4096];
     const char *destaddr = mv_device_addr(dev_s);
@@ -362,11 +347,24 @@ int _eval_prop_get(mvrt_instr_t *instr, mvrt_context_t *ctx)
     free(dev_s);
     return _EVAL_SUSPEND;
   }
-
-  /* failed to find the property; process error */
-  mv_value_t value_v = mv_value_string("E:NO_SUCH_PROP");
-  mvrt_stack_push(stack, value_v);
-  return ip + 1;
+  else {
+    /* local prop */
+    mvrt_prop_t *mvprop = mvrt_prop_lookup(name_s);
+    if (mvprop) {
+      mv_value_t value_v = mvrt_prop_getvalue(mvprop);
+      mvrt_stack_push(stack, value_v);
+      
+#if 0
+      fprintf(stdout, "\t=> PROP_GET: "); mv_value_print(value_v);
+#endif
+    }
+    else {
+      /* failed to find the property; process error */
+      mv_value_t value_v = mv_value_string("E:NO_SUCH_PROP");
+      mvrt_stack_push(stack, value_v);
+    }
+    return ip + 1;
+  }
 }
 
 int _eval_prop_set(mvrt_instr_t *instr, mvrt_context_t *ctx)
@@ -422,18 +420,15 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
     if (mvfunc) {
       /* local function */
       if (mvrt_func_isnative(mvfunc)) {
-        free(dev_s);
         return _eval_call_native(mvfunc, farg_v, ctx);
       }
       else {
         assert(0 && "MV func not implemented yet");
-        free(dev_s);
         return ip + 1;
       }
     }
     else {
       assert(0 && "Local function with the given name not found");
-      free(dev_s);
       return ip + 1;
     }
   }
@@ -570,6 +565,9 @@ char *_eval_getdev(char *s)
 {
   char *charp = strstr(s, ":");
   if (!charp)
+    return NULL;
+
+  if (charp == s)
     return NULL;
 
   char save = *charp;
