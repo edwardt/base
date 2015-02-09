@@ -417,17 +417,23 @@ int _eval_call_func(mvrt_instr_t *instr, mvrt_context_t *ctx)
   char *dev_s = _eval_getdev(func_s);
   char *name_s = _eval_getname(func_s);
 
-  mvrt_func_t *mvfunc = mvrt_func_lookup(name_s);
-  if (mvfunc) {
-    /* local function */
-
-    if (mvrt_func_isnative(mvfunc)) {
-      free(dev_s);
-      return _eval_call_native(mvfunc, farg_v, ctx);
+  if (!dev_s) {
+    mvrt_func_t *mvfunc = mvrt_func_lookup(name_s);
+    if (mvfunc) {
+      /* local function */
+      if (mvrt_func_isnative(mvfunc)) {
+        free(dev_s);
+        return _eval_call_native(mvfunc, farg_v, ctx);
+      }
+      else {
+        assert(0 && "MV func not implemented yet");
+        free(dev_s);
+        return ip + 1;
+      }
     }
     else {
+      assert(0 && "Local function with the given name not found");
       free(dev_s);
-      assert(0 && "MV func not implemented yet");
       return ip + 1;
     }
   }
