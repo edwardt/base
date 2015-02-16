@@ -10,12 +10,23 @@
 
 namespace mvc {
 
+enum QuadTag {
+  QT_ADD,        /* add */
+  QT_SUB,        /* subtract */
+  QT_MUL,        /* multiply */
+  QT_DIV,        /* divide */
+  QT_FUNCALL,    /* function call */
+  QT_PHI,        /* phi-function */
+  QT_NTAGS       /* number of tags */
+};
+
+
 /**
  * @class Quad
  */
 class Quad {
 public:
-  Quad();
+  Quad(QuadTag tag, Name *lhs, Name *arg0, Name *arg1);
   ~Quad();
 
 private:
@@ -23,9 +34,10 @@ private:
   Quad& operator=(const Quad& quad) = delete;
 
 private:
-  Name *lhs;
-  Name *rhs0;
-  Name *rhs1;
+  QuadTag _tag;
+  Name *_lhs;
+  Name *_arg0;
+  Name *_arg1;
 };
 
 /**
