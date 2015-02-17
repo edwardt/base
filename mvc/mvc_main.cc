@@ -3,8 +3,8 @@
  *
  * @brief The main for MVC.
  */
-#include <cstdio>           /* fprintf */
-#include <cstdlib>          /* exit */
+#include <cstdio>             /* fprintf */
+#include <cstdlib>            /* exit */
 #include "mvc_base.hh"
 #include "mvc_exp.hh"
 #include "mvc_stm.hh"

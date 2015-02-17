@@ -7,6 +7,9 @@
 #define MVC_IR_HH
 
 #include <list>
+#include "mvc_name.hh"
+#include "mvc_symtab.hh"
+
 
 namespace mvc {
 
@@ -40,6 +43,7 @@ private:
   Name *_arg1;
 };
 
+
 /**
  * @class BasicBlock
  */
@@ -49,7 +53,7 @@ public:
   ~BasicBlock();
 
   int addQuad(Quad *qad);
-  std::list<Quad *>& getQuads() { return _quads; }
+  std::vector<Quad *>& getQuads() { return _quads; }
 
 private:
   Basicblock(const BasicBlock& blk) = delete;
@@ -58,6 +62,7 @@ private:
 private:
   std::list<Quad *> _quads;
 };
+
 
 /**
  * @class ControlGraph
