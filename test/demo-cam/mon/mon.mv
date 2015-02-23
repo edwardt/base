@@ -1,0 +1,26 @@
+# module
+module MonitorModule
+
+#########################
+# exports
+#########################
+exports
+  prop pBatteryLife
+  event eBatteryLow
+  function fSetSourceDevice
+enexports
+
+# properties
+prop pSourceDevice
+prop pBatteryLife
+
+# events
+
+# functions
+function :INIT
+endfunction
+
+function :EXIT
+endfunction
+
+# reactors

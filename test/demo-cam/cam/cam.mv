@@ -1,0 +1,72 @@
+# module
+module CameraModule
+
+#########################
+# exported 
+#########################
+exports
+  prop pBatteryLife
+  event eBatteryLow
+  function fStart
+  function fStop
+  function fSetTargetDevice
+endexports
+
+# properties
+prop pBatteryLife
+prop pTargetDevice
+
+# events
+event eCameraTurnedOn
+event eCameraTurnedOff
+
+# timers
+timer t0 1 0
+
+# functions
+function :INIT
+endfunction
+
+function :EXIT
+endfunction
+
+function :START
+endfunction
+
+function fSetTargetDevice
+  getargs
+  pushs "pTargetDevice"
+  prop_set
+endfunction
+
+# fStartStreaming() {
+#   // block until connection
+#   pTargetDevice:connect() => fcall {
+#     fork {
+#       @fcall.Error { // one-time event
+#         return;
+#       }
+#       @fcall.Success { // one-time event
+#         return;
+#       }
+#     join(ANY);
+#   }
+#   
+# }  
+function fStartStreaming
+endfunction 
+
+function fStopStreaming
+endfunction
+
+# connect to the target device
+function fConnect
+endfunction
+
+function fDisconnect
+endfunction
+
+#reactors
+
+
+endmodule
