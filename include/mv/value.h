@@ -9,7 +9,7 @@
 #include <mv/defs.h>       /* mv_ptr_t */
 
 
-/* Opaque pointer to value. An mv_value_t is a pointer value where
+/* Opaque pointer to a value. An mv_value_t is a pointer value where
    three lsb bits are used for storing a tag (mv_vtag_t). An invalid
    value is represented by 0. */
 typedef mv_ptr_t mv_value_t;
