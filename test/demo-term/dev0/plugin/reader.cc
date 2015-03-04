@@ -1,18 +1,30 @@
+/**
+ * @file reader.cc
+ */
 #include <stdio.h>
-#include "mv/mvcc/mvcc.hh"
+#include <mv/value.hh>
+#include <mvcc/mvcc.hh>
 
-class KeyboardReader : public MV_Process {
+
+class KeyboardReader : public mvcc::Process {
 public:
+
   KeyboardReader() {
   }
 
-  init() {
+  ~KeyboardReader() {
   }
 
-  loop() {
-    int ival;
-    fscanf(stdin, "%d", &ival);
-    triggerEvent(
+  void init() {
+    mvcc::registerEvent(std::string("KeyPressedEvent"));
   }
-  
+
+  void loop() {
+    int iv;
+    fscanf(stdin, "%d", &iv);
+
+    mv_value_t intval = mv_value_int(iv);
+    mvcc::Event keyev("KeyPressedEvent", intval);
+    triggerEvent(keyev);
+  }
 };

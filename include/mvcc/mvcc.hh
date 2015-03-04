@@ -6,44 +6,53 @@
 #ifndef MVCC_HH
 #define MVCC_HH
 
-enum MV_ProcessTag {
-  MV_ProcessPassive,
-  MV_ProcessReactive
-};
+#include <mv/value.h>
+
+namespace mvcc {
+
+/*
+ * Runtime functions.
+ */
+void registerEvent(const std::string s);
+void waitEvent(Event& e);
+void triggerEvent(Event& e);
 
 /**
- * @class MV_Event
+ * @class Event
  */
-class MV_Event {
+class Event {
 public:
-  MV_EVent();
-  virtual ~MV_Event() = 0;
+  Event(const std::string s, mv_value_t v) : _name(s), _value(v) { }
+  ~Event() {
+    delete _value;
+  }
+
+  std::string& getName() { return _name; }
+  mv_value_t getValue() { return _value; }
+
+private:
+  std::string _name;
+  mv_value_t _value;
 };
 
+
 /**
- * @class MV_Process
+ * @class Process
  */
-class MV_Process {
+class Process {
 public:
-  MV_Process();
-  virtual ~MV_Process() = 0;
+  Process();
+  virtual ~Process() = 0;
 
   virtual init() = 0;
 
   virtual loop() = 0;
 
 private:
-  MV_Event *getEvent(const std::string s);
-
-  void waitEvent(MV_Event& e);
-
-  void triggerEvent(MV_Event& e);
-
-private:
-  MV_Process(const MV_Process&) = delete;
-  MV_Process& operator=(const MV_Process&) = delete;
-
+  Process(const Process&) = delete;
+  Process& operator=(const Process&) = delete;
 };
 
+} /* mvcc */
 
 #endif MVCC_HH
