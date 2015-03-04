@@ -88,7 +88,7 @@ typedef struct {
 /* Sends the given message the given device. The src field of the message 
    will be automatically constructed by. The argument string or value will
    be freed by the callee. Returns 0 on success and -1 on failure. */
-extern int mv_message_send_value(const char *addr, mv_mtag_t t, mv_value_t arg);
+extern int mv_message_send_value(const char *adr, mv_mtag_t t, mv_value_t arg);
 extern int mv_message_send(const char *addr, mv_mtag_t t, char *arg);
 
 /* Receives a string message. This is a blocking receive and will return
