@@ -75,10 +75,11 @@ class ControlGraph {
  */ 
 class IRModule {
 public:
+  IRModule();
+  ~IRModule();
   
 private:
-  std::list<Function *> _funcs;
-  std::list<Reactor *> _reactors;
+  SymTab _symtab;
 };
 
 
