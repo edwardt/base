@@ -82,6 +82,13 @@ typedef struct {
 } mv_message_t;
 
 
+
+mv_message_t mv_message_new(mv_mtag_t t, char *arg);
+int mv_message_delete(mv_message_t m);
+
+
+
+
 /* 
  * Use following functions for sending or receiving a message. Depending 
  * on the implementation, messages can be sent immediately or put on a queue.
@@ -91,7 +98,16 @@ typedef struct {
    will be automatically constructed by. The argument string or value will
    be freed by the callee. Returns 0 on success and -1 on failure. */
 extern int mv_message_send_value(const char *adr, mv_mtag_t t, mv_value_t arg);
+
+
 extern int mv_message_send(const char *addr, mv_mtag_t t, char *arg);
+
+
+extern int mv_message_try_send(mv_addr_t addr, mv_message_t m);
+
+
+extern int mv_message_timed_send(mv_addr_t addr, mv_message_t m);
+
 
 /* Receives a string message. This is a blocking receive and will return
    only when a message was received. The caller is responsible for 
