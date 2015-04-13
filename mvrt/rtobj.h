@@ -1,4 +1,4 @@
-/**q
+/**
  * @file rtobj.h
  *
  * @brief Interface to the local runtime objects, such as properties, events, 

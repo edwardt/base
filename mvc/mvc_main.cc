@@ -28,9 +28,12 @@ int main(int argc, char *argv[])
   Util::print(std::cout, mod);
 
   SymTab symtab;
-  Analyzer semcheck(mod, symtab);
-  semcheck.run();
 
+  /* semantic checking */
+  Analyzer analysis(mod, symtab);
+  analysis.run();
+
+  /* IR generation */
   
 
   return 0;

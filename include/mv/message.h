@@ -2,7 +2,9 @@
  * @file message.h
  *
  * @brief Interface to messages which is transferred between devices. A
- * message is a string (or an array of chars) in JSON format. 
+ * message is a string (or an array of chars) in JSON format. Message messaing
+ * is the major mechanism use for device communication. They can contain 
+ * either control information or payload.
  */
 #ifndef MV_MESSAGE_H
 #define MV_MESSAGE_H

@@ -28,7 +28,7 @@ typedef enum {
 
 #define MV_VALUE_INVALID(v)  ((v) == 0)
 
-/* common functions for all value types */
+/* Common functions for all value types. */
 mv_vtag_t mv_value_tag(mv_value_t value);
 int mv_value_eq(mv_value_t u, mv_value_t v);
 
