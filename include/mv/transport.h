@@ -17,7 +17,7 @@ typedef enum {
   MV_TRANSPORT_MQTT,      /* MQTT */
   MV_TRANSPORT_ZB,        /* ZigBee */
   MV_TRANSPORT_NTAGS
-} mv_transtag_t;
+} mv_ttag_t;
 
 #define MV_TRANSPORT_INVALID(transport)  ((transport) == 0)
 
@@ -28,10 +28,15 @@ extern "C" {
 extern mv_transport_t mv_transport_open(const char *s);
 extern int mv_transport_close(mv_transport_t t);
 
+typedef int (*transport_callback_t)(char *s);
+typedef int (*transport_callback_t)(char *s);
+
 int mv_transport_send(mv_transport_t t, char *s);
 char *mv_transport_recv(mv_transport_t t);
+int mv_transport_send_nb(mv_transport_t, char *s, reply_callback_t cb);
+int mv_transport_recv_nb(mv_transport_t t, recv_callback_t cb);
 
-mv_transtag_t mv_transport_tag();
+mv_ttag_t mv_transport_tag();
 const char *mv_transport_addr(mv_transport_t t);
 
 

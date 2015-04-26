@@ -4,13 +4,20 @@
 #include <mv/transport.h>
 
 
-typedef struct {
-  mv_transtag_t tag;
-  int (*send)(char *s);
-  char (*recv)();
-} _transport_t;
-
-
-mv_tansport_t _tcp_open(const char *s)
+int tcp_open(const char *addr)
 {
+  
+}
+
+int tcp_close(int handle)
+{
+}
+
+int tcp_send(int handle, const char *s)
+{
+}
+
+int tcp_recv(int handle, const char *s)
+{
+  
 }
