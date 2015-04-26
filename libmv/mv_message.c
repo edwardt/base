@@ -136,12 +136,14 @@ mv_message_t *mv_message_parse(char *s)
   return _message_build(value, s);
 }
 
-void mv_message_delete(mv_message_t *m)
+int mv_message_delete(mv_message_t *m)
 {
   if (!m) 
-    return;
+    return 0;
 
   free(m);
+
+  return 0;
 }
 
 const char *mv_message_tagstr(mv_mtag_t tag)

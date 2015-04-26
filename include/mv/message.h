@@ -11,6 +11,7 @@
 
 #include <mv/defs.h>     /* mv_uint64_t */
 #include <mv/value.h>    /* mv_value_t */
+#include <mv/addr.h>     /* mv_addr_t */
 
 /* A message transferred between devices is a JSON message. Such messages
    represent either service requests or replies to requests. An example 
@@ -81,12 +82,8 @@ typedef struct {
   mv_value_t src;                  /* value for "src" key */
 } mv_message_t;
 
-
-
-mv_message_t mv_message_new(mv_mtag_t t, char *arg);
-int mv_message_delete(mv_message_t m);
-
-
+mv_message_t *mv_message_new(mv_mtag_t t, char *arg);
+int mv_message_delete(mv_message_t *m);
 
 
 /* 
@@ -98,14 +95,8 @@ int mv_message_delete(mv_message_t m);
    will be automatically constructed by. The argument string or value will
    be freed by the callee. Returns 0 on success and -1 on failure. */
 extern int mv_message_send_value(const char *adr, mv_mtag_t t, mv_value_t arg);
-
-
 extern int mv_message_send(const char *addr, mv_mtag_t t, char *arg);
-
-
 extern int mv_message_try_send(mv_addr_t addr, mv_message_t m);
-
-
 extern int mv_message_timed_send(mv_addr_t addr, mv_message_t m);
 
 
@@ -121,10 +112,6 @@ extern char *mv_message_recv();
    TODO: Do we need this? Should the mv_message_recv directly return
    mv_message_t object? */
 extern mv_message_t *mv_message_parse(char *m);
-
-/* Deletes the given message. */
-extern void mv_message_delete(mv_message_t *m);
-
 
 /*
  * Utility functions mostly for debugging.
