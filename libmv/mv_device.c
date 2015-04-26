@@ -7,10 +7,11 @@
 #include <assert.h>      /* assert */
 #include <mv/device.h>   /* mv_deviceid_t */
 
+
 #define MAX_DEVICE_TABLE 4096
 typedef struct _device {
   char *name;               /* globally-unique name */
-  char *addr;               /* transport addr */
+  mv_addr_t addr;           /* transport addr */
 
   unsigned free     : 1;    /* free or not */
   unsigned free_idx : 12;   /* index to free list */
@@ -33,7 +34,7 @@ void _device_table_init()
   for (i = 0; i < MAX_DEVICE_TABLE; i++) {
     dev = _device_table + i;
     dev->name = NULL;
-    dev->addr = NULL;
+    dev->addr = 0;
 
     dev->free = 1;
     dev->free_idx = i;
@@ -100,11 +101,9 @@ int _device_tokenize(char *line, char **dev, char **addr)
 /*
  * Functions for the device API.
  */
-const char *_self = NULL;
-int mv_device_service_init(const char *dev, const char *file)
+int mv_device_module_init(const char *file)
 {
   _device_table_init();
-  _self = dev;
 
   /* For now, to emulate the device server, read a device-address
      table from a file. */
@@ -128,7 +127,7 @@ int mv_device_service_init(const char *dev, const char *file)
     if (!mvdev)
       continue;
     mvdev->name = strdup(name);
-    mvdev->addr = strdup(addr);
+    mvdev->addr = mv_addr(addr);
   }
 
   fprintf(stdout, "Device address lookup service initiated...\n");
@@ -147,14 +146,16 @@ int mv_device_register(const char *name)
 
   _device_t *dev = _device_get_free();
   if (!dev) {
-    fprintf(stderr, "Cannot register device - %s\n", name);
+    fprintf(stderr, "mv_device_register: Failed to register - %s\n", name);
     return -1;
   }
 
-  if (dev->name) free(dev->name);
-  if (dev->addr) free(dev->addr);
+  if (dev->name) 
+    free(dev->name);
+  if (dev->addr)
+    mv_addr_delete(dev->addr);
   dev->name = strdup(name);
-  dev->addr = NULL;
+  dev->addr = 0;
 
   fprintf(stdout, "Device registered: %s\n", dev->name);
   
@@ -165,47 +166,52 @@ int mv_device_deregister(const char *name)
 {
   _device_t *dev = (_device_t *) _device_lookup(name);
   if (!dev) {
-    fprintf(stderr, "Cannot register device - %s\n", name);
+    fprintf(stderr, "mv_device_deregister: Failed to deregister - %s\n", name);
     return -1;
   }
   
   return _device_delete(dev);
 }
 
-int mv_device_signon(const char *name, const char *addr)
+_device_t *_self = 0;
+char *_selfname = 0;
+mv_device_t mv_device_signon(const char *name, mv_addr_t addr)
 {
-  assert(!strcmp(name, _self));
-
-  _device_t *dev = _device_lookup(name);
+  _device_t *pdev = _device_lookup(name);
   if (!dev) {
-    fprintf(stderr, "Cannot sign on - %s\n", name);
+    fprintf(stderr, "mv_device_signon: Failed to sign on - %s\n", name);
     return -1;
   }
 
-  if (!addr) {
-    fprintf(stderr, "mv_device_signon: Transport address is NULL.\n");
+  if (addr == 0) {
+    fprintf(stderr, "mv_device_signon: Invalid transport address.\n");
     return -1;
   }
-  dev->addr = strdup(addr);
+  pdev->addr = addr;
 
-  _self = strdup(name);
+  _self = pdev;
+  _selfname = strdup(name);
+
+  return (mv_device_t) pdev;
+}
+
+int mv_device_signoff(mv_device_t dev)
+{
+  if (dev != _self) {
+    fprintf(stderr, "mv_device_signoff: Failed to sign off - %s\n", name);
+    return -1;
+  }
+
+  _device_t *pdev = (_device_t *) dev;
+  mv_addr_delete(pdev->addr);
+  pdev->addr = 0;
+
+  _self = 0;
 
   return 0;
 }
 
-int mv_device_signoff(const char *name)
-{
-  _device_t *dev = _device_lookup(name);
-  if (!dev) {
-    fprintf(stderr, "Cannot sign off - %s\n", name);
-    return -1;
-  }
-
-  free(dev->addr);
-  dev->addr = NULL;
-}
-
-const char *mv_device_self()
+mv_device_t mv_device_self()
 {
   return _self;
 }

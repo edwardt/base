@@ -1,6 +1,7 @@
 noinst_LIBRARIES = libmv.a
 libmv_a_SOURCES = \
 	mv_value.c \
+	mv_addr.c \
 	mv_device.c \
 	mv_message.c \
 	mv_sendrecv.c \

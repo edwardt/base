@@ -1,7 +1,7 @@
 /**
  * @file addr.h
  *
- * @brief Device addresses.
+ * @brief Device address.
  */
 #ifndef MV_ADDR_H
 #define MV_ADDR_H
@@ -25,11 +25,8 @@ typedef enum {
 extern "C" {
 #endif
 
-extern mv_addr_t mv_addr(mv_transport_t t, const char *s);
-
+extern mv_addr_t mv_addr(const char *s);
 extern int mv_addr_delete(mv_addr_t addr);
-
-extern mv_transport_t mv_addr_transport(mv_addr_t addr);
 
 
 #ifdef __cplusplus

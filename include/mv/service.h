@@ -7,7 +7,7 @@
 #ifndef MV_SERVICE_H
 #define MV_SERVICE_H
 
-#include <value.h>
+#include <mv/value.h>
 
 
 /* Opaque pointer to a service. An mv_stag_t is a pointer value where 
@@ -35,10 +35,8 @@ int mv_service_print(mv_service_t s);
 /*
  * Properties
  */
-/* Returns the value of property @p. Returns the INVALID value on failure. */
+mv_prop_t mv_prop(mv_device_t 
 mv_value_t mv_prop_get(mv_prop_t p);
-
-/* Sets the value of a property @p. Returns 0 on success, otherwise -1. */
 int mv_prop_set(mv_prop_t p, mv_value_t v);
 
 /*
