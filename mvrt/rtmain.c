@@ -58,11 +58,11 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  char *self = strdup(argv[1]);
+  char *selfdev = strdup(argv[1]);
   char *datafile = strdup(argv[2]);
 
   /* initialize device service */
-  mv_device_service_init(self, "etc/device.dat");
+  mv_device_module_init("etc/device.dat");
   
   /* load system properties, reactors, etc. */
   mvrt_obj_loadfile("etc/syslib.dat");
@@ -70,7 +70,11 @@ int main(int argc, char *argv[])
   /*
    * device sign using the MQ address
    */
-  mv_device_signon(self, mv_message_selfaddr());
+  mv_device_t selfdev = mv_device_signon(self, mv_message_selfaddr());
+  if (MV_DEVICE_INVALID(selfdev)) {
+    fprintf(stdout, "No device with name, %s, is not registered.\n", selfdev);
+    exit(1);
+  }
   fprintf(stdout, "Device %s signed on at %s.\n", self, mv_device_addr(self));
 
   /* 

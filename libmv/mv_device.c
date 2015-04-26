@@ -134,7 +134,7 @@ int mv_device_module_init(const char *file)
   return 0;
 }
 
-int mv_device_register(const char *name)
+mv_device_t mv_device_register(const char *name)
 {
   /* 
      TODO: Later, connect to the "server" to register the device globally.
@@ -144,6 +144,7 @@ int mv_device_register(const char *name)
      e.g. mv_mqueue_put("DEVADD name myname");
   */
 
+  /*
   _device_t *dev = _device_get_free();
   if (!dev) {
     fprintf(stderr, "mv_device_register: Failed to register - %s\n", name);
@@ -158,27 +159,26 @@ int mv_device_register(const char *name)
   dev->addr = 0;
 
   fprintf(stdout, "Device registered: %s\n", dev->name);
+  */
   
   return 0;
 }
 
-int mv_device_deregister(const char *name)
+int mv_device_deregister(mv_device_t dev)
 {
-  _device_t *dev = (_device_t *) _device_lookup(name);
-  if (!dev) {
-    fprintf(stderr, "mv_device_deregister: Failed to deregister - %s\n", name);
+  if (dev == 0)
     return -1;
-  }
   
-  return _device_delete(dev);
+  _device_t *pdev = (_device_t *) dev;
+
+  return _device_delete(pdev);
 }
 
 _device_t *_self = 0;
-char *_selfname = 0;
 mv_device_t mv_device_signon(const char *name, mv_addr_t addr)
 {
   _device_t *pdev = _device_lookup(name);
-  if (!dev) {
+  if (!pdev) {
     fprintf(stderr, "mv_device_signon: Failed to sign on - %s\n", name);
     return -1;
   }
@@ -190,19 +190,21 @@ mv_device_t mv_device_signon(const char *name, mv_addr_t addr)
   pdev->addr = addr;
 
   _self = pdev;
-  _selfname = strdup(name);
 
   return (mv_device_t) pdev;
 }
 
 int mv_device_signoff(mv_device_t dev)
 {
-  if (dev != _self) {
-    fprintf(stderr, "mv_device_signoff: Failed to sign off - %s\n", name);
+  if (dev == 0)
+    return -1;
+
+  _device_t *pdev = (_device_t *) dev;
+  if (pdev != _self) {
+    fprintf(stderr, "mv_device_signoff: Failed - %s\n", pdev->name);
     return -1;
   }
 
-  _device_t *pdev = (_device_t *) dev;
   mv_addr_delete(pdev->addr);
   pdev->addr = 0;
 
@@ -213,17 +215,26 @@ int mv_device_signoff(mv_device_t dev)
 
 mv_device_t mv_device_self()
 {
-  return _self;
+  return (mv_device_t) _self;
 }
 
-const char *mv_device_addr(const char *name)
+mv_device_t mv_device_lookup(const char *name)
 {
-  _device_t *dev = _device_lookup(name);
-  if (!dev) {
-    fprintf(stderr, "No such device exists - %s\n", name);
-    return NULL;
-  }
-
-  return dev->addr;
+  return (mv_device_t) _device_lookup(name);
 }
+
+const char *mv_device_name(mv_device_t dev)
+{
+  _device_t *pdev = (_device_t *) dev;
+
+  return pdev->name;
+}
+
+mv_addr_t mv_device_addr(mv_device_t dev)
+{
+  _device_t *pdev = (_device_t *) dev;
+
+  return pdev->addr;
+}
+
 

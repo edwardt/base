@@ -12,6 +12,9 @@
 /* Opaque pointer to a device. */
 typedef mv_ptr_t mv_device_t;
 
+#define MV_DEVICE_INVALID(dev)  ((dev) == 0)
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,28 +22,19 @@ extern "C" {
 /* NOTE: For now, actual device (persistent) namespace can be implemented
    in many different ways: files, device name server, or DHT */
 
-/* Initializes the device module. Be sure to call at time 0. */
+/* Call this at time 0. */
 extern int mv_device_module_init(const char *file);
 
-/* Registers or deregisters a device with the given name. */
 extern mv_device_t mv_device_register(const char *name);
 extern int mv_device_deregister(mv_device_t dev);
 
-/* Device sign-on and sign-off. To use any device services, one has to
-   sign-on first and get a handle to the self device. The mv_device_signon()
-   funrtion returns the handle to the self device; on failure, returns 0. 
-   The mv_device_signoff() function returns -1 on failure. */
 extern mv_device_t mv_device_signon(const char *name, mv_addr_t addr);
 extern int mv_device_signoff(mv_device_t dev);
-
-/* Device lookup. */
 extern mv_device_t mv_device_self();
+
 extern mv_device_t mv_device_lookup(const char *name);
-extern mv_addr_t mv_device_get_transport(mv_device_t dev);
-
-
-/* Returns the address of the given device */
-extern const char *mv_device_addr(const char *name);
+extern const char *mv_device_name(mv_device_t dev);
+extern mv_addr_t mv_device_addr(mv_device_t dev);
 
 
 #ifdef __cplusplus
