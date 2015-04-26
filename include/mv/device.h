@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /* NOTE: For now, actual device (persistent) database exists in a central
-   server. So, this device DPI is used to access the database server to
+   server. So, this device API is used to access the database server to
    lookup device information -- in particular, what is the current address
    of the given device, if signed on. */
 
@@ -36,6 +36,8 @@ extern const char *mv_device_self();
 
 /* Returns the address of the given device */
 extern const char *mv_device_addr(const char *name);
+
+//extern mv_addr_t mv_device_addr(mv_transport_t t);
 
 #ifdef __cplusplus
 }

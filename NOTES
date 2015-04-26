@@ -1,0 +1,27 @@
+
+[device layer]
+* device naming
+* device discovery
+* device advertisement
+* device groups 
+* device onboarding
+
+[messaging layer]
+* message queue
+
+[core layer]
+* properties
+* events
+* functions
+
+[services layer]
+* session
+  - virtual ckt (session ports in devs) vs pkt (messages carry session id)
+* device group layer
+  - 
+* overlay network layer
+
+
+[workflow layer]
+* workflow
+  - dependency between jobs

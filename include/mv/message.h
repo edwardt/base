@@ -11,6 +11,7 @@
 
 #include <mv/defs.h>     /* mv_uint64_t */
 #include <mv/value.h>    /* mv_value_t */
+#include <mv/addr.h>     /* mv_addr_t */
 
 /* A message transferred between devices is a JSON message. Such messages
    represent either service requests or replies to requests. An example 
@@ -82,30 +83,32 @@ typedef struct {
 } mv_message_t;
 
 
+#ifdef __cpluscplus
+extern "C" {
+#endif
+
 
 mv_message_t mv_message_new(mv_mtag_t t, char *arg);
-int mv_message_delete(mv_message_t m);
+
+void mv_message_delete(mv_message_t *m);
+
+/* Returns the string for the given message tag. For example, for 
+   MV_MESSAGE_FUNC_CALL, "FUNC_CALL" will be returned. Returns NULL on
+   failure. */
+extern const char *mv_message_tagstr(mv_mtag_t tag);
+
+/* Prints the message for debugging purpose. */
+extern void mv_message_print(mv_message_t *m);
 
 
-
-
-/* 
- * Use following functions for sending or receiving a message. Depending 
- * on the implementation, messages can be sent immediately or put on a queue.
+/*
+ * Functions for sending and receiving messages.
  */
-
 /* Sends the given message the given device. The src field of the message 
    will be automatically constructed by. The argument string or value will
    be freed by the callee. Returns 0 on success and -1 on failure. */
-extern int mv_message_send_value(const char *adr, mv_mtag_t t, mv_value_t arg);
-
-
-extern int mv_message_send(const char *addr, mv_mtag_t t, char *arg);
-
-
+extern int mv_message_send(mv_addr_t addr, mv_mtag_t t, char *arg);
 extern int mv_message_try_send(mv_addr_t addr, mv_message_t m);
-
-
 extern int mv_message_timed_send(mv_addr_t addr, mv_message_t m);
 
 
@@ -122,9 +125,6 @@ extern char *mv_message_recv();
    mv_message_t object? */
 extern mv_message_t *mv_message_parse(char *m);
 
-/* Deletes the given message. */
-extern void mv_message_delete(mv_message_t *m);
-
 
 /*
  * Utility functions mostly for debugging.
@@ -137,12 +137,10 @@ const char *mv_message_selfaddr();
    function calls. */
 int mv_message_setport(unsigned port);
 
-/* Returns the string for the given message tag. For example, for 
-   MV_MESSAGE_FUNC_CALL, "FUNC_CALL" will be returned. Returns NULL on
-   failure. */
-extern const char *mv_message_tagstr(mv_mtag_t tag);
 
-/* Prints the message for debugging purpose. */
-extern void mv_message_print(mv_message_t *m);
+
+#ifdef __cpluscplus
+}
+#endif
 
 #endif /* MV_MESSAGE_H */
