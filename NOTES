@@ -5,6 +5,7 @@
 * device advertisement
 * device groups 
 * device onboarding
+  - wifi only (for now; can support BTLE later)
 
 [messaging layer]
 * message queue
