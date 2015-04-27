@@ -1,17 +1,27 @@
-
 [device layer]
 * device naming
+* device groups 
+
+[network layer]
+* e.g. tcp, udp
 * device discovery
 * device advertisement
-* device groups 
-* device sign-on
-  - sign-on lookup
-  - name-to-transport-addr lookup
+* device network connection
+  - transport address assigment 
 * device onboarding
   - wifi only (for now; can support BTLE later)
 
+[security layer]
+* device sign-on
+  - sign-on lookup
+  - name-to-transport-addr lookup
+* authentication
+
 [messaging layer]
+* messaging support regardless of network layer
+* marshall/unmarshall
 * message queue
+* zmq, mqtt, minimal (mv)
 
 [device services layer]
 * properties
