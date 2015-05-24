@@ -1,0 +1,2 @@
+SUBDIRS = mvsh \
+	mvc

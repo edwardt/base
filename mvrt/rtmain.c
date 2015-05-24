@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  char *selfdev = strdup(argv[1]);
+  char *self = strdup(argv[1]);
   char *datafile = strdup(argv[2]);
 
   /* initialize device service */

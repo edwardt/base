@@ -11,7 +11,7 @@ int main(int args, char *argv[])
 {
 
   /* Initialize device service. */
-  mv_device_service_init("mvsh", "etc/device.dat");
+  mv_device_module_init("etc/device.dat");
 
   /* Set the message layer to use port 5558 to facilitate debugging on
      the same machine. Running the mvrt runtime and mvsh using the same
